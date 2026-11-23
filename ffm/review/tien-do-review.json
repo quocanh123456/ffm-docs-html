@@ -1,0 +1,384 @@
+{
+ "tasks": [
+  {
+   "key": "issue-485",
+   "kind": "task",
+   "id": 485,
+   "title": "[CRM] Tính năng báo giá",
+   "link": "https://pancakework.vn/issues/w4/c5024/i485",
+   "stage": "wait_dev",
+   "stage_text": "Chờ dev sửa",
+   "prs": [
+    {
+     "repo": "sea-fulfillment",
+     "number": 614,
+     "url": "https://github.com/pancake-vn/sea-fulfillment/pull/614",
+     "state": "OPEN",
+     "title": "feat(crm): Báo giá — tạo / sửa / duyệt / huỷ / thay thế / sao chép, gắn vào điều kiện stage và vòng đời lead #485",
+     "author": "tranbinhquang246",
+     "rounds": 2,
+     "last_review_at": 1795400201.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1795398768.0,
+     "open": {
+      "P0": 0,
+      "P1": 1,
+      "P2": 3,
+      "Nit": 2
+     }
+    },
+    {
+     "repo": "sea-fulfillment-web",
+     "number": 559,
+     "url": "https://github.com/pancake-vn/sea-fulfillment-web/pull/559",
+     "state": "OPEN",
+     "title": "feat(crm): Báo giá — danh sách + tab Duyệt, tạo / sửa / thay thế / sao chép, chi tiết + duyệt + file, tab Báo giá ở lead #485",
+     "author": "tranbinhquang246",
+     "rounds": 2,
+     "last_review_at": 1795400205.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1795398698.0,
+     "open": {
+      "P0": 0,
+      "P1": 3,
+      "P2": 3,
+      "Nit": 10
+     }
+    }
+   ],
+   "milestone": "Nov 15",
+   "milestone_due": "2026-11-15"
+  },
+  {
+   "key": "issue-508",
+   "kind": "task",
+   "id": 508,
+   "title": "[FFM-WMS] Kho POS chỉ là ưu tiên khi cấp hàng cho đơn và phiếu xuất, hết thì lấy",
+   "link": "https://pancakework.vn/issues/w4/c5024/i508",
+   "stage": "wait_dev",
+   "stage_text": "Chờ dev sửa",
+   "prs": [
+    {
+     "repo": "sea-fulfillment",
+     "number": 616,
+     "url": "https://github.com/pancake-vn/sea-fulfillment/pull/616",
+     "state": "OPEN",
+     "title": "Kho POS chỉ là ưu tiên khi cấp hàng cho đơn và phiếu xuất: hết thì lấy kho POS khác cùng kho FFM #508",
+     "author": "DucThang333",
+     "rounds": 1,
+     "last_review_at": 1795167180.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1795161500.0,
+     "open": {
+      "P0": 0,
+      "P1": 1,
+      "P2": 4,
+      "Nit": 2
+     }
+    }
+   ],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-436",
+   "kind": "task",
+   "id": 436,
+   "title": "[FFM] Gộp 2 luồng đóng hàng (Packing Order + WMS packing) và quét Order Display ",
+   "link": "https://pancakework.vn/issues/w4/c5024/i436",
+   "stage": "wait_dev",
+   "stage_text": "Chờ dev sửa",
+   "prs": [
+    {
+     "repo": "sea-fulfillment-web",
+     "number": 528,
+     "url": "https://github.com/pancake-vn/sea-fulfillment-web/pull/528",
+     "state": "OPEN",
+     "title": "Tách UI đóng gói dùng chung Pack Order/Pack WMS, quét mã đơn FFM khi chốt #436",
+     "author": "DucThang333",
+     "rounds": 2,
+     "last_review_at": 1794883404.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1792146097.0,
+     "open": {
+      "P0": 0,
+      "P1": 6,
+      "P2": 1,
+      "Nit": 4
+     }
+    },
+    {
+     "repo": "sea-fulfillment",
+     "number": 576,
+     "url": "https://github.com/pancake-vn/sea-fulfillment/pull/576",
+     "state": "OPEN",
+     "title": "Quét mã đơn FFM khi chốt đóng gói và bàn giao, tìm phiên bàn giao theo mã vận đơn phụ #436",
+     "author": "DucThang333",
+     "rounds": 2,
+     "last_review_at": 1794883400.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1792146041.0,
+     "open": {
+      "P0": 0,
+      "P1": 3,
+      "P2": 1,
+      "Nit": 2
+     }
+    }
+   ],
+   "milestone": "Oct 18",
+   "milestone_due": "2026-10-18"
+  },
+  {
+   "key": "task-223036",
+   "kind": "ticket",
+   "id": 223036,
+   "title": "fix(ffm): skip ffm_id write-back for sync_all init inventory purchase",
+   "link": "https://pancakework.vn/messages/w4/c10898/m188109b6-fd92-4739-9e7b-f4e54c876b98",
+   "stage": "wait_dev",
+   "stage_text": "Chờ dev sửa",
+   "prs": [
+    {
+     "repo": "pos-api",
+     "number": 17547,
+     "url": "https://github.com/pancake-vn/pos-api/pull/17547",
+     "state": "OPEN",
+     "title": "fix(ffm): skip ffm_id write-back for sync_all init inventory purchase",
+     "author": "DucThang333",
+     "rounds": 2,
+     "last_review_at": 1791543159.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1790845385.0,
+     "open": {
+      "P0": 0,
+      "P1": 1,
+      "P2": 1,
+      "Nit": 1
+     }
+    }
+   ],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-469",
+   "kind": "task",
+   "id": 469,
+   "title": "[WMS] Tính năng kiểm kê hàng trong kho(Mobile)",
+   "link": "https://pancakework.vn/issues/w4/c5024/i469",
+   "stage": "wait_rereview",
+   "stage_text": "Dev đã cập nhật, chờ review lại",
+   "prs": [
+    {
+     "repo": "sea-fulfillment-mobile",
+     "number": 83,
+     "url": "https://github.com/pancake-vn/sea-fulfillment-mobile/pull/83",
+     "state": "OPEN",
+     "title": "[WMS] Kiểm kê trên app cho Warehouse Staff #469",
+     "author": "Tudolla",
+     "rounds": 4,
+     "last_review_at": 1795164993.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1795174485.0,
+     "open": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "Nit": 0
+     }
+    }
+   ],
+   "milestone": "Nov 1",
+   "milestone_due": "2026-11-01"
+  },
+  {
+   "key": "issue-493",
+   "kind": "task",
+   "id": 493,
+   "title": "[FFM] - Thiết kế Landing Page ",
+   "link": "https://pancakework.vn/issues/w4/c5024/i493",
+   "stage": "wait_rereview",
+   "stage_text": "Dev đã cập nhật, chờ review lại",
+   "prs": [
+    {
+     "repo": "sea-fulfillment-web",
+     "number": 551,
+     "url": "https://github.com/pancake-vn/sea-fulfillment-web/pull/551",
+     "state": "OPEN",
+     "title": "feat: add lading page first demo #493",
+     "author": "Tudolla",
+     "rounds": 1,
+     "last_review_at": 1794199047.0,
+     "last_review_state": "CHANGES_REQUESTED",
+     "last_commit_at": 1794222072.0,
+     "open": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "Nit": 0
+     }
+    }
+   ],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-7159",
+   "kind": "task",
+   "id": 7159,
+   "title": "Migrate sang Open API mới của JNT PH",
+   "link": "https://pancakework.vn/issues/w4/c114/i7159",
+   "stage": "wait_first",
+   "stage_text": "Chưa có review trên GitHub",
+   "prs": [
+    {
+     "repo": "pos-ssr",
+     "number": 16288,
+     "url": "https://github.com/pancake-vn/pos-ssr/pull/16288",
+     "state": "OPEN",
+     "title": "feat(jnt): add API password to J&T PH connect form #7159",
+     "author": "hoanganh2303",
+     "rounds": 0,
+     "last_review_at": null,
+     "last_review_state": null,
+     "last_commit_at": 1793094551.0,
+     "open": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "Nit": 0
+     }
+    },
+    {
+     "repo": "pos-api",
+     "number": 17777,
+     "url": "https://github.com/pancake-vn/pos-api/pull/17777",
+     "state": "OPEN",
+     "title": "feat(jnt): move J&T PH direct and CA 97/180 to Open API #7159",
+     "author": "hoanganh2303",
+     "rounds": 0,
+     "last_review_at": null,
+     "last_review_state": null,
+     "last_commit_at": 1793347500.0,
+     "open": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "Nit": 0
+     }
+    }
+   ],
+   "milestone": "Nov 1",
+   "milestone_due": "2026-11-01"
+  },
+  {
+   "key": "task-202003",
+   "kind": "ticket",
+   "id": 202003,
+   "title": "",
+   "link": "https://pancakework.vn/messages/w4/c10898/m563e8da9-2087-4f8d-8ce0-f2f824fafa9b",
+   "stage": "no_pr",
+   "stage_text": "Chưa có link PR trong thread",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-489",
+   "kind": "task",
+   "id": 489,
+   "title": "[Bigate] Thêm Bigate làm đơn vị vận chuyển trong Courier Setting FFM — mở cho Gl",
+   "link": "https://pancakework.vn/issues/w4/c5024/i489",
+   "stage": "no_pr",
+   "stage_text": "Chưa có PR mở",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-488",
+   "kind": "task",
+   "id": 488,
+   "title": "[FFM] Open API cho đơn vị FFM tích hợp ERP của brand — tạo đơn, sản phẩm, phiếu ",
+   "link": "https://pancakework.vn/issues/w4/c5024/i488",
+   "stage": "no_pr",
+   "stage_text": "Chưa có PR mở",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-487",
+   "kind": "task",
+   "id": 487,
+   "title": "[FFM] Nền tảng Custom App cho tenant chạy trên dữ liệu FFM (tham khảo POS Apps)",
+   "link": "https://pancakework.vn/issues/w4/c5024/i487",
+   "stage": "no_pr",
+   "stage_text": "Chưa có PR mở",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-356",
+   "kind": "task",
+   "id": 356,
+   "title": "[POS] Cải thiện lọc ĐVVC cho đơn sàn đã sync từ FFM",
+   "link": "https://pancakework.vn/issues/w4/c5024/i356",
+   "stage": "no_pr",
+   "stage_text": "Chưa có PR mở",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-41",
+   "kind": "task",
+   "id": 41,
+   "title": "Bổ sung dữ liệu thời gian giao hàng dự kiến",
+   "link": "https://pancakework.vn/issues/w4/c5024/i41",
+   "stage": "no_pr",
+   "stage_text": "Chưa có PR mở",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "task-240616",
+   "kind": "ticket",
+   "id": 240616,
+   "title": "",
+   "link": "https://pancakework.vn/messages/w4/c10898/m995e525c-30c5-4800-a3b1-4e7fd5e3d246",
+   "stage": "no_pr",
+   "stage_text": "Chưa có link PR trong thread",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  },
+  {
+   "key": "issue-512",
+   "kind": "task",
+   "id": 512,
+   "title": "[Bigate Agency] Phase 1: Đăng ký & xét duyệt tài khoản quảng cáo (IA Seller + Ad",
+   "link": "https://pancakework.vn/issues/w4/c5024/i512",
+   "stage": "no_pr",
+   "stage_text": "Chưa có PR mở",
+   "prs": [],
+   "milestone": "29/11",
+   "milestone_due": "2026-11-29"
+  },
+  {
+   "key": "task-242321",
+   "kind": "ticket",
+   "id": 242321,
+   "title": "",
+   "link": "https://pancakework.vn/messages/w4/c10898/mab1520ce-f3a9-4228-a28f-00ba0478f3b0",
+   "stage": "no_pr",
+   "stage_text": "Chưa có link PR trong thread",
+   "prs": [],
+   "milestone": null,
+   "milestone_due": null
+  }
+ ],
+ "updated_at": 1795401897
+}

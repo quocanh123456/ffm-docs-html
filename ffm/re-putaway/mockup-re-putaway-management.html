@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Re-putaway trên app mobile kho – Prototype</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { height: auto; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  /* Bảng kế hoạch dự án + Gantt theo sprint: .filters lọc, table.plan, thanh .bar theo ưu tiên p0–p3, cột mốc .pilot */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .filters span { color: var(--ink2); font-size: 13px; margin-right: 4px; }
+  .fbtn { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink2); }
+  .fbtn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .plan-wrap { overflow-x: auto; }
+  table.plan { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  table.plan th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink3); font-weight: 700; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; background: #fff; }
+  table.plan td { padding: 8px 6px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+  table.plan td.no { color: var(--ink2); font-weight: 700; text-align: center; width: 28px; }
+  table.plan td.name { min-width: 220px; }
+  table.plan td.name b { display: block; font-size: 13px; }
+  table.plan td.name small { display: block; color: var(--ink2); font-size: 11.5px; line-height: 1.4; }
+  table.plan td.team, table.plan td.own { white-space: nowrap; color: var(--ink2); }
+  table.plan td.srcs { min-width: 92px; }
+  table.plan tr.grp td { background: var(--slate-bg); font-weight: 700; font-size: 12.5px; padding: 6px 10px; }
+  table.plan th.g, table.plan td.g { width: 31px; min-width: 31px; padding: 8px 0; text-align: center; }
+  table.plan td.g { border-left: 1px solid #f1f3f8; }
+  table.plan .pilot { border-right: 2px dashed var(--green) !important; }
+  table.plan th.later, table.plan td.later { width: 40px; min-width: 40px; padding-right: 4px; }
+  .bar { display: block; height: 14px; }
+  .bar.st { border-top-left-radius: 5px; border-bottom-left-radius: 5px; margin-left: 3px; }
+  .bar.en { border-top-right-radius: 5px; border-bottom-right-radius: 5px; margin-right: 3px; }
+  .bar.p0 { background: var(--ink3); } .bar.p1 { background: var(--blue); } .bar.p2 { background: var(--ffm); }
+  .bar.p3 { background: var(--violet-bg); border: 1px dashed var(--violet); }
+  .pri:not(.btn) { display: inline-block; font-weight: 700; font-size: 11.5px; padding: 1px 7px; border-radius: 6px; }
+  .pri.p0 { background: var(--slate-bg); color: var(--ink2); } .pri.p1 { background: var(--blue); color: #fff; }
+  .pri.p2 { background: #e0f2fe; color: #0369a1; } .pri.p3 { background: var(--violet-bg); color: var(--violet); }
+  .src { display: inline-block; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; margin: 1px 0; }
+  .src.d { background: var(--blue-bg); color: var(--blue); } .src.t { background: var(--green-bg); color: var(--green); }
+  .src.tn { background: var(--violet-bg); color: var(--violet); } .src.o { background: var(--slate-bg); color: var(--ink2); }
+  .muted { color: var(--ink3); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink2); margin-top: 12px; align-items: center; }
+  .legend .bar { display: inline-block; width: 26px; vertical-align: -2px; margin: 0 6px 0 0; border-radius: 5px; }
+  /* Lưới ánh xạ ngắn (vd take note → hạng mục) */
+  .tnmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tnmap div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; background: #fff; }
+  .tnmap div b { color: var(--violet); margin-right: 4px; }
+  .tnmap div span { display: block; color: var(--ink2); font-size: 12px; }
+
+  @media (max-width: 960px) {
+    .tnmap { grid-template-columns: 1fr 1fr; }
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+<style>
+/* Prototype app MOBILE kho (không phải antd web): màu và kích thước đo từ ảnh app thật, chỉ áp trong khung .mb-phone */
+.mb-stage{display:flex;gap:24px;padding:22px;background:#e4e8ef;align-items:flex-start}
+.mb-phone{--p:#2F80ED;--ps:#E9F2FD;--pl:#B5D2F8;--nv:#1B2A4E;--sub:#6B7280;--cap:#969B9E;--bgm:#EEF1F6;--seg:#F0F2F5;--bk:#EAEBEB;--dv:#CECECE;--rl:#E7E7E7;--cl:#E5E8EE;--gr:#27AE60;--grs:#E6F7EE;--or:#F2994A;--ors:#FCEBDB;--rd:#F5222D;--er:#EB5757;
+  width:375px;height:760px;background:#fff;border-radius:40px;border:9px solid #111;overflow:hidden;overflow:clip;position:relative;display:flex;flex-direction:column;flex:none;color:#000;font:15px/1.4 -apple-system,"SF Pro Text","Segoe UI",sans-serif}
+.mb-phone svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mb-status{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 28px;font-weight:600;font-size:15px;flex:none}
+.mb-bat{width:24px;height:12px;border:1.5px solid #111;border-radius:3px;position:relative}
+.mb-bat::after{content:"";position:absolute;inset:1.5px 4px 1.5px 1.5px;background:#111;border-radius:1px}
+.mb-scr{flex:1;display:none;flex-direction:column;min-height:0}.mb-scr.on{display:flex}
+.mb-hdr{display:flex;align-items:center;gap:12px;padding:14px 10px 12px;border-bottom:1px solid var(--dv);flex:none}
+.mb-back{width:52px;height:42px;border-radius:8px;background:var(--bk);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.mb-hdr h5{font-size:21px;font-weight:600;color:var(--p);flex:1;margin:0}
+.mb-act{color:var(--p);font-weight:700;font-size:14px}
+.mb-dd{height:42px;border:1px solid var(--pl);background:var(--ps);color:var(--p);border-radius:8px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px}
+.mb-dd::after{content:"";border:6px solid transparent;border-top-color:#616161;margin-top:6px}
+.mb-hdr .mb-dd{max-width:140px;font-size:14px}
+.mb-btn{height:47px;border-radius:8px;border:1.5px solid var(--p);background:#fff;color:var(--p);font:inherit;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;flex:1}
+.mb-btn.mb-pri{background:var(--p);color:#fff}
+.mb-btn:disabled{background:#E5E7EB;border-color:#E5E7EB;color:#A3A9B7;cursor:not-allowed}
+.mb-foot{padding:10px 14px 18px;display:flex;gap:10px;flex:none;background:#fff}
+.mb-home{background:var(--bgm);flex:1;overflow:auto}
+.mb-hero{background:var(--rd);padding:10px 14px 28px;display:flex;align-items:center;gap:12px;color:#fff}
+.mb-av{width:52px;height:52px;border-radius:50%;background:#fff;color:var(--rd);font-size:25px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mb-hero b{font-size:18px;display:block}
+.mb-role{display:inline-block;background:#F74A53;font-size:12px;font-weight:700;padding:1px 7px;border-radius:4px}
+.mb-ct{margin-left:auto;background:#fff;color:var(--nv);font-weight:700;font-size:13px;padding:5px 9px;border-radius:6px}
+.mb-sec{padding:14px 12px 2px;display:flex;gap:10px;align-items:center}
+.mb-bar{width:3px;height:36px;border-radius:2px}
+.mb-sec b{font-size:18px;color:var(--nv);display:block}
+.mb-sec small{color:var(--sub);font-size:12.5px}
+.mb-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 12px}
+.mb-tile{background:#fff;border:1px solid #D9DEE8;border-left:3px solid var(--p);border-radius:11px;padding:10px;position:relative;cursor:pointer;min-height:106px}
+.mb-ti{width:40px;height:40px;border-radius:9px;background:var(--ps);display:flex;align-items:center;justify-content:center;color:var(--p)}
+.mb-code{position:absolute;top:10px;right:10px;font-size:10.5px;font-weight:700;color:var(--p);background:var(--ps);padding:2px 7px;border-radius:6px}
+.mb-tile b{display:block;margin-top:9px;font-size:15.5px;color:var(--nv)}
+.mb-tile small{color:var(--sub);font-size:11.5px}
+.mb-tile.or{border-left-color:var(--or)}.mb-tile.or .mb-ti{background:var(--ors);color:var(--or)}.mb-tile.or .mb-code{color:var(--or);background:var(--ors)}
+.mb-intro{flex:1;overflow:auto;padding:16px 12px}
+.mb-lead{font-weight:700;font-size:16.5px;line-height:1.4;margin-bottom:14px}
+.mb-step{display:flex;align-items:center;gap:10px;padding:6px 0;font-weight:600;font-size:16px}
+.mb-n{width:24px;height:24px;border-radius:50%;background:var(--ps);color:var(--p);font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.mb-cam{height:190px;background:linear-gradient(135deg,#3b3b3b,#6d6a64 45%,#2a2a2a);position:relative;flex:none}
+.mb-frame{position:absolute;inset:16px;border:2px solid #fff;border-radius:10px}
+.mb-line{position:absolute;left:30px;right:30px;top:50%;height:1.5px;background:var(--er)}
+.mb-light{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.75);color:#fff;font-size:13px;font-weight:600;padding:6px 12px;border-radius:16px}
+.mb-area{flex:1;background:var(--bgm);overflow:auto;padding:12px 10px}
+.mb-at{font-weight:700;font-size:17px;color:var(--nv);margin:2px 2px 8px;display:flex;justify-content:space-between}
+.mb-at span{color:var(--sub);font-weight:600}
+.mb-card{background:#fff;border:1px solid var(--cl);border-radius:12px}
+.mb-hint{padding:18px 14px;text-align:center}
+.mb-hic{width:46px;height:46px;border-radius:50%;background:var(--ps);color:var(--p);display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.mb-hint b{font-size:17px;display:block;margin-bottom:4px}
+.mb-hint p{color:var(--sub);font-size:14px;font-weight:600;line-height:1.4;margin:0}
+.mb-msg{margin-bottom:8px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600}
+.mb-msg.ok{background:var(--grs);color:var(--gr)}.mb-msg.err{background:#FDECEC;color:var(--er)}
+.mb-it{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px}
+.mb-img{width:44px;height:44px;border-radius:8px;background:#F3F4F6;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.mb-nm{font-weight:700;font-size:14.5px;line-height:1.3}
+.mb-sku{font-size:12.5px;color:var(--sub);font-weight:600;margin-top:2px}
+.mb-q{margin-left:auto;text-align:right;font-weight:700;font-size:20px;color:var(--nv)}
+.mb-q small{display:block;font-size:11px;color:var(--sub);font-weight:600}
+.mb-q.full{color:var(--gr)}
+.mb-loc{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;background:var(--ps);border:1px solid var(--pl);border-radius:12px;color:var(--p);font-weight:700}
+.mb-loc small{font-weight:600;font-size:12px;color:var(--sub)}
+.mb-done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:8px;background:var(--bgm)}
+.mb-ok{width:64px;height:64px;border-radius:50%;background:var(--grs);color:var(--gr);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700}
+.mb-done b{font-size:19px;color:var(--nv)}
+.mb-done p{color:var(--sub);font-size:14px;font-weight:600;line-height:1.5;margin:0}
+.mb-list{flex:1;overflow:auto;padding:10px 8px}
+.mb-seg{display:flex;background:var(--seg);border-radius:9px;padding:3px;margin-bottom:6px;height:43px}
+.mb-seg span{flex:1;display:flex;align-items:center;justify-content:center;border-radius:7px;color:var(--sub);font-weight:700;font-size:15px}
+.mb-seg span.on{background:#fff;color:var(--nv);border:1px solid #DDE2EA}
+.mb-cap{color:var(--cap);font-weight:600;font-size:16px;margin:8px 4px}
+.mb-row{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px solid var(--rl);min-height:78px}
+.mb-row b{font-size:16px}
+.mb-row .t{font-size:14.5px;font-weight:600;margin-top:3px}
+.mb-row .r{text-align:right}
+.mb-row .id{font-weight:700;font-size:13.5px}
+.mb-tg{display:inline-block;border:1.5px solid;border-radius:6px;padding:0 8px;height:24px;line-height:21px;font-size:14px;font-weight:600;margin-top:5px}
+.mb-tg.doing{color:var(--p);border-color:var(--p);background:var(--ps)}
+.mb-tg.new{color:var(--gr);border-color:var(--gr);background:var(--grs)}
+.mb-tg.src{color:var(--or);border-color:var(--or);background:var(--ors);margin-right:4px}
+.mb-row.hl{background:#FFFBEA}
+.mb-scan{width:129px;height:41px;flex:none;margin:0 auto;font-size:15px}
+.mb-mask{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;z-index:5;visibility:hidden}
+.mb-mask.open{visibility:visible}
+.mb-sheet{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:18px 14px 20px}
+.mb-sheet h6{font-size:18px;margin:0 0 6px;color:var(--nv)}
+.mb-sheet p{color:var(--sub);font-weight:600;font-size:14.5px;line-height:1.5;margin:0 0 14px}
+.mb-sheet p b{color:var(--nv)}
+.mb-sheet .row2{display:flex;gap:10px}
+.mb-toast{position:absolute;top:48px;left:50%;transform:translateX(-50%);background:var(--nv);color:#fff;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;z-index:6;width:330px;visibility:hidden}
+.mb-toast.show{visibility:visible}
+.mb-ctrl{flex:1;min-width:0;font-size:13.5px;color:var(--ink)}
+.mb-ctrl h5{margin:0 0 6px;font-size:14px}
+.mb-ctrl ol{padding-left:18px;margin:0 0 12px}
+.mb-ctrl li{margin-bottom:4px;color:var(--ink2)}
+.mb-ctrl li.cur{color:var(--blue);font-weight:700}
+.mb-demo{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:10px 12px;font-size:12.5px}
+.mb-demo b{display:block;margin-bottom:6px;color:#fff}
+.mb-demo button{font-size:12px;margin:2px 3px 2px 0;padding:3px 8px;cursor:pointer;border-radius:6px;border:0;background:#e2e8f0;color:#0f172a}
+.mb-demo .h{color:#94a3b8;font-weight:400}
+</style>
+
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>Re-putaway mobile</div>
+  <nav class="nav"><a href="#luong">Luồng</a><a href="#prototype">Prototype</a><a href="#quyet-dinh">Quyết định</a></nav>
+</div></div>
+
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">FFM · WMS app mobile · Prototype</div>
+  <h1>Re-putaway trên app mobile kho</h1>
+  <p>Nhân viên kho quét Tote, quét các sản phẩm cần trả về kệ (đơn huỷ lẫn đơn không huỷ), rồi cất luôn ngay trong màn Re-putaway hoặc để cất sau ở màn Putaway có sẵn. Không còn màn Re-putaway trên web: trang này thay cho prototype web cũ ở cùng link.</p>
+  <div class="meta">
+    <span class="chip">Tài liệu luồng <a href="xu-ly-don-huy-va-missing-item">xu-ly-don-huy-va-missing-item</a></span>
+    <span class="chip">Cập nhật 05/11/2026</span>
+    <span class="chip">Giao diện đo từ ảnh app kho thật</span>
+  </div>
+</header>
+
+<section id="luong" style="margin-top:28px">
+  <div class="sec-h"><span class="n">01</span><h2>Luồng</h2><p>Một màn quét, rẽ 2 nhánh: cất luôn hoặc cất sau</p></div>
+  <div class="card">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Mở Re-putaway<small>Ô IN-03 trên trang chủ app, chọn kho, bấm Start</small></div>
+      <div class="s"><b>2</b><br>Quét Tote<small>Tote free cùng kho → busy</small></div>
+      <div class="s"><b>3</b><br>Quét sản phẩm<small>Gộp theo SKU, không quét waybill</small></div>
+      <div class="s"><b>4a</b><br>Put away now<small>Quét Location → quét sản phẩm ngay trong màn → Complete → Tote free</small></div>
+      <div class="s you"><b>4b</b><br>Put away later<small>Tạo lệnh Putaway, thoát app; cất sau ở màn Putaway</small></div>
+    </div>
+    <p class="caption">Các bước giống màn Inventory (chuyển hàng giữa kệ) đang có trên app, chỉ bỏ bước quét kệ nguồn. Cất Re-putaway chỉ cộng tồn tại kệ, không cộng tồn tổng.</p>
+  </div>
+</section>
+
+<section id="prototype" style="margin-top:28px">
+  <div class="sec-h"><span class="n">02</span><h2>Prototype</h2><p>Bấm thử: ô Re-putaway → Start → quét Tote (thử Tote busy) → quét sản phẩm (thử barcode lạ) → Put away now (quét kệ, quét sản phẩm, đổi kệ, Complete) hoặc Put away later → màn Putaway; Back khi đã quét hàng</p></div>
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span>WMS app · Re-putaway</span></div>
+    <div class="mb-stage">
+      <div class="mb-phone">
+        <div class="mb-status"><span>14:05</span><span class="mb-bat"></span></div>
+
+        <div class="mb-scr on" id="s-home"><div class="mb-home">
+          <div class="mb-hero"><div class="mb-av">L</div><div><b>lannguyen</b><span class="mb-role">WAREHOUSE</span></div><span class="mb-ct">🇵🇭 Philip… ⌄</span></div>
+          <div class="mb-sec"><span class="mb-bar" style="background:var(--p)"></span><div><b>Inbound</b><small>Receive and store incoming inventory</small></div></div>
+          <div class="mb-tiles">
+            <div class="mb-tile"><span class="mb-code">IN-01</span><div class="mb-ti"><svg viewBox="0 0 24 24"><path d="M12 3l8 4-8 4-8-4z"/><path d="M4 7v10l8 4 8-4V7"/></svg></div><b>Return</b><small>Process returned st… →</small></div>
+            <div class="mb-tile" data-go="putaway"><span class="mb-code">IN-02</span><div class="mb-ti"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 10v10"/></svg></div><b>Put-away</b><small>Move stock to bins →</small></div>
+            <div class="mb-tile changed" data-go="intro"><span class="mb-code">IN-03</span><div class="mb-ti"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg></div><b>Re-putaway</b><small>Return items to bins →</small></div>
+          </div>
+          <div class="mb-sec"><span class="mb-bar" style="background:var(--or)"></span><div><b>Outbound</b><small>Pick and prepare orders for dispatch</small></div></div>
+          <div class="mb-tiles">
+            <div class="mb-tile"><span class="mb-code">OUT-01</span><div class="mb-ti"><svg viewBox="0 0 24 24"><path d="M12 3l8 4-8 4-8-4z"/><path d="M4 7v10l8 4 8-4V7"/></svg></div><b>Picking</b><small>Pick items for dispa… →</small></div>
+            <div class="mb-tile or"><span class="mb-code">ARR-02</span><div class="mb-ti"><svg viewBox="0 0 24 24"><path d="M12 3l8 4-8 4-8-4z"/><path d="M4 7v10l8 4 8-4V7"/></svg></div><b>Inventory</b><small>Inventory good in lo… →</small></div>
+          </div>
+        </div></div>
+
+        <div class="mb-scr" id="s-intro">
+          <div class="mb-hdr"><div class="mb-back" data-go="home"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div><h5>Re-putaway</h5></div>
+          <div class="mb-intro">
+            <div class="mb-lead">Return items of canceled or held orders from totes back to bins.</div>
+            <div class="mb-dd">HM IN</div>
+            <div style="margin-top:10px">
+              <div class="mb-step"><span class="mb-n">1</span>Scan Tote Barcode</div>
+              <div class="mb-step"><span class="mb-n">2</span>Scan Products to return</div>
+              <div class="mb-step"><span class="mb-n">3</span>Create Put away</div>
+              <div class="mb-step"><span class="mb-n">4</span>Put away immediately or put away later (in Putaway screen)</div>
+            </div>
+          </div>
+          <div class="mb-foot"><button class="mb-btn mb-pri" data-act="start"><svg viewBox="0 0 24 24"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg>Start</button></div>
+        </div>
+
+        <div class="mb-scr" id="s-scan">
+          <div class="mb-hdr"><div class="mb-back" data-act="back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div><h5>Re-putaway</h5><span class="mb-act" id="scanAct"></span></div>
+          <div class="mb-cam"><div class="mb-frame"></div><div class="mb-line"></div><div class="mb-light">Turn on light</div></div>
+          <div class="mb-area" id="scanArea"></div>
+          <div class="mb-foot" id="scanFoot"></div>
+        </div>
+
+        <div class="mb-scr" id="s-put">
+          <div class="mb-hdr"><div class="mb-back" data-act="backput"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div><h5>Put away</h5><span class="mb-act" id="putAct"></span></div>
+          <div class="mb-cam"><div class="mb-frame"></div><div class="mb-line"></div><div class="mb-light">Turn on light</div></div>
+          <div class="mb-area" id="putArea"></div>
+          <div class="mb-foot"><button class="mb-btn" id="btnLater2" data-act="later">Put away later</button><button class="mb-btn mb-pri" id="btnComplete" data-act="complete" disabled>Complete</button></div>
+        </div>
+
+        <div class="mb-scr" id="s-done">
+          <div class="mb-hdr"><div class="mb-back" data-go="home"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div><h5>Re-putaway</h5></div>
+          <div class="mb-done" id="doneBody"></div>
+          <div class="mb-foot"><button class="mb-btn" data-go="home">Home</button><button class="mb-btn mb-pri" data-go="intro">New Re-putaway</button></div>
+        </div>
+
+        <div class="mb-scr" id="s-putaway">
+          <div class="mb-hdr"><div class="mb-back" data-go="home"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div><h5>Putaway</h5><div class="mb-dd">HM IN</div></div>
+          <div class="mb-list">
+            <div class="mb-seg"><span class="on">Putaway list today</span><span>Completed</span></div>
+            <div class="mb-cap">List putaway today</div>
+            <div id="paList"></div>
+          </div>
+          <div class="mb-foot"><button class="mb-btn mb-pri mb-scan">SCAN TOTE</button></div>
+        </div>
+
+        <div class="mb-mask" id="sheet"><div class="mb-sheet"><h6 id="shT"></h6><p id="shP"></p><div class="row2" id="shB"></div></div></div>
+        <div class="mb-toast" id="mbToast"></div>
+      </div>
+
+      <div class="mb-ctrl">
+        <h5>Các bước</h5>
+        <ol id="stepList">
+          <li data-s="home">Trang chủ: ô Re-putaway (IN-03) trong nhóm Inbound</li>
+          <li data-s="intro">Màn giới thiệu như màn Inventory: chọn kho, 4 bước, nút Start</li>
+          <li data-s="tote">Quét Tote free → Tote busy</li>
+          <li data-s="items">Quét sản phẩm cần trả về kệ, gộp theo SKU</li>
+          <li data-s="put">Put away now: quét Location → quét sản phẩm → Complete → Tote free</li>
+          <li data-s="later">Put away later: lệnh Putaway nằm ở màn Putaway có sẵn</li>
+        </ol>
+        <div class="mb-demo"><b>Giả lập quét <span class="h">(không phải UI thật, thay cho camera)</span></b><div id="demoBtns"></div><div style="margin-top:6px"><button data-act="reset">Làm lại từ đầu</button></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Phần viền tím nét đứt là chỗ mới so với app hiện tại: ô Re-putaway trên trang chủ và nhãn Re-putaway trên màn Putaway. Màu, cỡ chữ, khung camera, màn giới thiệu và màn Putaway lấy theo app thật. Dữ liệu là dữ liệu mẫu.</p>
+</section>
+
+<section id="quyet-dinh" style="margin-top:28px">
+  <div class="sec-h"><span class="n">03</span><h2>Quyết định</h2><p>Đã chốt với dev 05/11 và các câu còn chờ</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Nơi làm</div><h4>Re-putaway chạy ở đâu?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Chỉ trên app mobile kho. Web không có màn Re-putaway; lệnh Put away later theo dõi ở màn Putaway web có sẵn.</div></div></div>
+    <div class="dcard"><div class="q">Quét</div><h4>Quét gì?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Quét Tote rồi quét sản phẩm. Không quét waybill.</div></div></div>
+    <div class="dcard"><div class="q">Cất</div><h4>Cất lúc nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Put away now ngay trong màn Re-putaway, hoặc Put away later ở màn Putaway có sẵn. Đang cất dở vẫn chuyển sang Put away later được.</div></div></div>
+    <div class="dcard"><div class="q">Đơn không huỷ</div><h4>Đơn đang pick / pack / packed về trạng thái nào?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Không quét waybill nên hệ thống chưa biết sản phẩm thuộc đơn nào để đưa đơn về Wait Print (đơn trong Picking List / Handover Session mở đang bị khoá lùi trạng thái, #431). Người trả lời: BA + dev.</div></div></div>
+    <div class="dcard"><div class="q">Kiểm soát</div><h4>Chặn quét hàng không cần trả về kệ?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Hiện chỉ chặn barcode không có trong kho; quét nhầm hàng khác sẽ làm tồn kệ cao hơn thực tế. Người trả lời: BA + dev.</div></div></div>
+    <div class="dcard"><div class="q">Cất thiếu</div><h4>Hoàn tất khi chưa cất đủ?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất: chặn hoàn tất với lệnh Re-putaway, có thao tác báo thiếu (Lost / Damaged) để có log. Người trả lời: BA.</div></div></div>
+  </div>
+</section>
+</div>
+
+
+<script>
+(function(){
+const P={'FFM-ATD-M':{name:'Áo thun đỏ – Size M',bc:'8936000100011',img:'👕'},'FFM-MLT-01':{name:'Mũ lưỡi trai đen',bc:'8936000100035',img:'🧢'},'FFM-QDD-01':{name:'Quạt đứng Deli 16 inch',bc:'8936000100066',img:'🪭'}};
+const LOCS=['A01-02-03','B02-01-01','C03-01-02'],BUSY=['TOTE-21-0004','TOTE-21-0005'];
+const PA0=[{tote:'TOTE-21-0004',time:'2026-11-05 10:12:47',id:'PUT-PO633B46G0-1758',st:'doing'},{tote:'TOTE-21-0002',time:'2026-11-05 09:20:22',id:'PUT-PO6338E5W0-1756',st:'doing'}];
+const root=document.getElementById('proto'),$=id=>document.getElementById(id),tot=o=>Object.values(o).reduce((a,b)=>a+b,0);
+let S;
+function init(){S={scr:'home',tote:null,items:{},order:[],placed:{},loc:null,pa:JSON.parse(JSON.stringify(PA0)),last:null,msg:null,pmsg:null};}
+function show(s){S.scr=s;root.querySelectorAll('.mb-scr').forEach(x=>x.classList.remove('on'));$('s-'+s).classList.add('on');render();}
+function start(){S.tote=null;S.items={};S.order=[];S.placed={};S.loc=null;S.msg=null;show('scan');}
+function render(){if(S.scr==='scan')rScan();if(S.scr==='put')rPut();if(S.scr==='putaway')rPA();rDemo();}
+const m=o=>o?`<div class="mb-msg ${o[1]}">${o[0]}</div>`:'';
+const it=(k,r)=>`<div class="mb-card mb-it"><span class="mb-img">${P[k].img}</span><div><div class="mb-nm">${P[k].name}</div><div class="mb-sku">${k}</div></div>${r}</div>`;
+const ICQR='<svg viewBox="0 0 24 24"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M8 9h3v3H8zM13 13h3v3h-3z"/></svg>';
+function rScan(){
+  $('scanAct').textContent=S.tote||'';let h=m(S.msg);
+  if(!S.tote)h+=`<div class="mb-at">Tote</div><div class="mb-card mb-hint"><div class="mb-hic">${ICQR}</div><b>Tote</b><p>Place an empty tote barcode inside the scan frame</p></div>`;
+  else{h+=`<div class="mb-at">Scanned products <span>(${tot(S.items)})</span></div>`;
+    h+=S.order.length?S.order.map(k=>it(k,`<div class="mb-q">${S.items[k]}<small>qty</small></div>`)).join(''):`<div class="mb-card mb-hint"><div class="mb-hic">${ICQR}</div><b>Product</b><p>Scan products to return to bins<br>(canceled or not canceled orders)</p></div>`;}
+  $('scanArea').innerHTML=h;const n=tot(S.items);
+  $('scanFoot').innerHTML=S.tote?`<button class="mb-btn" data-act="later" ${n?'':'disabled'}>Put away later</button><button class="mb-btn mb-pri" data-act="putnow" ${n?'':'disabled'}>Put away now</button>`:'';
+}
+function scan(v){
+  if(S.scr==='put')return scanPut(v);
+  if(!S.tote){if(BUSY.includes(v)||S.pa.some(p=>p.tote===v&&p.st!=='done')){S.msg=[`${v} is busy. Please use an empty tote.`,'err'];return render();}
+    S.tote=v;S.msg=[`Tote ${v} is now busy. Scan products.`,'ok'];return render();}
+  const k=Object.keys(P).find(x=>P[x].bc===v);
+  if(!k){S.msg=[`Barcode ${v} not found in warehouse HM IN`,'err'];return render();}
+  if(!S.items[k]){S.items[k]=0;S.order.push(k);}S.items[k]++;S.msg=[`+1 ${P[k].name}`,'ok'];render();
+}
+const rem=k=>S.items[k]-S.placed[k];
+function putNow(){S.placed={};S.order.forEach(k=>S.placed[k]=0);S.loc=null;S.pmsg=null;show('put');}
+function rPut(){
+  $('putAct').textContent=S.tote;let h=m(S.pmsg);
+  h+=S.loc?`<div class="mb-loc"><span>📍 ${S.loc}</span><small>Scan another location to change</small></div>`:`<div class="mb-card mb-hint" style="margin-bottom:8px"><div class="mb-hic"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 1 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></svg></div><b>Location</b><p>Scan the location barcode on the shelf</p></div>`;
+  h+=`<div class="mb-at">To put away <span>${tot(S.placed)}/${tot(S.items)}</span></div>`+S.order.map(k=>it(k,`<div class="mb-q ${rem(k)?'':'full'}">${rem(k)?rem(k):'✓'}<small>of ${S.items[k]}</small></div>`)).join('');
+  $('putArea').innerHTML=h;$('btnComplete').disabled=S.order.some(k=>rem(k)>0);$('btnLater2').disabled=S.order.every(k=>rem(k)===0);
+}
+function scanPut(v){
+  if(/^[A-Z]\d{2}-\d{2}-\d{2}$/.test(v)){if(!LOCS.includes(v)){S.pmsg=[`Location ${v} not found or not active`,'err'];return render();}S.loc=v;S.pmsg=[`Location ${v}. Scan products.`,'ok'];return render();}
+  if(!S.loc){S.pmsg=['Scan location first','err'];return render();}
+  const k=Object.keys(P).find(x=>P[x].bc===v);
+  if(!k||!S.items[k]){S.pmsg=[`Barcode ${v} is not in tote ${S.tote}`,'err'];return render();}
+  if(rem(k)<=0){S.pmsg=[`${P[k].name}: all items already placed`,'err'];return render();}
+  S.placed[k]++;S.pmsg=[`+1 ${P[k].name} → ${S.loc}`,'ok'];render();
+}
+function complete(){$('doneBody').innerHTML=`<div class="mb-ok">✓</div><b>Re-putaway completed</b><p>${tot(S.placed)} item(s) put back to bins.<br>Tote ${S.tote} is now free.</p>`;show('done');}
+function askLater(){const rest=S.scr==='put'?S.order.reduce((a,k)=>a+rem(k),0):tot(S.items),part=S.scr==='put'&&tot(S.placed)>0;
+  sheet('Put away later?',`${part?`${tot(S.placed)} item(s) already placed. `:''}A putaway for tote <b>${S.tote}</b> with <b>${rest}</b> item(s) will be created. Put them away later in <b>Putaway</b>.`,[['Back','close'],['Create Put away','dolater',1]]);}
+function doLater(){closeSheet();const id='RPT-'+Math.random().toString(36).slice(2,7).toUpperCase(),d=new Date(),p=n=>String(n).padStart(2,'0');
+  S.pa.unshift({tote:S.tote,time:`2026-11-05 ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`,id,st:'new',src:1});S.last=id;toast(`Put away ${id} created for ${S.tote}`);show('putaway');}
+function rPA(){$('paList').innerHTML=S.pa.map(x=>`<div class="mb-row ${x.id===S.last?'hl':''}"><div><b>${x.tote}</b><div class="t">${x.time}</div></div><div class="r"><div class="id">▶ ${x.id}</div>${x.src?'<span class="mb-tg src changed">Re-putaway</span>':''}<span class="mb-tg ${x.st}">${x.st}</span></div></div>`).join('');}
+function back(){
+  if(S.tote&&tot(S.items))return sheet('Leave Re-putaway?',`Tote <b>${S.tote}</b> has ${tot(S.items)} scanned item(s). Create a putaway to put them away later, or discard (tote becomes free).`,[['Discard','discard'],['Put away later','later',1]]);
+  if(S.tote)return sheet('Leave Re-putaway?',`Tote <b>${S.tote}</b> will be released (free).`,[['Back','close'],['Leave','discard',1]]);
+  show('intro');}
+function sheet(t,p,b){$('shT').textContent=t;$('shP').innerHTML=p;$('shB').innerHTML=b.map(x=>`<button class="mb-btn ${x[2]?'mb-pri':''}" data-act="${x[1]}">${x[0]}</button>`).join('');$('sheet').classList.add('open');}
+function closeSheet(){$('sheet').classList.remove('open');}
+function toast(t){const e=$('mbToast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2600);}
+function rDemo(){
+  const cur={home:'home',intro:'intro',scan:S.tote?'items':'tote',put:'put',done:'put',putaway:'later'}[S.scr];
+  root.querySelectorAll('#stepList li').forEach(li=>li.classList.toggle('cur',li.dataset.s===cur));
+  const b=(v,l)=>`<button data-scan="${v}">${l}</button>`;let h='';
+  if(S.scr==='home')h='Bấm ô Re-putaway (viền tím nét đứt) trên điện thoại.';
+  else if(S.scr==='intro')h='Bấm Start.';
+  else if(S.scr==='scan'&&!S.tote)h=b('TOTE-21-0007','TOTE-21-0007 (free)')+b('TOTE-21-0005','TOTE-21-0005 (busy)');
+  else if(S.scr==='scan')h=Object.keys(P).map(k=>b(P[k].bc,P[k].img+' '+k)).join('')+b('8936999999999','Barcode lạ');
+  else if(S.scr==='put')h=LOCS.map(l=>b(l,'📍 '+l)).join('')+b('Z99-99-99','Location sai')+'<br>'+S.order.map(k=>b(P[k].bc,P[k].img+' '+k)).join('');
+  else if(S.scr==='putaway')h='Lệnh vừa tạo nằm đầu danh sách (nền vàng), nhãn Re-putaway + new. Cất như lệnh Putaway thường.';
+  else h='Hoàn tất. Bấm New Re-putaway để thử Put away later.';
+  $('demoBtns').innerHTML=h;}
+root.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g){if(g.dataset.go==='intro')start(),show('intro');else show(g.dataset.go);return;}
+  const s=e.target.closest('[data-scan]');if(s)return scan(s.dataset.scan);
+  const a=e.target.closest('[data-act]');if(!a||a.disabled)return;
+  ({start:start,back:back,backput:()=>sheet('Stop putting away?','Continue later in Putaway with the remaining item(s).',[['Back','close'],['Put away later','later',1]]),
+    later:()=>{closeSheet();askLater();},putnow:putNow,complete:complete,dolater:doLater,close:closeSheet,
+    discard:()=>{closeSheet();toast(`${S.tote} released (free)`);show('home');},reset:()=>{init();closeSheet();show('home');}})[a.dataset.act]();
+});
+init();render();
+})();
+</script>
+
+</body>
+</html>

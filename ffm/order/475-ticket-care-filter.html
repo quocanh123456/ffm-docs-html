@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#475 Lọc order theo Assigning Care của ticket</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+
+  /* ── Phần thêm riêng của trang #475 (mẫu chưa có): Advanced filter = nút + chip + Cascader nhiều cấp ── */
+  .fbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; position: relative; }
+  .fbtn { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+  .fbtn sup { position: absolute; top: -8px; right: -8px; min-width: 18px; height: 18px; border-radius: 9px; background: #ff4d4f; color: #fff; font-size: 11px; line-height: 18px; text-align: center; padding: 0 5px; }
+  .btn.danger { color: #ff4d4f; border-color: #ff4d4f; padding: 5px 9px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; margin-bottom: 10px; }
+  .ftag { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #d9d9d9; background: #fafafa; border-radius: 4px; padding: 0 2px 0 8px; font-size: 12px; line-height: 22px; }
+  .ftag.ex { color: var(--red); background: var(--red-bg); border-color: #fecaca; }
+  .ftag .x { cursor: pointer; color: rgba(0,0,0,.65); padding: 0 4px; }
+  .stag { display: inline-block; border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 20px; color: #fff; }
+  .casc { position: absolute; top: 36px; left: 0; display: flex; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); z-index: 8; visibility: hidden; }
+  .casc.show { visibility: visible; }
+  .casc ul { list-style: none; margin: 0; padding: 4px; min-width: 180px; max-height: 280px; overflow-y: auto; border-left: 1px solid #f0f0f0; }
+  .casc ul:first-child { border-left: none; }
+  .casc li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 12px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+  .casc li:hover { background: #f5f5f5; }
+  .casc li.on { background: var(--blue-bg); font-weight: 600; }
+  .casc li.par::after { content: "›"; color: rgba(0,0,0,.65); }
+  .casc li.off { color: #bfbfbf; cursor: not-allowed; }
+  .casc li.ctl { cursor: default; }
+  .casc li.off:hover, .casc li.ctl:hover { background: none; }
+  .casc li.new { color: var(--violet); font-weight: 600; }
+  .casc li input[type=text] { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 3px 8px; font-size: 12.5px; }
+  .casc label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .roles { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; color: rgba(0,0,0,.65); }
+  .cnt { font-size: 12.5px; color: rgba(0,0,0,.65); margin-top: 8px; }
+  .explain { color: var(--ink3); font-weight: 500; text-transform: none; letter-spacing: 0; }
+  td.dim { color: #bfbfbf; }
+  .tsel { border: 1px solid #d9d9d9; border-radius: 6px; padding: 3px 6px; font-size: 12.5px; background: #fff; }
+  pre.log { min-height: 260px; margin: 0; white-space: pre-wrap; }
+  table.t td .stag { vertical-align: 1px; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>FFM · #475</div>
+  <nav class="nav">
+    <a href="#hien-trang">Hiện trạng</a><a href="#luong">Luồng dữ liệu</a><a href="#prototype">Prototype</a><a href="#quy-tac">Business rules</a>
+    <a href="#quyet-dinh">Đã quyết định</a><a href="#ngoai-pham-vi">Ngoài phạm vi</a><a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Order · Đặc tả + prototype</div>
+  <h1>Lọc order theo Assigning Care của ticket</h1>
+  <p>Admin lọc được "các order có ticket do X care" ngay trên màn Order, qua mục mới <b>Ticket › Assigning Care</b> trong Advanced filter. Care của ticket được gán ở màn CSR Ticket và không đồng bộ sang care của order, nên filter <b>Assigning Care</b> sẵn có không lọc được nhóm này.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i475">ffm_dev #475</a></span>
+    <span class="chip">PR BE <a href="https://github.com/pancake-vn/sea-fulfillment/pull/590">sea-fulfillment#590</a></span>
+    <span class="chip">PR FE <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/537">sea-fulfillment-web#537</a></span>
+    <span class="chip">Requested by AFG</span>
+    <span class="chip">Cập nhật 22/10/2026</span>
+    <span class="chip">Code: BE 7b2b8f1f · FE c6dba716</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>1 key mới</b><span><code>csr_care_id</code> + cờ <code>is_exclude_csr_care_id</code></span></div>
+  <div class="kpi"><b>4 cách lọc</b><span>Chọn care · No · Has · Exclude filter</span></div>
+  <div class="kpi"><b>0</b><span>migration, đổi mapping hay reindex</span></div>
+  <div class="kpi"><b>BE → FE</b><span>thứ tự deploy bắt buộc</span></div>
+</div>
+
+<section id="hien-trang">
+  <div class="sec-h"><span class="n">01</span><h2>Hiện trạng</h2><p>Hai lần gán care độc lập; filter cũ chỉ đọc được care của order</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Care của order</h4><span class="pill p-info">Giữ nguyên</span></div><p>Gán ở màn Order, lưu <code>orders.assigning_care_id</code>. Filter <b>Assigning Care</b> trên màn Order đọc field này. Quyền xem order của CS (chỉ thấy order mà care của order là mình) cũng dựa vào field này.</p></div>
+    <div class="row"><div><h4>Care của ticket</h4><span class="pill p-new">#475 thêm filter</span></div><p>Gán ở màn CSR Ticket (sửa tay, sửa hàng loạt, tạo ticket kèm care, tự động phân care), lưu <code>tickets.assigning_care_id</code>. Không ghi ngược sang order, nên một order có thể có care của order là Hà trong khi ticket do Đức care.</p></div>
+    <div class="row"><div><h4><code>ticket_info</code> trên order index</h4><span class="pill p-ok">Có sẵn</span></div><p>Mỗi order trên ES đã mang <code>ticket_info.assigning_care_id</code> của ticket đại diện (thêm từ trước cho báo cáo CSR). Đổi care trên ticket thì BE gọi <code>TicketAction.reindex_ticket_orders/3</code> để index lại order. #475 chỉ thêm cách lọc, không đổi mapping, không reindex.</p></div>
+    <div class="row"><div><h4>Filter <b>Ticket Status</b></h4><span class="pill p-mid">Dời chỗ</span></div><p>Key <code>csr_ticket_status</code> đang là mục gốc trong Advanced filter. #475 dời vào <b>Ticket › Status</b>, giữ nguyên key, option và cách lọc, nên saved filter cũ vẫn chạy.</p></div>
+  </div>
+</section>
+
+<section id="luong">
+  <div class="sec-h"><span class="n">02</span><h2>Luồng dữ liệu</h2><p>Từ lúc CSR gán care tới lúc admin lọc trên màn Order</p></div>
+  <div class="card">
+    <div class="seq">
+      <span></span>
+      <div class="hd" style="background:#64748b">Màn CSR Ticket / màn Order</div><div class="hd" style="background:var(--ffm)">FFM BE</div><div class="hd" style="background:var(--blue)">ES order index</div>
+      <span class="no">1</span><div class="msg" style="--from:2;--to:4">CSR gán care cho ticket → ghi <code>tickets.assigning_care_id</code></div><span></span>
+      <span class="no">2</span><span></span><div class="msg" style="--from:3;--to:5"><code>reindex_ticket_orders</code> → index lại order: <code>ticket_info.assigning_care_id</code> = care của ticket đại diện</div>
+      <span class="no">3</span><div class="msg" style="--from:2;--to:4">Admin chọn <b>Ticket › Assigning Care › X</b> → gửi <code>csr_care_id: [X]</code></div><span></span>
+      <span class="no">4</span><span></span><div class="msg" style="--from:3;--to:5"><code>exists ticket_info.id</code> + <code>terms ticket_info.assigning_care_id</code></div>
+      <span class="no">5</span><div class="msg rev" style="--from:2;--to:4">Trả list + số đếm trên các tab; export dùng cùng điều kiện</div><span></span>
+      <span class="no">!</span><div class="msg rev err" style="--from:2;--to:4">FE lên trước BE: key rơi vào nhánh <code>_ -&gt;</code>, ra 0 order (bật Exclude filter thì ra toàn bộ order)</div><span></span>
+    </div>
+    <p class="caption">Bước 1–2 là cơ chế có sẵn, dùng chung với báo cáo CSR, nên CSR đổi care thì kết quả filter cập nhật sau vài giây. #475 thêm bước 3–5.</p>
+  </div>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">03</span><h2>Prototype — màn Order</h2><p>Bấm thử: Add Filter, Exclude filter, Search user, gỡ chip, Admin / Seller, đổi care ticket</p></div>
+
+  <div class="card" style="margin-bottom:14px;padding:12px 16px">
+    <b>Gợi ý thử</b> <span style="color:var(--ink2);font-size:13px">— kết quả mong đợi theo 6 order mẫu (giống bảng test case trong issue, thêm order 10236)</span>
+    <table class="t" style="margin-top:6px">
+      <tr><th style="width:36px">#</th><th>Thao tác</th><th>Kết quả mong đợi</th></tr>
+      <tr><td>1</td><td>Add Filter › Ticket › Assigning Care › Nguyễn Thu Hà</td><td>10231, 10236. Không có 10232 (ticket do Đức care, care của order là Hà) và 10235 (ticket đại diện là ticket mới, do Đức care).</td></tr>
+      <tr><td>2</td><td>Gỡ chip, chọn mục gốc Assigning Care (care của order) › Nguyễn Thu Hà</td><td>Chỉ 10232. Hai filter chạy độc lập.</td></tr>
+      <tr><td>3</td><td>Ticket › Assigning Care › No Assigning Care</td><td>10233. Không có 10234 vì 10234 chưa có ticket.</td></tr>
+      <tr><td>4</td><td>Ticket › Assigning Care › Has Assigning Care</td><td>10231, 10232, 10235, 10236.</td></tr>
+      <tr><td>5</td><td>Chọn Nguyễn Thu Hà rồi tick Exclude filter</td><td>10232, 10233, 10235. Chip đổi sang đỏ "Exclude Ticket Assigning Care". 10234 không hiện.</td></tr>
+      <tr><td>6</td><td>Đang lọc như bước 1, ở bảng ticket bên dưới gán Nguyễn Thu Hà cho ticket #503</td><td>10233 hiện thêm (app: sau vài giây, prototype: ngay).</td></tr>
+      <tr><td>7</td><td>Ticket › Status › No Ticket</td><td>10234. Filter cũ vẫn chạy ở vị trí mới.</td></tr>
+      <tr><td>8</td><td>Ticket › Status › New, thêm Ticket › Assigning Care › Nguyễn Thu Hà</td><td>Chỉ 10231 (hai field AND với nhau).</td></tr>
+      <tr><td>9</td><td>Đổi sang Seller rồi bấm Add Filter</td><td>Ticket chỉ còn nhánh Status. Không có mục gốc Assigning Care.</td></tr>
+      <tr><td>10</td><td>Mở Ticket › Assigning Care khi chưa chọn user, bấm Exclude filter</td><td>Checkbox bị khoá: phải chọn ít nhất 1 giá trị trước.</td></tr>
+    </table>
+  </div>
+
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/order</span></div>
+    <div class="app">
+      <div class="side">
+        <div class="brand"><b>F</b>FFM</div>
+        <a>Telesale</a><a class="on">Order</a><a>CSR Ticket</a><a>WMS</a><a>Product</a><a>Finance</a><a>Statistic</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>Order</h3>
+          <div class="roles">Xem với vai trò <button class="btn pri" data-role="admin">Admin</button><button class="btn" data-role="seller">Seller</button></div>
+        </div>
+        <div class="panel">
+          <div class="fbar" id="fbar">
+            <button class="btn fbtn" data-act="toggle"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14l-5.5 6.5V14l-3-1.5v-4z"/></svg>Add Filter<sup id="badge" hidden></sup></button>
+            <button class="btn danger" data-act="clear" id="clear" title="Xoá hết filter" hidden><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5 1h6v2h4v2H1V3h4zM2 6h12l-1 9H3z"/></svg></button>
+            <div class="casc" id="casc"></div>
+          </div>
+          <div class="chips" id="chips"></div>
+          <table class="ant">
+            <thead><tr><th>ID</th><th>Assigning Care</th><th>Ticket</th><th><span class="explain">Care của ticket đại diện (cột giải thích, app không có)</span></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div class="cnt" id="count"></div>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="grid2" style="margin-top:14px">
+    <div class="card" style="padding:14px 16px">
+      <b>Ticket của từng order</b> <span style="color:var(--ink2);font-size:13px">— đổi care như ở màn CSR Ticket</span>
+      <table class="t" style="margin-top:6px"><thead><tr><th>Order</th><th>Ticket</th><th>Status</th><th>Care của ticket</th></tr></thead><tbody id="tickets"></tbody></table>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <b>Nhật ký thao tác</b> <span style="color:var(--ink2);font-size:13px">— mới nhất ở trên</span>
+      <pre class="log" id="log"></pre>
+    </div>
+  </div>
+  <p class="caption">Chữ tím trong Cascader là chỗ mới so với hiện tại. Logic lọc chép từ code đã viết, giữ nguyên tên hàm: nhánh <code>"csr_care_id"</code> / <code>"csr_ticket_status"</code> / <code>"assigning_care_id"</code> của <code>Services.EsV2.Order.apply_es_filter/2</code>, cách chọn ticket đại diện của <code>Services.EsV2.Order.encode/2</code>, và <code>handleChangeCascader</code> / <code>apply</code> của <code>AdvanceFilterV1</code>. Danh sách field cấp 1 lấy đúng theo màn Order; chỉ Assigning Care và Ticket bấm được. Dữ liệu mẫu, không gọi API.</p>
+</section>
+
+<section id="quy-tac">
+  <div class="sec-h"><span class="n">04</span><h2>Business rules</h2><p>Hành vi đã code ở 2 PR</p></div>
+  <div class="card" style="padding:8px 12px">
+    <table class="t">
+      <tr><th style="width:190px">Nhóm</th><th>Quy tắc</th></tr>
+      <tr><td><b>Nơi hiển thị</b></td><td>Màn Order, nút <b>Add Filter</b>. Mục gốc <b>Ticket</b> gồm <b>Status</b> và <b>Assigning Care</b>; mục gốc <b>Ticket Status</b> cũ không còn. Admin thấy cả 2 nhánh; seller (<code>/seller/order</code>) chỉ thấy <b>Status</b>.</td></tr>
+      <tr><td><b>Danh sách care</b></td><td>User nhóm <code>CS_MANAGER</code> và <code>CS</code>, có ô Search user, dòng Exclude filter, <b>No Assigning Care</b>, <b>Has Assigning Care</b>. Giống danh sách của filter Assigning Care sẵn có.</td></tr>
+      <tr><td><b>Ý nghĩa từng giá trị</b></td><td>Chọn user X: order có ticket đại diện do X care. <b>No Assigning Care</b>: order có ticket nhưng ticket chưa có care. <b>Has Assigning Care</b>: order có ticket đã có care. Chọn nhiều giá trị trong cùng field thì OR.</td></tr>
+      <tr><td><b>Exclude filter</b></td><td>Chỉ tick được khi đã chọn ít nhất 1 giá trị. Kết quả: order có ticket mà không khớp giá trị nào, gồm cả ticket chưa có care. Khác Exclude của <b>Ticket Status</b> (vẫn trả order chưa có ticket).</td></tr>
+      <tr><td><b>Order chưa có ticket</b></td><td>Không xuất hiện ở bất kỳ giá trị nào của <b>Ticket › Assigning Care</b>, kể cả khi bật Exclude filter. Muốn lọc nhóm này thì dùng <b>Ticket › Status › No Ticket</b>.</td></tr>
+      <tr><td><b>Ticket đại diện</b></td><td>Order có nhiều ticket chỉ xét 1 ticket, cùng ticket mà <b>Ticket Status</b> dùng: ticket mới nhất không ở <code>canceled</code> (ticket <code>canceled</code> có <code>sub_status = returned</code>, tức đóng theo order hoàn, vẫn tính). Order không còn ticket nào khác thì lấy ticket mới nhất, kể cả ticket <code>canceled</code>. Care được giữ khi CSR huỷ tay, và khi order huỷ mà ticket đã có lý do Xử lý / Theo dõi tiếp, nên order đó vẫn khớp care X (order 10236 trong prototype).</td></tr>
+      <tr><td><b>Kết hợp filter</b></td><td>Các field khác nhau AND với nhau. Filter <b>Assigning Care</b> của order và <b>Ticket › Assigning Care</b> chạy độc lập.</td></tr>
+      <tr><td><b>Chip</b></td><td><code>Ticket Assigning Care: &lt;tên&gt;</code>; giá trị đặc biệt hiện <code>No Assigning Care</code> / <code>Has Assigning Care</code>. Bật Exclude filter thì chip thành <code>Exclude Ticket Assigning Care</code> màu đỏ. Gỡ chip cuối cùng của field thì bỏ luôn Exclude filter.</td></tr>
+      <tr><td><b>Phạm vi áp dụng</b></td><td>List, số đếm trên các tab, và các thao tác dùng filter hiện tại của màn Order (chọn tất cả theo filter, export). Saved filter lưu được key mới; saved filter cũ có <b>Ticket Status</b> vẫn chạy.</td></tr>
+      <tr><td><b>Quyền</b></td><td>CS chỉ có quyền xem order được giao vẫn chỉ thấy order mà care của order là mình; filter mới lọc trong phạm vi đó. Tính năng phục vụ admin.</td></tr>
+      <tr><td><b>Cập nhật dữ liệu</b></td><td>Đổi care trên ticket (sửa tay, sửa hàng loạt, tạo ticket kèm care, tự động phân care, gỡ care khi xoá user / đổi group, đồng bộ theo trạng thái order) thì order được index lại sau vài giây.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="quyet-dinh">
+  <div class="sec-h"><span class="n">05</span><h2>Đã quyết định</h2><p>Chốt với user 22/10/2026 trước khi code</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Ticket nào</div><h4>Order nhiều ticket thì xét ticket nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Ticket đại diện, cùng ticket mà Ticket Status dùng. Dữ liệu đã có trên order index, không đổi mapping, không reindex.</div></div>
+      <div class="alt"><s>Bất kỳ ticket nào của order</s> (phải lưu thêm danh sách care lên order và reindex toàn bộ)</div></div>
+    <div class="dcard"><div class="q">No Assigning Care</div><h4>"No" gồm những order nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Order có ticket nhưng ticket chưa có care. Đây là filter về care của ticket nên chỉ xét order đã có ticket.</div></div>
+      <div class="alt"><s>Gộp cả order chưa có ticket</s> (đã có Ticket › Status › No Ticket)</div></div>
+    <div class="dcard"><div class="q">Exclude filter</div><h4>Exclude X có trả order chưa có ticket?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Không. Exclude X = order có ticket mà care khác X, gồm cả ticket chưa có care.</div></div>
+      <div class="alt"><s>Giữ order chưa có ticket như Exclude của Ticket Status</s></div></div>
+    <div class="dcard"><div class="q">Quyền CS</div><h4>CS có thấy order theo care của ticket?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Giữ nguyên: CS chỉ thấy order mà care của order là mình. Issue phục vụ admin.</div></div>
+      <div class="alt"><s>Cho CS thấy order theo care của ticket</s> (đổi phân quyền, ngoài phạm vi)</div></div>
+    <div class="dcard"><div class="q">Giao diện</div><h4>Đặt filter mới ở đâu?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Mục gốc Ticket 3 cấp: Ticket › Status / Assigning Care › giá trị. Dời Ticket Status vào, giữ nguyên key.</div></div>
+      <div class="alt"><s>Giữ Ticket Status ở gốc, thêm mục Ticket chỉ có 1 nhánh</s></div></div>
+    <div class="dcard"><div class="q">Tên key và chip</div><h4>Gửi BE key gì, chip ghi gì?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Key <code>csr_care_id</code>, cùng tên và cùng field với báo cáo CSR. Chip <code>Ticket Assigning Care</code> để không nhầm với chip <code>Assigning Care</code> của order.</div></div></div>
+  </div>
+</section>
+
+<section id="ngoai-pham-vi">
+  <div class="sec-h"><span class="n">06</span><h2>Ngoài phạm vi</h2></div>
+  <div class="note n-info"><span class="ic">i</span><div>
+    <ul class="clean">
+      <li>Không đổi filter <b>Assigning Care</b> của order và cột Assigning Care trên list.</li>
+      <li>Không đổi quyền xem order của CS.</li>
+      <li>Không đổi cột <b>Ticket</b> trên list (vẫn hiện status như cũ).</li>
+      <li>Bộ lọc riêng của Export Excel Via Email và Order Data Statistics không thêm field này.</li>
+      <li>Màn CSR Ticket không đổi.</li>
+    </ul>
+  </div></div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">07</span><h2>Cho dev</h2><p>File đã sửa ở 2 PR, thứ tự deploy, rủi ro</p></div>
+  <div class="status">
+    <div class="card" style="padding:8px 10px">
+      <table class="t">
+        <tr><th>BE · <a href="https://github.com/pancake-vn/sea-fulfillment/pull/590">#590</a></th><th>Sửa gì</th><th style="text-align:right">dòng</th></tr>
+        <tr><td><code>lib/services/es_v2/order.ex</code></td><td>Nhánh <code>"csr_care_id"</code> trong <code>apply_es_filter/2</code>: mọi giá trị kèm <code>exists ticket_info.id</code>; <code>no_user</code> / <code>has_user</code> / user id OR với nhau; cờ <code>is_exclude_csr_care_id</code> bọc cả nhóm trong <code>must_not</code></td><td class="num">+26</td></tr>
+        <tr><td><code>test/services/es_v2/order_test.exs</code></td><td>9 test cho nhánh mới</td><td class="num">+105</td></tr>
+        <tr><td><code>test/app/csr_statistic_action_test.exs</code></td><td>Sửa ví dụ trong 1 dòng comment</td><td class="num">1</td></tr>
+      </table>
+    </div>
+    <div class="card" style="padding:8px 10px">
+      <table class="t">
+        <tr><th>FE · <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/537">#537</a></th><th>Sửa gì</th><th style="text-align:right">dòng</th></tr>
+        <tr><td><code>components/AdvanceFilterV1.js</code></td><td>Node gốc <code>ticket</code> theo mẫu <code>claim</code> (<code>TICKET_GROUP_KEYS</code>, <code>buildTicketChildren</code>), case <code>'ticket'</code> trong <code>handleChangeCascader</code>, search user dựng lại cả cây, <code>buildAssignUserChildren(key, label)</code></td><td class="num">+30 −9</td></tr>
+        <tr><td><code>components/AdvanceFilterResult.js</code></td><td>Chip của <code>csr_care_id</code></td><td class="num">+7</td></tr>
+        <tr><td><code>utils/advance-filter.js</code></td><td>Nhãn <code>Ticket Assigning Care</code></td><td class="num">+1</td></tr>
+        <tr><td><code>pages/admin/order/index.js</code></td><td>Admin khai <code>csr_care_id</code>; seller giữ nguyên</td><td class="num">+1</td></tr>
+        <tr><td><code>test/components/OrderTicket*.test.js</code></td><td>14 test mới + đổi đường mở Ticket Status</td><td class="num">+230 −2</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Merge BE #590<small>không migration</small></div>
+      <div class="s"><b>2</b><br>Deploy BE</div>
+      <div class="s"><b>3</b><br>Merge FE #537</div>
+      <div class="s"><b>4</b><br>Deploy FE</div>
+      <div class="s you"><b>5</b><br>Kiểm tra<small>12 test case trong issue</small></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="note n-red"><span class="ic">!</span><div><p><b>Rủi ro: FE lên trước BE</b></p><p>Key <code>csr_care_id</code> rơi vào nhánh <code>_ -&gt;</code> của <code>apply_es_filter</code>, thành <code>terms</code> trên field không có trong mapping: chọn care ra 0 order, bật Exclude filter ra toàn bộ order. Không có thông báo lỗi.</p></div></div>
+    <div class="note n-info"><span class="ic">↺</span><div><p><b>Hoàn tác</b></p><p>Revert FE thì Ticket Status về mục gốc như cũ. Nhánh BE để lại không ảnh hưởng gì vì không còn ai gửi key. Không có dữ liệu cần dọn.</p></div></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong biến, mỗi thao tác cập nhật rồi vẽ lại Cascader, chip, bảng order, bảng ticket.
+(() => {
+  const root = document.getElementById('proto');
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const norm = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'd').toLowerCase();
+
+  // giống utils/csr.js ticketStatus
+  const TICKET_STATUS = [
+    { key: 'new', value: 'New', color: '#0F62FE' },
+    { key: 'processing', value: 'Processing', color: '#FA8C16' },
+    { key: 'follow_up', value: 'Follow Up', color: '#003eb3' },
+    { key: 'completed', value: 'Completed', color: '#389E0D' },
+    { key: 'canceled', value: 'Canceled', color: '#F5222D' },
+  ];
+  const statusOf = (key) => TICKET_STATUS.find((s) => s.key === key);
+  const stag = (key) => { const s = statusOf(key); return `<span class="stag" style="background:${s.color}">${s.value}</span>`; };
+
+  const USERS = [
+    { id: 'u-ha', name: 'Nguyễn Thu Hà', group: 'CS' },
+    { id: 'u-duc', name: 'Trần Minh Đức', group: 'CS_MANAGER' },
+    { id: 'u-ngoc', name: 'Đặng Bảo Ngọc', group: 'CS' },
+    { id: 'u-huy', name: 'Lê Quang Huy', group: 'SALE' },
+  ];
+  const userName = (id) => USERS.find((u) => u.id === id)?.name;
+
+  // 6 order mẫu: 10231–10235 giống bảng test case trong issue (O1–O5), 10236 minh hoạ ticket đại diện bị huỷ tay.
+  const orders = [
+    { id: 10231, care: null, tickets: [{ id: 501, status: 'new', care: 'u-ha' }] },
+    { id: 10232, care: 'u-ha', tickets: [{ id: 502, status: 'processing', care: 'u-duc' }] },
+    { id: 10233, care: null, tickets: [{ id: 503, status: 'new', care: null }] },
+    { id: 10234, care: null, tickets: [] },
+    { id: 10235, care: null, tickets: [{ id: 480, status: 'completed', care: 'u-ha' }, { id: 505, status: 'follow_up', care: 'u-duc' }] },
+    { id: 10236, care: null, tickets: [{ id: 506, status: 'canceled', sub_status: null, care: 'u-ha' }] },
+  ];
+
+  // Field cấp 1 của Advanced filter màn Order: thứ tự của buildFilterOptionsList, lọc theo advanceFilterOptions (pages/admin/order/index.js)
+  const ROOT = {
+    admin: ['Saved Filter', 'POS Shop', 'Order source', 'Service Type', 'Courier', 'Waybill Number', 'Tag', 'Product', 'Variation', 'Warehouse', 'Duplicated Phone', 'Duplicated IP', 'Express Order', 'Exchange / Return Order', 'Courier Reconciliation Status', 'Customer Reconciliation Status', 'Assigning Sale', 'Assigning Care', 'Total Quantity', 'Delivery Address', 'Combo', 'Ticket', 'Sub Status', 'COD'],
+    seller: ['POS Shop', 'Order source', 'Courier', 'Tag', 'Product', 'Variation', 'Duplicated Phone', 'Duplicated IP', 'Express Order', 'Customer Reconciliation Status', 'Delivery Address', 'Ticket'],
+  };
+  // Key con trang khai trong `options` (seller chỉ khai csr_ticket_status)
+  const PAGE_OPTIONS = { admin: ['assigning_care_id', 'csr_ticket_status', 'csr_care_id'], seller: ['csr_ticket_status'] };
+  // giống utils/advance-filter.js objAdvanceFilter
+  const LABELS = { assigning_care_id: 'Assigning Care', csr_ticket_status: 'Ticket Status', csr_care_id: 'Ticket Assigning Care' };
+  // giống components/AdvanceFilterV1/ExcludeFilterCheckbox.js
+  const EXCLUDE_TOOLTIP = 'When selecting exclusion filtering, the options you choose will be excluded from the filter results.';
+  const SHOULD_SELECT_OPTION = 'You must select at least one option, before selecting exclude filtering';
+
+  let role = 'admin';
+  let open = false;
+  let path = [];            // nhánh đang mở trong Cascader: [mục gốc, key con]
+  let searchState = { key: null, value: '' };
+  let filter = {};          // { key: [giá trị], is_exclude_<key>: true }
+  let logs = [];
+
+  // ── BE: giống lib/services/es_v2/order.ex ──
+  // encode/2: ticket đại diện = ticket mới nhất có represents_order?, không có thì ticket mới nhất
+  const representsOrder = (t) => (t.status === 'canceled' ? t.sub_status === 'returned' : true);
+  function ticketInfo(order) {
+    if (!order.tickets.length) return null;
+    const sorted = [...order.tickets].sort((a, b) => b.id - a.id);
+    const t = sorted.find(representsOrder) || sorted[0];
+    return { id: t.id, status: t.status, assigning_care_id: t.care };
+  }
+  // apply_es_filter/2, nhánh "csr_care_id"
+  function matchCsrCare(info, term, isExclude) {
+    const care = info ? info.assigning_care_id : null;
+    const clauses = [];
+    if (term.includes('no_user')) clauses.push(() => !care);
+    if (term.includes('has_user')) clauses.push(() => !!care);
+    const careIds = term.filter((v) => v !== 'no_user' && v !== 'has_user');
+    if (careIds.length) clauses.push(() => careIds.includes(care));
+    if (!clauses.length) return true;
+    const hasTicket = !!info;                      // exists ticket_info.id
+    const any = clauses.some((c) => c());
+    return hasTicket && (isExclude ? !any : any);
+  }
+  // apply_es_filter/2, nhánh "csr_ticket_status"
+  function matchTicketStatus(info, term, isExclude) {
+    const clauses = [];
+    if (term.includes('no_ticket')) clauses.push(() => !info);
+    const statuses = term.filter((v) => v !== 'no_ticket');
+    if (statuses.length) clauses.push(() => !!info && statuses.includes(info.status));
+    if (!clauses.length) return true;
+    const any = clauses.some((c) => c());
+    return isExclude ? !any : any;
+  }
+  // apply_es_filter/2, nhánh "assigning_care_id" (care của order)
+  function matchOrderCare(care, term, isExclude) {
+    const only = (v) => term.length === 1 && term[0] === v;
+    if ((only('no_user') && isExclude) || (only('has_user') && !isExclude)) return !!care;
+    if ((only('no_user') && !isExclude) || (only('has_user') && isExclude)) return !care;
+    const filtered = term.filter((v) => v !== 'no_user' && v !== 'has_user');
+    return isExclude ? !filtered.includes(care) : filtered.includes(care);
+  }
+  const filterKeys = () => Object.keys(filter).filter((k) => !k.startsWith('is_exclude_'));
+  function matches(order) {
+    const info = ticketInfo(order);
+    return filterKeys().every((k) => {
+      const term = filter[k];
+      const isExclude = !!filter['is_exclude_' + k];
+      if (k === 'csr_care_id') return matchCsrCare(info, term, isExclude);
+      if (k === 'csr_ticket_status') return matchTicketStatus(info, term, isExclude);
+      if (k === 'assigning_care_id') return matchOrderCare(order.care, term, isExclude);
+      return true;
+    });
+  }
+
+  // ── FE: giống components/AdvanceFilterV1.js / AdvanceFilterResult.js ──
+  // getDisplayTicket (utils/csr.js): cột Ticket hiện ticket đang mở đầu tiên, hết mở mới lấy mới nhất
+  function displayTicket(tickets) {
+    if (!tickets.length) return null;
+    const openTicket = tickets.find((t) => !['completed', 'canceled'].includes(t.status));
+    if (openTicket) return openTicket;
+    const byNewest = [...tickets].sort((a, b) => b.id - a.id);
+    return byNewest.find(representsOrder) || byNewest[0];
+  }
+  // apply(): cộng dồn vào mảng, không trùng
+  function apply(key, value) {
+    const cur = filter[key] || [];
+    filter[key] = cur.includes(value) ? cur : [...cur, value];
+  }
+  function chipValue(key, v) {
+    if (key === 'csr_ticket_status') return v === 'no_ticket' ? 'No Ticket' : stag(v);
+    if (key === 'csr_care_id') {
+      if (v === 'no_user') return 'No Assigning Care';
+      if (v === 'has_user') return 'Has Assigning Care';
+      return esc(userName(v) || v);
+    }
+    // assigning_care_id: không tra được user thì hiện No / Has như AdvanceFilterResult
+    return esc(userName(v) || `${v === 'no_user' ? 'No' : 'Has'} Assigning Care`);
+  }
+  function valueName(key, v) {
+    if (key === 'csr_ticket_status') return v === 'no_ticket' ? 'No Ticket' : statusOf(v).value;
+    if (v === 'no_user') return 'No Assigning Care';
+    if (v === 'has_user') return 'Has Assigning Care';
+    return userName(v) || v;
+  }
+
+  const log = (line) => { logs.unshift(line); logs = logs.slice(0, 14); $('log').textContent = logs.join('\n'); };
+  const toast = (text, bad) => { const el = $('toast'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => (el.className = 'toast'), 2200); };
+  const matchedIds = () => orders.filter(matches).map((o) => o.id);
+
+  function ticketChildren() {
+    return [
+      { key: 'csr_ticket_status', label: 'Status' },
+      { key: 'csr_care_id', label: 'Assigning Care' },
+    ].filter((c) => PAGE_OPTIONS[role].includes(c.key));
+  }
+  function leafRows(key) {
+    const disabled = !(filter[key] && filter[key].length);
+    const exRow = `<li class="ctl"><label title="${esc(disabled ? SHOULD_SELECT_OPTION : EXCLUDE_TOOLTIP)}"><input type="checkbox" data-ex="${key}" ${disabled ? 'disabled' : ''} ${filter['is_exclude_' + key] ? 'checked' : ''}>Exclude filter</label></li>`;
+    if (key === 'csr_ticket_status') {
+      return exRow + '<li data-leaf="no_ticket">No Ticket</li>' + TICKET_STATUS.map((s) => `<li data-leaf="${s.key}">${stag(s.key)}</li>`).join('');
+    }
+    // csr_care_id truyền nhãn riêng "Assigning Care"; assigning_care_id sinh nhãn từ tên key, ra cùng chữ
+    const label = 'Assigning Care';
+    const kw = searchState.key === key ? searchState.value : '';
+    const users = USERS.filter((u) => ['CS_MANAGER', 'CS'].includes(u.group) && (!kw || norm(u.name).includes(norm(kw))));
+    return `<li class="ctl"><input type="text" data-search="${key}" placeholder="Search user" value="${esc(kw)}"></li>` + exRow
+      + `<li data-leaf="no_user">No ${label}</li><li data-leaf="has_user">Has ${label}</li>`
+      + users.map((u) => `<li data-leaf="${u.id}">${esc(u.name)}</li>`).join('');
+  }
+  function renderCasc() {
+    const el = $('casc');
+    const kept = [...el.querySelectorAll('ul')].map((u) => u.scrollTop);
+    el.classList.toggle('show', open);
+    if (!open) { el.innerHTML = ''; return; }
+    const cols = [ROOT[role].map((label) => {
+      const active = label === 'Ticket' || (label === 'Assigning Care' && role === 'admin');
+      if (!active) return `<li class="off" title="Không mô phỏng trong prototype">${label}</li>`;
+      const isNew = label === 'Ticket' ? ' new' : '';
+      return `<li class="par${path[0] === label ? ' on' : ''}${isNew}" data-root="${label}">${label}</li>`;
+    }).join('')];
+    if (path[0] === 'Assigning Care') cols.push(leafRows('assigning_care_id'));
+    if (path[0] === 'Ticket') {
+      cols.push(ticketChildren().map((c) => {
+        const isNew = c.key === 'csr_care_id' ? ' new' : '';
+        return `<li class="par${path[1] === c.key ? ' on' : ''}${isNew}" data-sub="${c.key}">${c.label}</li>`;
+      }).join(''));
+      if (path[1]) cols.push(leafRows(path[1]));
+    }
+    el.innerHTML = cols.map((c) => `<ul>${c}</ul>`).join('');
+    const uls = el.querySelectorAll('ul');
+    uls.forEach((u, i) => {
+      if (kept[i] !== undefined) u.scrollTop = kept[i];
+      else if (i === 0) { const t = u.querySelector('[data-root="Assigning Care"]') || u.querySelector('[data-root="Ticket"]'); u.scrollTop = t.offsetTop - 4; }
+    });
+  }
+  function renderChips() {
+    const keys = filterKeys();
+    $('chips').innerHTML = keys.flatMap((k) => filter[k].map((v) => {
+      const ex = !!filter['is_exclude_' + k];
+      return `<span class="ftag${ex ? ' ex' : ''}"><b>${ex ? 'Exclude ' : ''}${LABELS[k]}:</b> ${chipValue(k, v)}<span class="x" data-k="${k}" data-v="${v}" title="Gỡ">×</span></span>`;
+    })).join('');
+    const n = keys.length;
+    $('badge').hidden = !n; $('badge').textContent = n;
+    $('clear').hidden = !n;
+  }
+  function renderRows() {
+    const rows = orders.filter(matches);
+    $('rows').innerHTML = rows.map((o) => {
+      const t = displayTicket(o.tickets);
+      const info = ticketInfo(o);
+      const tCell = t ? `<span title="#${t.id}${o.tickets.length > 1 ? ` (+${o.tickets.length - 1} more)` : ''}">${stag(t.status)}</span>` : '-';
+      const repCell = info ? `${esc(userName(info.assigning_care_id) || 'Chưa có care')} <span style="color:#bfbfbf">· ticket #${info.id}</span>` : '<span style="color:#bfbfbf">Chưa có ticket</span>';
+      return `<tr data-order="${o.id}"><td>${o.id}</td><td>${esc(userName(o.care) || '-')}</td><td>${tCell}</td><td>${repCell}</td></tr>`;
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:#999;padding:24px">Không có order nào khớp filter</td></tr>';
+    $('count').textContent = `${rows.length} / ${orders.length} order khớp filter`;
+  }
+  function renderTickets() {
+    const opts = (cur) => ['<option value="">— chưa có care —</option>']
+      .concat(USERS.filter((u) => ['CS_MANAGER', 'CS'].includes(u.group)).map((u) => `<option value="${u.id}" ${u.id === cur ? 'selected' : ''}>${esc(u.name)}</option>`)).join('');
+    $('tickets').innerHTML = orders.flatMap((o) => {
+      if (!o.tickets.length) return [`<tr><td>${o.id}</td><td class="dim" colspan="3">Chưa có ticket</td></tr>`];
+      const rep = ticketInfo(o).id;
+      return [...o.tickets].sort((a, b) => b.id - a.id).map((t) => `<tr><td>${o.id}</td><td>#${t.id} ${t.id === rep ? '<span class="pill p-info">đại diện</span>' : ''}</td><td>${stag(t.status)}</td><td><select class="tsel" data-tk="${t.id}">${opts(t.care)}</select></td></tr>`);
+    }).join('');
+  }
+  function render() {
+    renderCasc(); renderChips(); renderRows();
+    root.querySelectorAll('[data-role]').forEach((b) => b.classList.toggle('pri', b.dataset.role === role));
+  }
+
+  root.addEventListener('click', (e) => {
+    const roleBtn = e.target.closest('[data-role]');
+    if (roleBtn) {
+      if (roleBtn.dataset.role === role) return;
+      role = roleBtn.dataset.role; filter = {}; path = []; open = false; searchState = { key: null, value: '' };
+      render();
+      log(`Đổi sang ${role === 'admin' ? 'Admin' : 'Seller'} → Advanced filter dựng lại theo field trang khai (${PAGE_OPTIONS[role].join(', ')}), filter về rỗng`);
+      return;
+    }
+    const x = e.target.closest('.ftag .x');
+    if (x) {
+      const { k, v } = x.dataset;
+      const rest = filter[k].filter((val) => val !== v);
+      if (rest.length) filter[k] = rest; else { delete filter[k]; delete filter['is_exclude_' + k]; }
+      render();
+      log(`Gỡ chip ${LABELS[k]}: ${valueName(k, v)} → ${rest.length ? `còn ${rest.length} giá trị` : 'bỏ luôn field và Exclude filter'}; ${matchedIds().length} order khớp`);
+      return;
+    }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'toggle') { open = !open; if (!open) path = []; renderCasc(); return; }
+    if (act === 'clear') { filter = {}; render(); log('Bấm nút xoá filter → bỏ hết filter, hiện đủ 6 order'); return; }
+    const lab = e.target.closest('.casc label');
+    if (lab && lab.querySelector('input[disabled]')) { toast(SHOULD_SELECT_OPTION, true); log('Bấm Exclude filter khi chưa chọn giá trị → checkbox đang khoá, không đổi gì'); return; }
+    const r = e.target.closest('[data-root]');
+    if (r) { path = [r.dataset.root]; renderCasc(); return; }
+    const s = e.target.closest('[data-sub]');
+    if (s) { path = [path[0], s.dataset.sub]; renderCasc(); return; }
+    const leaf = e.target.closest('[data-leaf]');
+    if (leaf) {
+      const key = path[0] === 'Assigning Care' ? 'assigning_care_id' : path[1];
+      const value = leaf.dataset.leaf;
+      apply(key, value);
+      render();
+      const pathText = path[0] === 'Ticket' ? `Ticket › ${ticketChildren().find((c) => c.key === key).label}` : 'Assigning Care';
+      log(`${pathText} › ${valueName(key, value)} → filter.${key} = [${filter[key].map((v) => valueName(key, v)).join(', ')}]; khớp: ${matchedIds().join(', ') || 'không order nào'}`);
+    }
+  });
+  root.addEventListener('change', (e) => {
+    const ex = e.target.closest('[data-ex]');
+    if (!ex) return;
+    const key = ex.dataset.ex;
+    if (ex.checked) filter['is_exclude_' + key] = true; else delete filter['is_exclude_' + key];
+    render();
+    log(`${ex.checked ? 'Tick' : 'Bỏ tick'} Exclude filter (${LABELS[key]}) → is_exclude_${key} = ${ex.checked}; khớp: ${matchedIds().join(', ') || 'không order nào'}`);
+  });
+  root.addEventListener('input', (e) => {
+    const inp = e.target.closest('[data-search]');
+    if (!inp) return;
+    searchState = { key: inp.dataset.search, value: inp.value };
+    renderCasc();
+    const again = root.querySelector(`[data-search="${searchState.key}"]`);
+    if (again) { again.focus({ preventScroll: true }); again.setSelectionRange(again.value.length, again.value.length); }
+  });
+  // Bấm ra ngoài vùng filter thì đóng Cascader (như handleClickOutside). Phần tử vừa bị vẽ lại không còn trong trang thì bỏ qua.
+  document.addEventListener('click', (e) => {
+    if (open && e.target.isConnected && !$('fbar').contains(e.target)) { open = false; path = []; renderCasc(); }
+  });
+  $('tickets').addEventListener('change', (e) => {
+    const sel = e.target.closest('[data-tk]');
+    if (!sel) return;
+    const id = Number(sel.dataset.tk);
+    const order = orders.find((o) => o.tickets.some((t) => t.id === id));
+    const ticket = order.tickets.find((t) => t.id === id);
+    ticket.care = sel.value || null;
+    renderTickets(); render();
+    log(`CSR gán care ${userName(ticket.care) || '(bỏ care)'} cho ticket #${id} → BE gọi reindex_ticket_orders, order ${order.id} được index lại (app: vài giây, prototype: ngay); khớp: ${matchedIds().join(', ') || 'không order nào'}`);
+  });
+
+  renderTickets(); render();
+  log('Mở màn Order: 6 order mẫu, chưa có filter');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>GIP CRM — Flow tổng quan và các bước (v0.2) · phản hồi BA</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root { --pkd:#dbeafe; --sys:#eef1f4; --am:#dcfce7; --appr:#ffedd5; --ops:#ede9fe; --lead:#fef3c7; --cust:#fce7f3; }
+  body { font-family: -apple-system, "Segoe UI", sans-serif; margin: 0; color: #1f2328; line-height: 1.55; }
+  nav { position: fixed; top: 0; left: 0; bottom: 0; width: 230px; overflow-y: auto; background: #f6f8fa; border-right: 1px solid #d0d7de; padding: 16px 12px; font-size: 13.5px; }
+  nav a { display: block; color: #1f2328; text-decoration: none; padding: 3px 6px; border-radius: 4px; }
+  nav a:hover { background: #e7ecf2; }
+  nav .h { font-weight: 700; margin: 12px 0 4px; color: #59636e; font-size: 12px; text-transform: uppercase; }
+  main { margin-left: 260px; max-width: 1100px; padding: 20px 28px 80px; }
+  h1 { font-size: 25px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin-top: 44px; border-bottom: 2px solid #d0d7de; padding-bottom: 6px; scroll-margin-top: 10px; }
+  h3 { font-size: 16.5px; margin-top: 30px; scroll-margin-top: 10px; }
+  .sub { color: #59636e; margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
+  th, td { border: 1px solid #e1e4e8; padding: 5px 9px; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  code { background: #f2f4f7; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  .mermaid { background: #fafbfc; border: 1px solid #e1e4e8; border-radius: 10px; padding: 12px; margin: 10px 0; }
+  .box { border-left: 5px solid #2f6fdb; background: #f0f6ff; padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
+  .warn { border-left: 5px solid #d4a72c; background: #fff8c5; padding: 8px 14px; border-radius: 6px; margin: 8px 0; font-size: 14px; }
+  .chg { border-left: 5px solid #1a7f37; background: #eefbf1; padding: 8px 14px; border-radius: 6px; margin: 8px 0; font-size: 14px; }
+  .ok { color: #1a7f37; font-weight: 600; } .bad { color: #cf222e; font-weight: 600; } .mid { color: #9a6700; font-weight: 600; }
+  .legend span { display: inline-block; padding: 2px 10px; border-radius: 10px; margin: 2px 4px 2px 0; font-size: 12.5px; border: 1px solid #c9d1d9; }
+  .tag { display:inline-block; font-size:12px; padding:0 7px; border-radius:9px; background:#fff1e5; border:1px solid #f0c9a0; margin-left:6px; }
+  .tnew { display:inline-block; font-size:12px; padding:0 7px; border-radius:9px; background:#dafbe1; border:1px solid #8fd19e; margin-left:6px; font-weight:600; color:#1a7f37; }
+  .st { display:inline-block; font-size:12px; padding:0 8px; border-radius:9px; font-weight:600; white-space:nowrap; margin-bottom:3px; }
+  .st.done { background:#dafbe1; color:#1a7f37; border:1px solid #8fd19e; }
+  .st.prop { background:#ddf4ff; color:#0969da; border:1px solid #80ccff; }
+  .st.wait { background:#fff8c5; color:#9a6700; border:1px solid #e3c76a; }
+  .st.note { background:#f6f8fa; color:#59636e; border:1px solid #d0d7de; }
+  .stage { display:inline-block; padding:4px 10px; border-radius:6px; background:var(--pkd); margin:2px; font-weight:600; font-size:13.5px; }
+  .arrow { color:#8c959f; }
+  ol li, ul li { margin: 3px 0; }
+  .tadd { display:inline-block; font-size:12px; padding:0 7px; border-radius:9px; background:#ddf4ff; border:1px solid #80ccff; margin-left:6px; font-weight:600; color:#0969da; }
+  tr.add td { background:#f5fbff; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="h">Phản hồi BA</div>
+  <a href="#ket-luan">Kết luận v0.2</a>
+  <a href="#a-mau-thuan">A. Mâu thuẫn — BA trả lời</a>
+  <a href="#cau-hinh">Cấu hình liên quan</a>
+  <a href="#b-prototype">B. Khác prototype v4.1</a>
+  <a href="#c-he-thong">C. So với hệ thống hiện tại</a>
+  <a href="#thay-doi">Thay đổi so với v0.1</a>
+  <div class="h">Tổng quan</div>
+  <a href="#tong-quan">3 chặng · stage · chất lượng</a>
+  <a href="#cac-buoc">Giải thích từng bước</a>
+  <div class="h">Flow chi tiết</div>
+  <a href="#f00">00 · Toàn trình</a>
+  <a href="#f01">01 · Tạo lead</a>
+  <a href="#f01b">01b · Import Excel</a>
+  <a href="#f02">02 · Xem và sửa lead</a>
+  <a href="#f03">03 · Đổi stage</a>
+  <a href="#f04">04 · SLA và cảnh báo</a>
+  <a href="#f05">05 · Báo giá</a>
+  <a href="#f06">06 · Hợp đồng, Closed Won</a>
+  <a href="#f07">07 · Bàn giao, onboarding</a>
+  <a href="#f08">08 · Health &amp; Risk</a>
+  <a href="#f09">09 · Gia hạn</a>
+  <a href="#f10">10 · Tăng trưởng</a>
+  <a href="#f12a">12a · Tổ chức, phân quyền</a>
+  <a href="#f12b">12b · Kiểm tra quyền</a>
+  <a href="#f13">13 · Trường bắt buộc theo stage</a>
+</nav>
+<main>
+<h1>GIP CRM — Flow tổng quan và các bước (v0.2)</h1>
+<p class="sub">Cập nhật: 19/10/2026 · Issue: <a href="https://pancakework.vn/issues/w4/c5024/i423">ffm_dev #423 — Khởi tạo code base project CRM Enterprise</a><br>Bản phản hồi của BA cho nhận xét của dev trên v0.1 (13/10/2026). Bản 19/10: bỏ Issue, bổ sung quy tắc chi tiết vào phần Cấu hình và ghi chú dưới các sơ đồ. Flow đã vẽ lại theo các quyết định mới nhất: spec Leads v0.5 (18/10), Phân quyền ORG v0.6 (15/10) và file yêu cầu TNKH.</p>
+
+<h2 id="ket-luan">Kết luận v0.2</h2>
+<div class="box">
+<p><b>Mục A (14 điểm):</b> <span class="ok">đã chốt cả 14 điểm</span>. A2, A3 không cần quyết định riêng vì mốc nhắc gia hạn, stage và Lead Status đều là cấu hình.</p>
+<p><b>Issue:</b> <b>không làm trong CRM</b> (đổi trả lời ở mục B). Bỏ sơ đồ 11; lỗi nghiêm trọng của khách ghi thành Risk.</p>
+<p><b>Mục B (5 điểm):</b> BA xác nhận <b>flow mới thay thế prototype v4.1 ở cả 5 điểm</b>.</p>
+<p><b>Mục C:</b> BA trả lời các điểm liên quan nghiệp vụ (C1–C6, C8, C10, C11). Đổi lớn nhất so với nhận xét của dev:</p>
+<ul>
+<li>Phạm vi dữ liệu chọn <b>một lần cho cả vai trò</b>, không chọn theo từng nhóm quyền.</li>
+<li>Phòng ban, team, người dùng, vai trò được <b>khai báo trên FFM</b>. Phía CRM chỉ có Phân quyền.</li>
+<li>C4 (quốc gia), C5 (kích hoạt tài khoản) vẫn chờ xác nhận nhưng <b>đã có phương án tạm</b> để dev code trước.</li>
+</ul>
+<p><b>Flow:</b> còn 15 sơ đồ (bỏ sơ đồ 11 Issue). Chỗ đổi so với v0.1 đánh dấu <span class="tnew">v0.2</span>, chỗ cập nhật ngày 19/10 đánh dấu <span class="tadd">bổ sung 19/10</span>.</p>
+</div>
+<div class="legend">Trạng thái trả lời:
+  <span class="st done">Đã chốt</span>
+    <span class="st wait">Chờ xác nhận</span>
+  <span class="st note">Ghi nhận</span>
+</div>
+<div class="legend">Màu trong sơ đồ:
+  <span style="background:var(--pkd)">PKD (sales)</span>
+  <span style="background:var(--sys)">Hệ thống CRM</span>
+  <span style="background:var(--am)">AM · P.TNKH</span>
+  <span style="background:var(--lead)">Lãnh đạo / trưởng nhóm / quản trị</span>
+  <span style="background:var(--appr)">Người duyệt (TP PKD · PKD Master)</span>
+  <span style="background:var(--ops)">Kho · DSP</span>
+  <span style="background:var(--cust)">Khách hàng</span>
+</div>
+
+<h2 id="a-mau-thuan">A. Mâu thuẫn hoặc thiếu nhánh — trả lời của BA</h2>
+<table>
+<tr><th style="width:4%">#</th><th style="width:15%">Chỗ</th><th style="width:27%">Vấn đề (dev nêu)</th><th>Trả lời BA</th></tr>
+<tr><td>A1</td><td>Closed Won</td><td>Hệ thống tự chuyển hay PIC chuyển tay; kéo thẻ không kiểm tra hợp đồng.</td><td><span class="st done">Đã chốt</span><br><b>PIC chuyển tay</b>, đi qua luồng đổi stage chuẩn (sơ đồ 03). Stage Closed Won bắt buộc <b>"Có hợp đồng"</b> và <b>"Hợp đồng đã ký (có file)"</b>. Thiếu thì chặn, kể cả khi kéo thẻ.<br>Các trường còn lại ở Closed Won (vd SĐT, Email) theo ma trận trường bắt buộc của stage (sơ đồ 13).</td></tr>
+<tr><td>A2</td><td>Mốc mở gia hạn</td><td>06 ghi ≤ 30 ngày, 09 ghi T-90/60/30.</td><td><span class="st done">Đã chốt</span><br>Mốc nhắc gia hạn <b>là cấu hình</b> (Cài đặt › Hợp đồng &amp; hồ sơ khách hàng › Nhắc gia hạn), không cố định trong code. Các con số 30 ngày hay T-90 / 60 / 30 trong flow v0.1 chỉ là ví dụ giá trị cấu hình. Chi tiết: <a href="#ch-renewal">Cấu hình › 5</a>.</td></tr>
+<tr><td>A3</td><td>"Onboarding Started" ở Contract</td><td>Trạng thái thuộc Contract nhưng onboarding chỉ mở khi Closed Won.</td><td><span class="st done">Đã chốt</span><br>Stage và Lead Status của từng stage <b>là cấu hình</b> (Cài đặt › Pipeline &amp; Lead Status). Danh sách trạng thái trong flow v0.1 chỉ là dữ liệu mẫu, có giữ "Onboarding Started" hay không do người cấu hình quyết định. Code không gắn logic với tên trạng thái, kể cả khi gửi báo giá (xem <a href="#ch-status">Cấu hình › 2</a>). Chi tiết: <a href="#ch-stage">Cấu hình › 1–2</a>.</td></tr>
+<tr><td>A4</td><td>Duyệt báo giá</td><td>"Nâng cao" vừa là loại vừa là điều kiện CK &gt; 10%; 2 luồng từ chối khác nhau; 4 bộ phận không có nhánh từ chối.</td><td><span class="st done">Đã chốt</span><br><b>Một luồng duyệt, một người duyệt</b>: Trưởng phòng PKD / PKD Master, áp dụng cho cả 2 loại. 3 kết quả:<ul><li>Duyệt.</li><li>Trả về (bắt buộc lý do), sale sửa và gửi lại.</li><li>Không duyệt, báo giá bị huỷ.</li></ul>Người tạo báo giá là cấp duyệt thì báo giá không cần duyệt.<br><b>Bỏ</b> bước Kế toán trưởng, BOD và bước 4 bộ phận xác nhận.<br>"Cơ bản / Nâng cao" chỉ là loại báo giá (dùng mẫu hay upload file). Chiết khấu &gt; 10% chỉ người có quyền <code>quote.discount_over_10</code> mới nhập được, mặc định PKD Manager và PKD Master.</td></tr>
+<tr><td>A5</td><td>Mã KH ở stage Contract</td><td>Bắt buộc nhập mã KH ở Contract nhưng khách hàng chỉ tạo khi Closed Won.</td><td><span class="st done">Đã chốt</span> (19/10)<br>Mã KH <b>không nhập tay</b>, hệ thống tự cấp. Cấp <b>khi tạo hợp đồng đầu tiên của lead</b>, không gắn với tên stage.<br>Định dạng GIP + 5 số tăng dần (vd GIP01000). Cấp một lần, không sửa, dùng chung cho Leads và Hợp đồng. Thay cho "mã GIP theo thị trường" ở v0.1.</td></tr>
+<tr><td>A6</td><td>Cờ AT RISK</td><td>Ngày hàng về nhập ở S2, nên khách mới nào cũng AT RISK.</td><td><span class="st done">Đã chốt</span><br>Không kiểm tra ở S0. <b>Kiểm tra khi PKD nộp gói sẵn sàng (S3)</b>: lúc đó chưa có "Ngày hàng dự kiến về" thì gắn cờ AT RISK.</td></tr>
+<tr><td>A7</td><td>Badge SLA</td><td>Warning "còn 24 giờ" bật trước Caution với Hot.</td><td><span class="st done">Đã chốt</span><br>2 ngưỡng là <b>tham số theo từng mức chất lượng</b>:<ul><li>Lưu ý = đã dùng x% thời hạn.</li><li>Cảnh báo = trước hạn y giờ.</li></ul>Màn cấu hình chặn lưu nếu Cảnh báo không nằm <b>sau</b> Lưu ý và <b>trước</b> hạn. Mặc định y ≈ 15% thời hạn, vd Hot 24 giờ thì cảnh báo trước 3 giờ.</td></tr>
+<tr><td>A8</td><td>Trùng "Brand cùng PIC"</td><td>Hai sales khác nhau tạo cùng brand không bị cảnh báo.</td><td><span class="st done">Đã chốt</span><br>Trùng tên Brand kiểm tra với lead đang mở <b>trên toàn hệ thống, mọi PIC</b>. Cảnh báo hiện stage và PIC của lead cũ. Chỉ cảnh báo, người dùng tích xác nhận thì vẫn tạo được. Có ghi nhận lần vượt cảnh báo.</td></tr>
+<tr><td>A9</td><td>Import Excel</td><td>Dòng trùng có import không; PIC của lead import.</td><td><span class="st done">Đã chốt</span> (phần chi tiết là đề xuất)<br>Mỗi dòng có 3 kết quả:<ul><li><b>Hợp lệ</b>: nhập.</li><li><b>Có thể trùng</b>: chỉ nhập khi người import tích xác nhận, một lần cho tất cả.</li><li><b>Không hợp lệ</b>: không nhập, tải về file lỗi.</li></ul>PIC: PKD User luôn là chính mình. PKD Manager lấy theo cột BD PIC (thành viên team) hoặc chọn "Gán tất cả cho tôi". PKD Master lấy theo cột BD PIC. Cột trống thì PIC là người import. Team theo PIC. Lead import luôn vào stage đầu tiên.</td></tr>
+<tr><td>A10</td><td>Đổi cấu hình trường bắt buộc</td><td>13 ghi deal cũ không bị chặn, nhưng 02 kiểm tra ở mọi lần lưu.</td><td><span class="st done">Đã chốt</span><br>Bỏ câu "deal hiện có không bị chặn ngay" ở sơ đồ 13. Khi đổi ma trận trường bắt buộc, <b>các lead Đang mở bị ảnh hưởng</b> (lead ở stage Đang mở mà trường hoặc điều kiện vừa thành ✔ còn thiếu, kể cả do đổi thứ tự hay xoá stage; lead Thắng xử lý theo <a href="#ch-matrix">Cấu hình › 3</a>) phải được <b>khắc phục trước khi thay đổi</b>:<ul><li>Bấm Lưu cấu hình → hệ thống liệt kê lead bị ảnh hưởng (số lượng, stage, trường thiếu, PIC).</li><li>Còn lead bị ảnh hưởng thì chưa áp dụng thay đổi; bổ sung dữ liệu cho các lead đó rồi lưu lại.</li></ul>Nhờ vậy lead luôn đủ trường của stage hiện tại, nên kiểm tra ở mọi lần lưu (sơ đồ 02) không còn mâu thuẫn. Chi tiết: <a href="#ch-matrix">Cấu hình › 3</a>.</td></tr>
+<tr><td>A11</td><td>Deal vào stage giữa</td><td>Cần đủ trường các stage trước không; Gia hạn có miễn kiểm tra trùng như Tăng trưởng không.</td><td><span class="st done">Đã chốt</span><ul><li><b>Trường bắt buộc kế thừa:</b> trường ✔ ở một stage thì ✔ ở mọi stage sau. Deal tạo từ Gia hạn / Tăng trưởng phải đủ trường của các stage trước stage nó vào.</li><li><b>Chặn ở stage có điều kiện báo giá</b> (mặc định Proposal): deal chỉ vào được stage này khi <b>đã có báo giá còn hiệu lực</b>. Báo giá chưa duyệt (Nháp, Chờ duyệt) cũng tính, xem <a href="#ch-matrix">Cấu hình › 3</a>. Duyệt là điều kiện để gửi khách. Nếu người tạo báo giá là cấp duyệt thì báo giá không cần duyệt.</li><li>Deal tạo từ Gia hạn cũng <b>không cảnh báo trùng với chính khách đó</b>, giống Tăng trưởng.</li></ul></td></tr>
+<tr><td>A12</td><td>Escalate ở G2</td><td>Sau quyết định không có nhánh quay lại.</td><td><span class="st done">Đã chốt</span> (theo file TNKH, Handover workflow 6c/6d)<br>Khi escalate: hồ sơ giữ ở S3, gắn cờ <b>BLOCKED</b>, bàn giao chuyển trạng thái Escalated, bắt buộc lý do. Leader AM + TPKD (cấp 3: COO) quyết định:<ul><li><b>Accept kèm điều kiện</b>: sang S4. Nếu gói sẵn sàng còn "Chưa đủ" thì bắt buộc ghi điều kiện và người chịu trách nhiệm.</li><li><b>Return</b>: về S2, số lần trả +1.</li></ul></td></tr>
+<tr><td>A13</td><td>Tên "Growth Opportunity"</td><td>Trùng tên stage Opportunity.</td><td><span class="st done">Đã chốt</span><br>Trên giao diện hiển thị "Cơ hội tăng trưởng" (module Growth).</td></tr>
+<tr><td>A14</td><td>Nhảy cóc stage</td><td>Được kéo thẳng Lead → Contract không.</td><td><span class="st done">Đã chốt</span><br><b>Được nhảy nhiều stage một lần</b> nếu thoả mọi điều kiện của stage đích: trường bắt buộc (gồm kế thừa) và điều kiện báo giá / hợp đồng.<br>Vd Lead → Contract chỉ được khi đã có báo giá khách đồng ý. Bỏ câu "Closed Won chỉ vào từ Contract": điều kiện hợp đồng đã ký đã đủ chặn.</td></tr>
+</table>
+
+
+<h2 id="cau-hinh">Cấu hình liên quan — để dev nắm toàn cảnh <span class="tnew">v0.2</span></h2>
+<div class="box">Nhiều điểm ở mục A (A2, A3, A6, A10, A11) không có quy tắc cố định mà <b>dựa trên cấu hình</b>. Code chỉ đọc cấu hình, <b>không gắn logic với tên stage, tên trạng thái hay con số cụ thể</b>. Tất cả cấu hình dưới đây do <b>System Admin</b> sửa trong Cài đặt hệ thống. Mỗi lần sửa đều ghi nhật ký.</div>
+
+<h3 id="ch-stage">1. Stage (Cài đặt › Pipeline &amp; Lead Status › tab Stage)</h3>
+<table>
+<tr><th style="width:22%">Thuộc tính</th><th>Mô tả</th></tr>
+<tr><td>Mã stage</td><td>Cố định, không đổi. Dữ liệu lead, lịch sử stage, ma trận trường đều lưu theo <b>mã</b>.</td></tr>
+<tr><td>Tên</td><td>Bắt buộc, tối đa 80 ký tự, không trùng (kể cả stage ngừng dùng). Đổi tên chỉ đổi hiển thị.</td></tr>
+<tr><td>Loại kết quả</td><td><b>Đang mở</b> / <b>Thắng</b> / <b>Thua</b>. Mọi logic (kéo thả, SLA, khoá lead Thua, chuyển lùi từ Thắng) dựa vào loại, không dựa vào tên.</td></tr>
+<tr><td>Xác suất (%)</td><td>0–100, hiện trên đầu cột Kanban. Thắng = 100, Thua = 0.</td></tr>
+<tr><td>Thứ tự</td><td>Kéo thả. Thứ tự quyết định "stage đứng sau" khi kế thừa trường bắt buộc và khi xét chuyển lùi.</td></tr>
+<tr><td>Đang dùng / Ngừng dùng</td><td>Stage ngừng dùng không chọn được nữa, nhưng vẫn hiện trên Kanban nếu còn lead.</td></tr>
+<tr><td>Mô tả</td><td>Tuỳ chọn.</td></tr>
+</table>
+<p><b>Ràng buộc khi lưu:</b></p>
+<ul>
+<li>Stage <b>Lead</b> luôn đứng đầu và luôn đang dùng. Không xoá được <b>Lead, Closed Won, Closed Lost</b>, cũng không đổi loại của 3 stage này.</li>
+<li>Phải có ít nhất 1 stage Đang mở, 1 stage Thắng và 1 stage Thua đang dùng.</li>
+<li>Stage đang có lead thì không đổi loại kết quả.</li>
+<li><b>Thêm stage:</b> cột ma trận trường bắt buộc lấy theo stage liền trước.</li>
+<li><b>Xoá stage</b> đang có lead: phải chọn một stage Đang mở nhận các lead đó (không được chọn stage cũng đang bị xoá, không vòng lặp). Lead Status và chất lượng của lead được chuyển về giá trị hợp lệ của stage nhận.</li>
+</ul>
+<p><b>Mặc định khi khởi tạo:</b> <span class="stage">Lead</span><span class="stage">Qualification</span><span class="stage">Opportunity</span><span class="stage">Proposal</span><span class="stage">Contract</span> (Đang mở) · <span class="stage" style="background:#dcfce7">Closed Won</span> (Thắng) · <span class="stage" style="background:#ffe4e6">Closed Lost</span> (Thua).</p>
+
+<h3 id="ch-status">2. Lead Status — trạng thái của từng stage (tab Stage, trong từng stage)</h3>
+<ul>
+<li>Mỗi stage có <b>danh sách Lead Status riêng</b>. Tên không trùng trong cùng stage, tối đa 80 ký tự.</li>
+<li>Mỗi stage có đúng <b>1 trạng thái mặc định</b>. Khi tạo lead hoặc đổi stage, Lead Status lấy trạng thái mặc định của stage đích, hoặc giữ nguyên nếu trạng thái hiện tại thuộc stage đích.</li>
+<li>Form chỉ hiện Lead Status của stage đang chọn.</li>
+<li>Lead Status của stage Thua chính là <b>lý do mất</b>.</li>
+<li>Đổi tên Lead Status vẫn giữ liên kết với dữ liệu cũ.</li>
+<li>Hệ thống <b>không tự đổi Lead Status</b> theo tên trạng thái, kể cả khi gửi báo giá. PIC tự chọn Lead Status khi cần.</li>
+</ul>
+<p><b>Dữ liệu mẫu</b> (seed, cấu hình lại được; trạng thái đầu tiên là mặc định):</p>
+<table>
+<tr><th style="width:18%">Stage</th><th>Lead Status</th></tr>
+<tr><td>Lead</td><td>New Lead · Contacted</td></tr>
+<tr><td>Qualification</td><td>Interested · Consultation Started</td></tr>
+<tr><td>Opportunity</td><td>Call · Meeting · In Negotiation</td></tr>
+<tr><td>Proposal</td><td>Rate Card Sent · Waiting for Test</td></tr>
+<tr><td>Contract</td><td>Contract Drafting · Waiting for Shipping · Onboarding Started</td></tr>
+<tr><td>Closed Won</td><td>Onboarded</td></tr>
+<tr><td>Closed Lost (lý do mất)</td><td>Invalid Contact Info · Unreachable · Not Target Profile · Spam · Price Too High · Chose In-House · Service Gap · Market / Category Not Served · Business Closed</td></tr>
+</table>
+
+<h3 id="ch-matrix">3. Trường bắt buộc theo stage (tab Trường bắt buộc)</h3>
+<ul>
+<li>Ma trận <b>trường × stage</b>, mỗi ô có 3 mức: <b>✔ Bắt buộc</b> (chặn lưu / chuyển stage), <b>○ Khuyến nghị</b> (chỉ nhắc), <b>trống</b> (không áp dụng).</li>
+<li><b>Kế thừa:</b> ✔ ở một stage Đang mở thì tự ✔ ở <b>mọi stage đứng sau, gồm stage Thắng</b>. Không áp dụng cho stage Thua, Chất lượng lead và nhóm Báo giá &amp; hợp đồng (mỗi ô tự đặt). Vd SĐT ✔ ở Qualification thì sang Closed Won vẫn bắt buộc SĐT.</li>
+<li><b>Trường khoá</b> luôn ✔, không sửa được: Lead Status, BD PIC, Team, Brand / Non-Brand, Người liên hệ, Loại nguồn, Nguồn chi tiết.</li>
+<li>Stage Thua chỉ yêu cầu Lead Status (lý do mất).</li>
+<li><b>Nhóm "Báo giá &amp; hợp đồng"</b> chỉ có ✔ hoặc trống. Mặc định:
+  <ul><li>"Có báo giá" ✔ từ Proposal.</li><li>"Báo giá được khách đồng ý" ✔ từ Contract.</li><li>"Có hợp đồng", "Hợp đồng đã ký (có file)" ✔ ở Closed Won.</li></ul>
+  <b>"Có báo giá"</b> = lead có ít nhất 1 báo giá còn hiệu lực. <b>Tính:</b> Nháp, Chờ duyệt, Cần chỉnh sửa, Đã duyệt, Đã gửi khách, Khách đồng ý. <b>Không tính:</b> Đã huỷ, Hết hiệu lực, Bị thay thế, Khách từ chối. Duyệt là điều kiện để <b>gửi khách</b>, không phải điều kiện vào stage. <b>"Báo giá được khách đồng ý"</b> chỉ tính báo giá trạng thái Khách đồng ý.<br>
+  Báo giá tạo được từ stage liền trước stage đầu tiên có "Có báo giá" (mặc định từ Opportunity). <b>Hai ngoại lệ:</b>
+  <ul><li>Trang tạo lead đầy đủ chọn stage có ✔ "Có báo giá": tạo lead kèm báo giá v1 (sơ đồ 01).</li><li>Lead ở stage sớm hơn (vd Qualification) bấm chọn stage cần báo giá trên thanh stage: khung điều kiện có nút <b>Tạo báo giá</b>, tạo xong quay lại lead để lưu chuyển stage (sơ đồ 03).</li></ul></li>
+<li><b>Đổi cấu hình phải khắc phục trước:</b> khi lưu, hệ thống tìm các lead <b>Đang mở</b> không còn đủ trường hoặc điều kiện báo giá / hợp đồng ✔ của stage hiện tại. Áp dụng cho cả đổi ma trận, đổi thứ tự stage (làm đổi phần kế thừa) và xoá stage (lead chuyển sang stage nhận). Còn lead bị ảnh hưởng thì chưa áp dụng (xem A10, sơ đồ 13). Lead Thắng không bị liệt kê. Khi sửa lead Thắng, trường thiếu do cấu hình đổi sau khi Thắng chỉ nhắc (như ○), không chặn lưu, nhưng không được xoá trống trường ✔ đang có giá trị. Lead Thắng chuyển lùi về stage Đang mở thì kiểm tra đầy đủ như sơ đồ 03.</li>
+</ul>
+
+<h3 id="ch-sla">4. Chất lượng lead &amp; SLA (Cài đặt › Chất lượng lead &amp; SLA)</h3>
+<ul>
+<li>5 mức chất lượng, mỗi mức có ý nghĩa và <b>thời hạn chăm sóc (giờ)</b>.</li>
+<li><b>Chất lượng được chọn ở từng stage</b>: mỗi stage Đang mở cần ít nhất 1 mức. Closed Won không có chất lượng, Closed Lost là Freeze.</li>
+<li><b>Bắt đầu tính SLA từ:</b> Ngày nhập data (mặc định) / khi tạo lead / khi gán PIC.</li>
+<li>Công tắc reset SLA: khi có ghi chú mới; khi đổi chất lượng.</li>
+<li>Ngưỡng <b>Lưu ý</b> (% thời hạn đã dùng) và <b>Cảnh báo</b> (giờ trước hạn). Cảnh báo phải nằm sau Lưu ý và trước hạn.</li>
+<li>Lịch gặp / review khách: Warm, Hot (số ngày / lần gặp), khách đã thắng (số ngày / lần review), có công tắc bật cảnh báo.</li>
+<li>Tính 24/7, dừng khi lead ở stage Thắng / Thua.</li>
+<li><b>Thông báo</b> (kênh: trong app, Telegram cá nhân; màn cấu hình bật / tắt từng sự kiện và từng kênh):
+  <ul><li>SLA Lưu ý / Cảnh báo / Quá hạn, quá chu kỳ gặp khách: gửi PIC. Quá hạn gửi thêm vào nhóm Telegram của team.</li><li>Báo giá chờ duyệt: gửi người duyệt. Báo giá được duyệt / trả về / không duyệt: gửi người tạo.</li><li>Lead Closed Won: gửi Leader AM.</li><li>Nhắc gia hạn: theo Cấu hình › 5.</li></ul></li>
+</ul>
+
+<h3 id="ch-renewal">5. Hợp đồng &amp; nhắc gia hạn (Cài đặt › Hợp đồng &amp; hồ sơ khách hàng)</h3>
+<ul>
+<li><b>Mã hợp đồng</b> tự sinh GIP-HD-YYYY-XXX. <b>Mã khách hàng</b> GIP + 5 số, cấp khi tạo hợp đồng đầu tiên của lead (A5).</li>
+<li><b>Trạng thái hợp đồng</b> hệ thống tự tính hằng ngày từ ngày bắt đầu / kết thúc: Chờ hiệu lực → Đang hiệu lực → <b>Sắp hết hạn</b> (đến mốc nhắc gia hạn) → Hết hạn. Ngoài ra có trạng thái Tạm dừng.</li>
+<li><b>Nhắc gia hạn</b> cấu hình được:
+  <ul><li>Nhắc trước khi hết hạn: số ngày.</li><li>Người nhận: PIC phụ trách, trưởng nhóm của PIC, PKD Master.</li><li>Kênh: Telegram, thông báo trong app.</li></ul></li>
+<li>Đến mốc nhắc: hợp đồng chuyển Sắp hết hạn, hệ thống tạo bản ghi <b>Renewal</b> (Not Started) cho AM xử lý (sơ đồ 09).</li>
+<li>Renewal Status theo file TNKH: Not Started · Reviewing · Action Required · Negotiating · At Risk · Renewed · Not Renewed.</li>
+<li>Gia hạn <b>không xoá hợp đồng cũ</b>: mỗi lần gia hạn tạo hợp đồng mới cho cùng khách (giữ mã KH). Ngày bắt đầu gợi ý = ngày kết thúc hợp đồng cũ + 1.</li>
+<li><b>2 cách tạo hợp đồng:</b> (1) từ báo giá Khách đồng ý (sơ đồ 06); (2) <b>Gia hạn từ hợp đồng cũ</b> khi không đổi thương mại: nút "Gia hạn" trên Renewal hoặc trên hợp đồng sắp hết hạn, cần quyền <code>contract.create</code>. Sao chép khách, mã KH, bảng giá, giá trị, điều khoản; không cần báo giá; lead cũ giữ nguyên Closed Won. Hợp đồng mới ký xong thì Renewal = Renewed. Có thay đổi thương mại thì đi deal mới (sơ đồ 09, nhánh Negotiating).</li>
+</ul>
+
+<h2 id="b-prototype">B. Khác với prototype v4.1</h2>
+<table>
+<tr><th>Điểm</th><th>Prototype v4.1</th><th>Flow (áp dụng)</th><th style="width:28%">Trả lời BA</th></tr>
+<tr><td>SLA</td><td>Theo stage: Lead 24 giờ, Qualification 14 ngày (quá hạn rớt về Nurture)</td><td>Theo chất lượng lead: Data Thô 100 giờ … Hot 24 giờ</td><td><span class="st done">Theo flow</span><br>Mốc bắt đầu mặc định là Ngày nhập data. Reset khi có ghi chú mới hoặc khi đổi chất lượng (bật/tắt được). Tính 24/7. Dừng khi lead Closed Won / Closed Lost.</td></tr>
+<tr><td>Kiểm tra trùng</td><td>Chặn khi trùng Tax Code · Domain · Phone</td><td>Cảnh báo khi trùng Brand · SĐT · Brand + Platform 90 ngày</td><td><span class="st done">Theo flow</span><br>Không chặn, kiểm tra toàn hệ thống (xem A8).</td></tr>
+<tr><td>Stage, trạng thái con</td><td>Không có Proposal; New / Attempted / Contacted do Call Log API tự đổi</td><td>Có Proposal; trạng thái con riêng từng stage</td><td><span class="st done">Theo flow</span><br>Trạng thái con đổi tên thành <b>Lead Status</b>, cấu hình theo từng stage. <b>Không dùng Call Log API.</b> Stage cũng cấu hình được (xem sơ đồ 13).</td></tr>
+<tr><td>Issue</td><td>Quản trên Lark, ngoài CRM</td><td>Issue trong CRM, giao Kho / DSP</td><td><span class="st prop">BA đổi 19/10</span><br><b>Không làm Issue trong CRM.</b> Issue vẫn quản ngoài CRM như hiện tại. Lỗi nghiêm trọng ảnh hưởng khách (vd lô đơn đầu lỗi) ghi thành <b>Risk</b> (sơ đồ 08). Bỏ sơ đồ 11, bỏ Issue khỏi Health, Gia hạn và danh mục quyền.</td></tr>
+<tr><td>Chất lượng lead</td><td>Không có</td><td>Data Thô · Freeze · Cold · Warm · Hot</td><td><span class="st done">Theo flow</span><br>Lead mới mặc định Data Thô. Closed Won không có chất lượng. Closed Lost đặt về Freeze.</td></tr>
+</table>
+
+<h2 id="c-he-thong">C. So với hệ thống sea-crm đang xây dựng</h2>
+<p>Phần "Khớp" của dev: BA đồng ý. Dưới đây là phản hồi cho các điểm phải mở rộng.</p>
+<table>
+<tr><th style="width:4%">#</th><th style="width:30%">Dev nêu</th><th>Phản hồi BA</th></tr>
+<tr><td>C1</td><td>Thiếu vai trò Kế toán, KTT, BOD, Trưởng phòng, Vận đơn, Kho, DSP, Leader AM, PKD Master</td><td><span class="st done">Đã chốt</span><br>Danh sách chuẩn có <b>7 vai trò</b>: PKD User, PKD Manager, PKD Master, AM, AM Leader, TP.TNKH, System Admin.<ul><li><b>Không cần</b> Kế toán, KTT, BOD vì báo giá chỉ một người duyệt (A4).</li><li>Kho, DSP, Vận đơn (và phòng Technology) <b>tạm hoãn</b>.</li></ul>Ánh xạ sang 11 vai trò mặc định của sea-crm do dev đề xuất, vd TL AM = AM Leader.</td></tr>
+<tr><td>C2</td><td>Vai trò thuộc phòng ban, có cấp; phạm vi chọn theo từng nhóm quyền</td><td><span class="st done">Đã chốt</span><br>Vai trò thuộc phòng ban và có cấp: Nhân viên / Quản lý / Trưởng phòng / Quản trị hệ thống.<br><b>Phạm vi dữ liệu chọn một lần cho cả vai trò</b>, không chọn theo từng nhóm quyền. Như vậy khớp với <code>scope_type</code> hiện có. 4 phạm vi: Của mình · Cả team · Tất cả · Chỉ xem.</td></tr>
+<tr><td>C3</td><td>Phòng ban chức năng + team (trưởng nhóm, nhóm Telegram)</td><td><span class="st done">Đã chốt</span><br>Hiện có 2 phòng ban: PKD, P.TNKH. Team có trưởng nhóm (cấp Quản lý, cùng phòng) và Chat ID nhóm Telegram. Phòng ban, team, người dùng, vai trò <b>khai báo trên FFM</b> (CRM là một phân hệ của FFM, xem ORG-FFM v0.6). Cây PKD → PKD Miền Bắc → team dùng được.<br>Màn <b>Tổ chức &amp; người dùng</b> trong CRM <b>chỉ xem</b> dữ liệu đọc từ FFM. Nút thêm / sửa trên prototype chỉ để minh hoạ, không làm.</td></tr>
+<tr><td>C4</td><td>Flow không có chiều quốc gia</td><td><span class="st wait">Chờ xác nhận</span><br>BA sẽ xác nhận việc giữ gán vai trò theo quốc gia như hệ thống hiện tại.<br><b>Phương án tạm để code trước:</b> giữ cấu trúc người dùng × quốc gia × vai trò của sea-crm. Flow chưa dùng chiều quốc gia nên mặc định mỗi người dùng có mọi quốc gia. Nếu sau này bỏ quốc gia thì chỉ bỏ bộ lọc, không đổi dữ liệu lead.</td></tr>
+<tr><td>C5</td><td>Mời người dùng, mã PIC, kho phụ trách</td><td>Vòng đời tài khoản: Chưa kích hoạt (vừa tạo) → Đang hoạt động (đăng nhập lần đầu) → Ngừng hoạt động. Người dùng có mã PIC.<br>Trường <b>kho phụ trách bỏ</b> (tạm hoãn cùng Kho). <span class="st wait">Chờ xác nhận</span> cách nhận mật khẩu / kích hoạt: đề xuất theo cơ chế đăng nhập của FFM.<br><b>Phương án tạm để code trước:</b> đăng nhập bằng tài khoản FFM, CRM không tự quản mật khẩu. Lần đăng nhập đầu tiên chuyển Chưa kích hoạt → Đang hoạt động.</td></tr>
+<tr><td>C6</td><td>Khách có AM Owner và PKD Owner</td><td><span class="st done">Đúng</span><br>Phạm vi "Của mình" bên P.TNKH = AM Owner hoặc AM dự phòng. Bên PKD = PKD Owner. Cần lọc theo nhiều cột.<br>Mặc định PKD User <b>chưa có</b> quyền xem/sửa Renewal và Growth (System Admin bật khi cần).</td></tr>
+<tr><td>C8</td><td>Bảng lịch sử stage riêng</td><td><span class="st done">Đồng ý</span><br>Lịch sử stage ghi từ → đến, người, thời điểm, lý do lùi / lý do mất. Dùng cho funnel, kiểm tra trùng 90 ngày và SLA.</td></tr>
+<tr><td>C10</td><td>Kiểm tra trùng bỏ qua phạm vi xem</td><td><span class="st done">Đồng ý</span><br>Kiểm tra trên toàn bộ lead (trừ lead đã xoá), không phụ thuộc vai trò.</td></tr>
+<tr><td>C11</td><td>Cấu hình nghiệp vụ, đặt tên quyền</td><td><span class="st done">Đã chốt</span><br>Tên quyền dạng <code>module.action</code> (vd <code>lead.create</code>, <code>quote.send</code>). Danh mục có 67 quyền / 11 nhóm. Module Leads dùng tiền tố <code>lead.</code> (vd <code>lead.move_stage</code>, <code>lead.change_status</code>), <b>không dùng <code>deal.</code></b>. Không có quyền <code>issue.*</code>.<br>Vào <b>Cài đặt hệ thống</b> không dùng permission mà <b>gắn cố định với vai trò System Admin</b>. Bỏ <code>system.config</code>, <code>settings.manage</code>.</td></tr>
+<tr><td>C7, C9, C12</td><td>Kỹ thuật (quốc gia trong kiểm tra quyền, tích hợp, lỗi revoke_role)</td><td><span class="st note">Dev xử lý</span><br>Telegram gồm cá nhân và nhóm team. Đồng bộ dữ liệu FFM cho Health làm ở giai đoạn sau.</td></tr>
+</table>
+
+<h2 id="thay-doi">Thay đổi trong flow so với v0.1</h2>
+<div class="chg">
+<ul>
+<li><b>Thuật ngữ:</b> "Deal Status" đổi thành <b>Lead Status</b> (trạng thái con theo stage, cấu hình được). Stage cấu hình được, logic theo loại kết quả Đang mở / Thắng / Thua, không theo tên stage.</li>
+<li><b>01 Tạo lead:</b> drawer nhanh tạo ở stage đầu tiên. Trang đầy đủ có thanh stage để chọn stage Đang mở; stage cần báo giá thì tạo kèm báo giá v1 Chờ duyệt.</li>
+<li><b>02 Xem và sửa:</b> gộp xem và sửa vào một màn lead (bấm vào trường để sửa, có thanh Lưu). Bỏ trang sửa riêng và mục "Sửa lead".</li>
+<li><b>03 Đổi stage:</b> kiểm tra trường kế thừa và điều kiện báo giá / hợp đồng; được nhảy stage; Closed Won lùi phải có lý do; Closed Lost chỉ cần lý do mất và sau đó lead chỉ xem.</li>
+<li><b>05 Báo giá:</b> một người duyệt, bỏ BOD / KTT / 4 bộ phận; người tạo là cấp duyệt thì không cần duyệt; gửi khách không tự đổi Lead Status; "Có báo giá" tính cả báo giá chưa duyệt.</li>
+<li><b>06 Hợp đồng:</b> mã KH cấp khi tạo hợp đồng đầu tiên; Closed Won do PIC chuyển, cần hợp đồng đã ký.</li>
+<li><b>07 Onboarding:</b> thêm nhánh kết quả escalate; kiểm tra cờ AT RISK khi nộp gói S3.</li>
+<li><b>09 Gia hạn:</b> mốc nhắc gia hạn là cấu hình; deal gia hạn vào stage có báo giá phải có báo giá; gia hạn không đổi thương mại tạo hợp đồng từ hợp đồng cũ.</li>
+<li><b>12a, 13:</b> tổ chức khai báo trên FFM; cấu hình do System Admin; ma trận có kế thừa; đổi trường bắt buộc phải khắc phục lead bị ảnh hưởng trước.</li>
+<li><b>03 Đổi stage:</b> lùi từ Closed Won chỉ khi bàn giao còn S0 – S1, huỷ hồ sơ bàn giao.</li>
+<li><b>07, 08, 09:</b> bỏ Issue; lô đầu lỗi ghi Risk. Health giai đoạn đầu đánh giá thủ công.</li>
+<li><b>11 Issue:</b> bỏ, Issue không làm trong CRM.</li>
+<li>Sơ đồ 12b không đổi nghiệp vụ.</li>
+</ul>
+</div>
+
+<h2 id="tong-quan">Tổng quan: 3 chặng, stage và chất lượng lead</h2>
+<table>
+<tr><th>Chặng</th><th>Ai phụ trách</th><th>Bắt đầu khi</th><th>Kết thúc khi</th></tr>
+<tr><td><b>1. Bán hàng (Pipeline)</b> — bước ① → ⑥</td><td>PKD (BD PIC, trưởng nhóm); TP PKD / PKD Master duyệt báo giá</td><td>Có khách tiềm năng, tạo lead</td><td>Closed Won (PIC chuyển khi có hợp đồng đã ký) hoặc Closed Lost</td></tr>
+<tr><td><b>2. Bàn giao &amp; Onboarding</b> — ⑦ → ⑨</td><td>PKD Owner bàn giao → AM Owner (P.TNKH) tiếp nhận</td><td>Deal Closed Won</td><td>Đạt G4, khách vào S7 quản lý thường xuyên</td></tr>
+<tr><td><b>3. Chăm sóc &amp; tăng trưởng</b> — ⑩ → ⑫</td><td>AM Owner (P.TNKH)</td><td>Khách ở S7</td><td>Liên tục; gia hạn hoặc mở deal mới quay lại chặng 1</td></tr>
+</table>
+<p><b>Stage mặc định</b> (cột trên Kanban, cấu hình được trừ Lead · Closed Won · Closed Lost):
+<span class="stage">Lead</span><span class="arrow">→</span><span class="stage">Qualification</span><span class="arrow">→</span><span class="stage">Opportunity</span><span class="arrow">→</span><span class="stage">Proposal</span><span class="arrow">→</span><span class="stage">Contract</span><span class="arrow">→</span><span class="stage" style="background:#dcfce7">Closed Won</span> · <span class="stage" style="background:#ffe4e6">Closed Lost</span> (vào được từ mọi stage đang mở)</p>
+<p><b>Chất lượng lead</b> (độ "nóng", không phải stage): Data Thô · Freeze · Cold · Warm · Hot. Mỗi stage chỉ cho chọn một số mức: Lead, Qualification cả 5 mức; Opportunity, Proposal từ Freeze → Hot; Contract từ Cold → Hot. Closed Won không có chất lượng, Closed Lost là Freeze. SLA follow-up tính theo chất lượng (Data Thô 100 giờ … Hot 24 giờ).</p>
+<p><b>Trường bắt buộc kế thừa:</b> trường ✔ ở một stage thì ✔ ở mọi stage đứng sau, gồm Closed Won, trừ Closed Lost. <b>Điều kiện báo giá / hợp đồng mặc định:</b> "Có báo giá" từ Proposal, "Báo giá được khách đồng ý" từ Contract, "Có hợp đồng" và "Hợp đồng đã ký" ở Closed Won.</p>
+
+<h2 id="cac-buoc">Giải thích từng bước <span class="tnew">v0.2</span></h2>
+<table>
+<tr><th>Bước</th><th>Ai làm</th><th>Việc chính</th><th>Hệ thống làm gì</th><th>Điều kiện sang bước sau</th><th>Sơ đồ</th></tr>
+<tr><td>— Tạo lead</td><td>PKD</td><td>Drawer nhanh (mở rộng ra trang đầy đủ) hoặc import Excel</td><td>Kiểm tra trùng toàn hệ thống (Brand · SĐT · Brand + Platform 90 ngày); tạo lead ID LD-YYYYMM-XXXX, Data Thô, Lead Status mặc định của stage; PIC theo vai trò; bắt đầu đếm SLA</td><td>Lưu thành công</td><td><a href="#f01">01</a>, <a href="#f01b">01b</a></td></tr>
+<tr><td>① Lead</td><td>BD PIC</td><td>Liên hệ, xác nhận thông tin cơ bản</td><td>Theo dõi SLA, nhãn Lưu ý / Cảnh báo / Quá hạn, gửi Telegram</td><td>Đủ trường ✔ của stage đích (theo ma trận, có kế thừa). Lead Status: New Lead · Contacted</td><td><a href="#f03">03</a>, <a href="#f04">04</a></td></tr>
+<tr><td>② Qualification</td><td>BD PIC</td><td>Xác định nhu cầu, ngành hàng, thị trường; đánh giá chất lượng</td><td>Như trên</td><td>Như trên. Lead Status: Interested · Consultation Started</td><td><a href="#f03">03</a></td></tr>
+<tr><td>③ Opportunity</td><td>BD PIC</td><td>Gọi, gặp, đàm phán; <b>bắt đầu tạo được báo giá</b></td><td>Cảnh báo Warm / Hot quá 21 ngày chưa gặp khách</td><td>Sang Proposal cần <b>có báo giá còn hiệu lực</b> (Nháp / Chờ duyệt cũng tính)</td><td><a href="#f03">03</a>, <a href="#f05">05</a></td></tr>
+<tr><td>④ Proposal</td><td>BD PIC; TP PKD / PKD Master duyệt</td><td>Trình duyệt → gửi khách → ghi nhận khách đồng ý / từ chối</td><td>Báo giá có version; người tạo là cấp duyệt thì không cần duyệt; quá hiệu lực thì Hết hiệu lực</td><td>Sang Contract cần <b>báo giá được khách đồng ý</b></td><td><a href="#f05">05</a></td></tr>
+<tr><td>⑤ Contract</td><td>BD PIC</td><td>Tạo hợp đồng từ lead; ký, upload bản ký</td><td>Kế thừa dữ liệu sang hợp đồng; <b>cấp mã KH khi tạo hợp đồng đầu tiên</b> (A5)</td><td>Sang Closed Won cần <b>có hợp đồng và hợp đồng đã ký (có file)</b></td><td><a href="#f06">06</a></td></tr>
+<tr><td>⑥ Closed Won</td><td>BD PIC chuyển</td><td>Chuyển stage như bình thường</td><td>Mở onboarding S0, báo Leader AM; dừng SLA</td><td>Chuyển lùi phải có lý do; chỉ khi bàn giao còn S0 – S1</td><td><a href="#f03">03</a>, <a href="#f06">06</a></td></tr>
+<tr><td>✕ Closed Lost</td><td>BD PIC</td><td>Từ mọi stage đang mở</td><td>Chỉ cần chọn lý do mất (ghi chú tuỳ chọn); chất lượng Freeze; dừng SLA; <b>lead chỉ xem, vẫn thêm ghi chú</b></td><td>Kết thúc</td><td><a href="#f03">03</a></td></tr>
+<tr><td>⑦ Bàn giao S0–S3</td><td>PKD Owner; Leader AM phân công AM</td><td>S0 chốt khách · S1 bàn giao thông tin thương mại, cam kết, rủi ro · S2 chuẩn bị · S3 nộp gói sẵn sàng</td><td>Cờ AT RISK nếu nộp gói S3 mà chưa có ngày hàng về</td><td>G1 thông tin đủ, G2 AM chấp nhận. Escalate: giữ S3 (BLOCKED), quản lý Accept kèm điều kiện hoặc Return</td><td><a href="#f07">07</a></td></tr>
+<tr><td>⑧ Onboarding S4–S6</td><td>AM Owner; Kho xác nhận</td><td>S4 AM tiếp nhận (khách thuộc P.TNKH), nhận hàng · G3 Kho xác nhận · S5 lô đơn đầu · S6 ổn định, theo dõi 8 tiêu chí exit</td><td>Lô đầu lỗi nghiêm trọng → ghi Risk, giữ S5</td><td>G4 Leader AM duyệt đạt tiêu chí exit</td><td><a href="#f07">07</a>, <a href="#f08">08</a></td></tr>
+<tr><td>⑨ S7</td><td>AM Owner</td><td>Chăm sóc định kỳ</td><td>Ghi BAU Date</td><td>—</td><td><a href="#f07">07</a></td></tr>
+<tr><td>⑩ Health, Risk</td><td>AM Owner; TP.TNKH · COO khi escalate</td><td>Đánh giá Health (giai đoạn đầu thủ công); Action Plan khi Health Đỏ; xử lý Risk</td><td>Lưu lịch sử Health; Risk Critical hoặc quá hạn → escalate</td><td>Liên tục</td><td><a href="#f08">08</a></td></tr>
+<tr><td>⑪ Gia hạn</td><td>AM Owner; PKD Owner nếu đàm phán</td><td>Reviewing → Action Required / At Risk → Negotiating</td><td>Tạo Renewal và nhắc theo mốc nhắc gia hạn đã cấu hình</td><td>Renewed → hợp đồng mới (từ hợp đồng cũ hoặc từ deal mới); Not Renewed → bắt buộc lý do</td><td><a href="#f09">09</a></td></tr>
+<tr><td>⑫ Tăng trưởng</td><td>AM Owner → PKD Owner</td><td>Tín hiệu tăng trưởng → Cơ hội tăng trưởng</td><td>Tạo deal mới nguồn "Khách hiện hữu – từ AM", vào Qualification, không cảnh báo trùng với chính khách này</td><td>Deal mới quay lại chặng 1</td><td><a href="#f10">10</a></td></tr>
+</table>
+
+<h2 id="flows">Flow chi tiết</h2>
+
+<h3 id="f00">00 · Toàn trình — từ lead đến chăm sóc và tăng trưởng <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Có khách tiềm năng: tạo lead hoặc import Excel"]:::pkd
+  A --> B["Kiểm tra trùng toàn hệ thống, tạo lead ở stage đầu tiên"]:::sys
+  B --> C["Chăm sóc, chuyển stage Lead → Qualification → Opportunity"]:::pkd
+  C --> D{"Còn tiềm năng?"}:::pkd
+  D -->|"Không"| L1(["Closed Lost: chọn lý do mất, lead chỉ xem"]):::endn
+  D -->|"Có"| E["Tạo báo giá, gửi duyệt"]:::pkd
+  E --> F0{"Người tạo là cấp duyệt?"}:::sys
+  F0 -->|"Có"| H
+  F0 -->|"Không"| F{"TP PKD / PKD Master duyệt?"}:::appr
+  F -->|"Trả về"| E
+  F -->|"Không duyệt — báo giá huỷ"| D
+  F -->|"Duyệt"| H["Gửi báo giá cho khách, stage Proposal"]:::pkd
+  H --> I{"Khách đồng ý?"}:::cust
+  I -->|"Từ chối"| E
+  I -->|"Rút lui"| L2(["Closed Lost"]):::endn
+  I -->|"Đồng ý"| J["Stage Contract: tạo hợp đồng, hệ thống cấp mã KH; ký, upload bản ký"]:::pkd
+  J --> K["PIC chuyển Closed Won (cần hợp đồng đã ký): mở hồ sơ onboarding"]:::pkd
+  K --> M["S0 – S3: chốt khách, bàn giao, chuẩn bị, nộp gói sẵn sàng"]:::pkd
+  M --> N{"G1 · G2: AM chấp nhận?"}:::am
+  N -->|"Trả về"| M
+  N -->|"Escalate"| N2["Leader AM + TPKD: Accept kèm điều kiện hoặc Return"]:::lead
+  N2 -->|"Return"| M
+  N2 -->|"Accept"| O
+  N -->|"Chấp nhận"| O["S4 – S6: tiếp nhận, nhận hàng, lô đơn đầu, ổn định vận hành"]:::am
+  O --> P{"G4 đạt tiêu chí exit?"}:::am
+  P -->|"Chưa đạt"| O
+  P -->|"Đạt"| Q["S7 quản lý thường xuyên"]:::am
+  Q --> R["Tính Health, cảnh báo rủi ro, nhắc gia hạn theo mốc cấu hình"]:::sys
+  R --> T{"Tín hiệu nào?"}:::am
+  T -->|"Tăng trưởng — deal mới"| C
+  T -->|"Rủi ro"| U["Xử lý rủi ro (Risk)"]:::am
+  T -->|"Sắp hết hạn"| V["Gia hạn hợp đồng"]:::am
+  U --> W(["Tiếp tục quản lý"]):::endn
+  V --> W
+</div>
+
+<h3 id="f01">01 · Tạo lead — drawer nhanh và trang đầy đủ <span class="tnew">v0.2</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Bấm Thêm lead trên danh sách"]:::pkd
+  A --> B{"Có quyền lead.create?"}:::sys
+  B -->|"Không"| X(["Ẩn nút"]):::endn
+  B -->|"Có"| C["Mở drawer ở stage đầu tiên: BD PIC = người đăng nhập, Team theo PIC, Data Thô, Lead Status mặc định, Ngày nhập data = hôm nay"]:::sys
+  C --> D["Nhập các trường cơ bản"]:::pkd
+  D --> D0{"Bấm Hủy?"}:::pkd
+  D0 -->|"Có"| X9(["Đóng, không lưu"]):::endn
+  D0 -->|"Không"| E{"Cần nhập đầy đủ hoặc chọn stage khác?"}:::pkd
+  E -->|"Không"| G["Bấm Tạo lead"]:::pkd
+  E -->|"Có"| F["Bấm Mở rộng → trang tạo đầy đủ (giữ dữ liệu); chọn stage trên thanh stage"]:::pkd
+  F --> F1{"Stage đã chọn cần Có báo giá?"}:::sys
+  F1 -->|"Có"| F2["Hiện nhóm Báo giá bắt buộc: loại, thị trường, dịch vụ, mẫu, bảng giá, giá trị, hiệu lực"]:::pkd
+  F1 -->|"Không"| G
+  F2 --> G
+  G --> H{"Hợp lệ, đủ trường ✔ của stage đã chọn (có kế thừa)?"}:::sys
+  H -->|"Không"| H2["Báo lỗi tại trường vi phạm"]:::sys
+  H2 --> D
+  H -->|"Có"| I["Kiểm tra trùng toàn hệ thống, mọi PIC: tên Brand · SĐT · Brand + Platform 90 ngày"]:::sys
+  I --> J{"Có khả năng trùng?"}:::sys
+  J -->|"Có"| K["Hiện cảnh báo kèm stage và PIC của lead cũ"]:::sys
+  K --> L{"Người dùng quyết định"}:::pkd
+  L -->|"Quay lại sửa"| D
+  L -->|"Tích xác nhận, vẫn tạo"| M
+  J -->|"Không"| M["Lưu lead: ID LD-YYYYMM-XXXX, lịch sử stage, nhật ký; ghi lần vượt cảnh báo; bắt đầu đếm SLA"]:::sys
+  M --> M2{"Có nhóm Báo giá?"}:::sys
+  M2 -->|"Có"| M4{"Người tạo là cấp duyệt (TP PKD / PKD Master)?"}:::sys
+  M4 -->|"Có"| M5["Tạo báo giá v1 trạng thái Đã duyệt; mở màn lead"]:::sys
+  M4 -->|"Không"| M3["Tạo báo giá v1 trạng thái Chờ duyệt, gửi TP PKD / PKD Master; mở màn lead"]:::sys
+  M5 --> Z
+  M2 -->|"Không"| N["Đóng form, lead hiện đầu danh sách và ở cột stage trên Kanban"]:::sys
+  M3 --> Z(["Đã tạo lead"]):::endn
+  N --> Z
+</div>
+<div class="warn">Trang đầy đủ chỉ cho chọn stage Đang mở <b>không</b> cần "Báo giá được khách đồng ý" / "Có hợp đồng" / "Hợp đồng đã ký". Mặc định là Lead · Qualification · Opportunity · Proposal. Tạo kèm báo giá cần thêm quyền <code>quote.create</code>.</div>
+
+<h3 id="f01b">01b · Import lead từ Excel <span class="tnew">v0.2</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> P{"Có quyền lead.import?"}:::sys
+  P -->|"Không"| X0(["Ẩn nút Import"]):::endn
+  P -->|"Có"| A["Bấm Import Excel, tải file mẫu, điền dữ liệu"]:::pkd
+  A --> B["Chọn file .xlsx, bấm Kiểm tra"]:::pkd
+  B --> C["Kiểm tra từng dòng như tạo lead ở stage đầu tiên: trường ✔, danh mục, định dạng, chất lượng, Lead Status; kiểm tra trùng với hệ thống và các dòng phía trên"]:::sys
+  C --> C2["Xác định PIC: PKD User = chính mình; Manager theo cột BD PIC (thành viên team) hoặc Gán tất cả cho tôi; Master theo cột BD PIC; cột trống = người import. BD PIC ngoài phạm vi được gán → dòng Không hợp lệ"]:::sys
+  C2 --> D["Bảng kết quả: Hợp lệ · Hợp lệ, có thể trùng · Không hợp lệ (tải file lỗi)"]:::sys
+  D --> F{"Người dùng chọn"}:::pkd
+  F -->|"Hủy"| X(["Không lưu gì"]):::endn
+  F -->|"Nhập, không tích dòng trùng"| F3["Chỉ nhập dòng Hợp lệ"]:::sys
+  F -->|"Nhập, tích xác nhận dòng trùng (một lần cho tất cả)"| F4["Nhập dòng Hợp lệ và dòng có thể trùng; ghi lần vượt cảnh báo"]:::sys
+  F3 --> G
+  F4 --> G["Tạo lead: stage đầu tiên, Data Thô, Team theo PIC; dòng Không hợp lệ luôn bị bỏ qua; ghi lần import (file, số dòng mỗi loại, người import)"]:::sys
+  G --> H["Báo kết quả: số dòng đã nhập / bỏ qua"]:::sys
+  H --> Z(["Hoàn tất import"]):::endn
+</div>
+
+<h3 id="f02">02 · Xem và sửa lead — màn lead gộp <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Bấm dòng trên danh sách hoặc nút mở trên thẻ Kanban"]:::pkd
+  A --> B{"Trong phạm vi lead.view?"}:::sys
+  B -->|"Không"| X(["Không hiển thị"]):::endn
+  B -->|"Có"| C["Mở drawer: trường cơ bản, tóm tắt, tab Thông tin · Báo giá · Hợp đồng · Lịch sử thay đổi"]:::sys
+  C --> C1{"Lead ở Closed Lost hoặc không có quyền lead.edit với bản ghi?"}:::sys
+  C1 -->|"Có"| V["Chỉ xem; Closed Lost vẫn thêm ghi chú"]:::sys
+  V --> X3(["Kết thúc"]):::endn
+  C1 -->|"Không"| D{"Thao tác"}:::pkd
+  D -->|"Chỉnh nhanh SĐT, Email, Chất lượng"| D2["Lưu ngay trên drawer; SĐT trùng thì nhắc; đổi chất lượng reset SLA theo cấu hình"]:::sys
+  D2 --> D
+  D -->|"Đóng"| X2(["Đóng"]):::endn
+  D -->|"Mở rộng"| H["Màn lead: bấm vào trường để sửa; có thể bấm stage khác trên thanh stage → dấu * đổi theo stage đó"]:::pkd
+  H --> I["Thanh Lưu: Có N thay đổi chưa lưu · Hủy thay đổi · Lưu (hoặc Lưu và chuyển sang stage)"]:::sys
+  I --> I1{"Người dùng chọn"}:::pkd
+  I1 -->|"Hủy thay đổi"| I2(["Bỏ mọi thay đổi chưa lưu"]):::endn
+  I1 -->|"Lưu"| K{"Đủ trường ✔ của stage đang chọn trên thanh stage?"}:::sys
+  K -->|"Thiếu"| K2["Tô đỏ trường thiếu, báo đầu màn"]:::sys
+  K2 --> H
+  K -->|"Đủ"| L{"Có chọn stage khác?"}:::sys
+  L -->|"Có"| L2{"Qua được kiểm tra đổi stage (sơ đồ 03)?"}:::sys
+  L2 -->|"Không"| L3["Không lưu gì; hiện checklist điều kiện còn thiếu"]:::sys
+  L3 --> H
+  L2 -->|"Có"| M
+  L -->|"Không"| M{"Đổi tên Brand, SĐT hoặc Platform và có khả năng trùng?"}:::sys
+  M -->|"Có"| N{"Tích xác nhận, vẫn lưu?"}:::pkd
+  N -->|"Quay lại sửa"| H
+  N -->|"Vẫn lưu"| O
+  M -->|"Không"| O["Lưu (kèm đổi stage nếu có), ghi lịch sử cũ → mới, cập nhật Hoạt động gần nhất"]:::sys
+  O --> Z(["Đã cập nhật"]):::endn
+</div>
+<div class="warn">Không sửa được trên màn lead: trường hệ thống, BD PIC (dùng Gán PIC), Team, Ngày nhập data, Mã KH. Không còn trang sửa riêng và mục "Sửa lead"; link <code>/edit</code> cũ chuyển về màn lead.<br>Lead Thắng: trường thiếu do cấu hình đổi sau khi Thắng chỉ nhắc, không chặn lưu.</div>
+
+<h3 id="f03">03 · Đổi stage và kiểm tra điều kiện <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Kéo thẻ trên Kanban, chọn ở nút Stage, hoặc bấm stage trên thanh stage rồi Lưu"]:::pkd
+  A --> B{"Có quyền lead.move_stage?"}:::sys
+  B -->|"Không"| X(["Trả thẻ về chỗ cũ"]):::endn
+  B -->|"Có"| B2{"Lead đang ở Closed Lost?"}:::sys
+  B2 -->|"Có"| X0(["Không chuyển được, lead chỉ xem"]):::endn
+  B2 -->|"Không"| B3{"Stage đích đang dùng?"}:::sys
+  B3 -->|"Không"| X4(["Không chuyển, báo stage ngừng dùng"]):::endn
+  B3 -->|"Có"| W{"Lead đang ở Closed Won?"}:::sys
+  W -->|"Có"| W2{"Đích là stage Đang mở?"}:::sys
+  W2 -->|"Không"| X1(["Không chuyển sang Thắng / Thua khác"]):::endn
+  W2 -->|"Có"| W4{"Hồ sơ bàn giao còn ở S0 – S1?"}:::sys
+  W4 -->|"Không — đã từ S2"| X5(["Chặn: liên hệ Leader AM"]):::endn
+  W4 -->|"Có"| W3["Nhập lý do chuyển lùi (lưu thành ghi chú), chọn lại chất lượng; SLA tính lại từ lúc chuyển; huỷ hồ sơ bàn giao, báo Leader AM"]:::pkd
+  W3 --> J
+  W -->|"Không"| C{"Đích là Closed Lost?"}:::sys
+  C -->|"Có"| C2["Chỉ chọn lý do mất, ghi chú tuỳ chọn; không kiểm tra trường khác"]:::pkd
+  C2 --> C3["Chất lượng Freeze, dừng SLA, lead chỉ xem"]:::sys
+  C3 --> J
+  C -->|"Không"| E{"Đủ trường ✔ của stage đích, gồm trường kế thừa?"}:::sys
+  E -->|"Thiếu"| E2["Chặn, liệt kê trường thiếu; từ Kanban mở màn lead với stage đích chọn sẵn"]:::sys
+  E2 --> X2(["Bổ sung rồi thử lại"]):::endn
+  E -->|"Đủ"| F{"Thoả điều kiện báo giá / hợp đồng ✔ của stage đích?"}:::sys
+  F -->|"Chưa"| F2["Hiện checklist ✓ / ✕ kèm nút gợi ý Tạo báo giá / Tạo hợp đồng; tạo xong quay lại lead"]:::sys
+  F2 --> X3(["Chưa chuyển"]):::endn
+  F -->|"Thoả"| G{"Chất lượng hợp lệ với stage đích?"}:::sys
+  G -->|"Không"| G2["Chọn lại chất lượng lead"]:::pkd
+  G2 --> J
+  G -->|"Có"| J["Đổi stage (được nhảy nhiều stage một lần); Lead Status mặc định của stage đích; ghi lịch sử stage"]:::sys
+  J --> K{"Stage mới là Closed Won?"}:::sys
+  K -->|"Có"| Y(["Mở hồ sơ bàn giao mới ở S0, dừng SLA"]):::endn
+  K -->|"Không"| Z(["Cập nhật Kanban, danh sách"]):::endn
+</div>
+<div class="warn">Lùi từ Closed Won: chỉ khi hồ sơ bàn giao còn ở S0 – S1 (chưa qua G1); hồ sơ chuyển Đã huỷ, lưu lý do, báo Leader AM. Từ S2 trở đi thì chặn, báo "Hồ sơ bàn giao đã ở {S}, liên hệ Leader AM". Hợp đồng và mã KH giữ nguyên. Lead vào lại Closed Won thì mở hồ sơ bàn giao mới từ S0.</div>
+
+<h3 id="f04">04 · Giám sát SLA và cảnh báo <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Chạy định kỳ 15 phút cho lead đang mở; tính từ mốc bắt đầu (mặc định Ngày nhập data), 24/7"]:::sys
+  A --> B{"So với SLA theo chất lượng lead"}:::sys
+  B -->|"Dưới x%"| X(["Không cảnh báo"]):::endn
+  B -->|"Đã dùng ≥ x% thời hạn"| C["Nhãn Lưu ý"]:::sys
+  C -->|"Còn ≤ y giờ đến hạn (y sau ngưỡng Lưu ý)"| D["Nhãn Cảnh báo"]:::sys
+  D -->|"Hết hạn"| E["Nhãn Quá hạn"]:::sys
+  C --> NT["Gửi PIC (trong app, Telegram cá nhân) nếu sự kiện đang bật trong cấu hình Thông báo"]:::sys
+  D --> NT
+  A --> W["Warm, Hot quá chu kỳ gặp khách; khách đã thắng quá chu kỳ review (số ngày cấu hình): cảnh báo"]:::sys
+  E --> NT
+  W --> NT
+  NT --> F["Quá hạn: gửi thêm vào nhóm Telegram của team"]:::sys
+  F --> G["Trưởng nhóm: nhắc PIC hoặc gán lại PIC"]:::lead
+  G --> H["PIC: liên hệ khách, thêm ghi chú, đổi Lead Status, chất lượng hoặc stage"]:::pkd
+  H --> I["Ghi chú mới hoặc đổi chất lượng: SLA đếm lại (bật / tắt được), gỡ nhãn"]:::sys
+  I --> Z(["Kết thúc"]):::endn
+</div>
+<div class="warn">x (%) và y (giờ) là tham số theo từng mức chất lượng. Màn cấu hình chặn lưu nếu ngưỡng Cảnh báo không nằm sau ngưỡng Lưu ý và trước hạn. SLA dừng khi lead ở Closed Won / Closed Lost.</div>
+
+<h3 id="f05">05 · Báo giá: tạo, duyệt, gửi <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A0{"Lead đã tới stage tạo báo giá (mặc định từ Opportunity), hoặc đang chọn stage cần báo giá trên trang tạo / thanh stage? Không phải Closed Lost"}:::sys
+  A0 -->|"Chưa"| X0(["Chưa có tab Báo giá"]):::endn
+  A0 -->|"Rồi, có quyền quote.create"| A["Chọn loại: cơ bản (mẫu, tự điền giá) hoặc nâng cao (upload file, giá trị, điều khoản)"]:::pkd
+  A --> B["Lưu Nháp, mã GIP-BG-YYYY-XXX-vN"]:::sys
+  B --> B2{"Người tạo là cấp duyệt (TP PKD / PKD Master)?"}:::sys
+  B2 -->|"Có — không cần duyệt"| E
+  B2 -->|"Không"| C["Bấm Gửi duyệt → Chờ duyệt"]:::pkd
+  C --> D{"TP PKD / PKD Master quyết định"}:::appr
+  D -->|"Trả về (bắt buộc lý do)"| R["Cần chỉnh sửa: sale sửa, gửi duyệt lại"]:::pkd
+  R --> C
+  D -->|"Không duyệt"| X(["Đã huỷ"]):::endn
+  D -->|"Duyệt"| E["Đã duyệt"]:::sys
+  E --> L["Gửi khách: Đã gửi khách (Lead Status không tự đổi)"]:::pkd
+  L --> M{"Khách phản hồi?"}:::cust
+  M -->|"Từ chối"| N["Khách từ chối: ghi lý do"]:::pkd
+  N --> N2{"Còn đàm phán?"}:::pkd
+  N2 -->|"Có"| A
+  N2 -->|"Không"| N3(["Chuyển lead Closed Lost (sơ đồ 03)"]):::endn
+  M -->|"Đồng ý"| O["Khách đồng ý; version cũ → Bị thay thế"]:::sys
+  O --> O2["Có thể chuyển stage, nhưng phải qua luồng đổi stage chuẩn (sơ đồ 03)"]:::pkd
+  O2 --> Y(["Sang hợp đồng (sơ đồ 06)"]):::endn
+  M -->|"Không phản hồi"| P["Quá ngày hiệu lực: Hết hiệu lực, nhắc PIC"]:::sys
+  P --> Z(["Kết thúc"]):::endn
+</div>
+<div class="warn">Một luồng duyệt cho cả 2 loại. Không có bước Kế toán trưởng, BOD hay bộ phận xác nhận. Chiết khấu &gt; 10% chỉ nhập được khi có quyền <code>quote.discount_over_10</code>. "Có báo giá" tính mọi báo giá còn hiệu lực, kể cả Nháp / Chờ duyệt; không tính Đã huỷ, Hết hiệu lực, Bị thay thế, Khách từ chối.</div>
+
+<h3 id="f06">06 · Hợp đồng và Closed Won <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Báo giá Khách đồng ý: PIC chuyển lead sang stage Contract (sơ đồ 03)"]:::pkd
+  A --> C["Bấm Tạo hợp đồng trên báo giá Khách đồng ý (quyền contract.create): kế thừa bảng giá, giá trị, platform, PIC; nhập ngày hiệu lực, thời hạn"]:::pkd
+  C --> C2{"Lead đã có mã KH?"}:::sys
+  C2 -->|"Chưa — hợp đồng đầu tiên"| C3["Cấp mã KH GIP + 5 số tăng dần; tạo hồ sơ khách hàng"]:::sys
+  C2 -->|"Có"| D
+  C3 --> D["Lưu hợp đồng Nháp, mã GIP-HD-YYYY-XXX"]:::sys
+  D --> E["Ký hợp đồng, upload bản ký"]:::pkd
+  E --> F["Hợp đồng Chờ hiệu lực / Đang hiệu lực"]:::sys
+  F --> G["PIC chuyển lead sang Closed Won"]:::pkd
+  G --> H{"Có hợp đồng và hợp đồng đã ký (có file)?"}:::sys
+  H -->|"Chưa"| H2["Chặn, checklist ✕ kèm nút Tải file hợp đồng đã ký"]:::sys
+  H2 --> E
+  H -->|"Đủ, kèm trường ✔ khác của Closed Won"| I["Closed Won"]:::sys
+  I --> J["Mở hồ sơ onboarding S0, báo Leader AM"]:::sys
+  J --> Y(["Sang bàn giao (sơ đồ 07)"]):::endn
+  F --> K["Hằng ngày: kiểm tra ngày hết hạn hợp đồng"]:::sys
+  K --> L{"Còn bao lâu đến hết hạn?"}:::sys
+  L -->|"Đến mốc nhắc gia hạn (cấu hình)"| M["Sắp hết hạn: tạo Renewal (sơ đồ 09)"]:::am
+  M --> M2(["Sang gia hạn (sơ đồ 09)"]):::endn
+  L -->|"Đã quá hạn"| N["Hết hạn: cần gia hạn hoặc đóng"]:::am
+  N --> Z(["Kết thúc"]):::endn
+</div>
+
+<div class="warn">Đây là cách tạo hợp đồng từ báo giá. Cách thứ 2 là <b>Gia hạn từ hợp đồng cũ</b>: không cần báo giá, xem Cấu hình › 5 và sơ đồ 09.</div>
+
+<h3 id="f07">07 · Bàn giao và onboarding S0 – S7 <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Deal Closed Won: mở hồ sơ onboarding, Handover Pending"]:::sys
+  A --> B["S0 chốt khách, thị trường, PKD Owner"]:::pkd
+  B --> C["S1 nộp bàn giao thông tin thương mại, cam kết, rủi ro"]:::pkd
+  C --> D["Leader AM: phân công AM Owner"]:::lead
+  D --> E{"G1: thông tin bàn giao đủ?"}:::am
+  E -->|"Thiếu — trả PKD, giữ S1"| C
+  E -->|"Đủ"| F["S2 chuẩn bị 6 nhóm sẵn sàng; nhập ngày hàng dự kiến về"]:::pkd
+  F --> G["Kho: Warehouse Ready · DSP: DSP Ready (nếu có dịch vụ DSP)"]:::ops
+  G --> I["S3 PKD nộp gói sẵn sàng; hệ thống ghi kết quả kiểm tra Đủ / Chưa đủ"]:::pkd
+  I --> I2{"Đã có ngày hàng dự kiến về?"}:::sys
+  I2 -->|"Chưa"| I3["Gắn cờ AT RISK"]:::sys
+  I3 --> J
+  I2 -->|"Có"| J{"G2: AM quyết định"}:::am
+  J -->|"Chấp nhận (chỉ khi kết quả Đủ)"| L
+  J -->|"Trả về — lần trả +1"| F
+  J -->|"Escalate: chưa đủ nhưng hàng sắp về (bắt buộc lý do)"| K["Giữ S3, cờ BLOCKED, Handover Escalated"]:::sys
+  K --> K2{"Leader AM + TPKD quyết định (L3: COO)"}:::lead
+  K2 -->|"Return"| F
+  K2 -->|"Accept kèm điều kiện, người chịu trách nhiệm"| L["S4 AM tiếp nhận, Handover Confirmed, khách thuộc P.TNKH"]:::am
+  L --> M["Kho: nhận hàng lần đầu, kiểm kê, gửi biên bản"]:::ops
+  M --> N["G3: Kho xác nhận khả năng xử lý"]:::ops
+  N --> O["S5 Go Live, đơn đầu tiên, lô vận hành thành công đầu tiên"]:::am
+  O --> P{"Lô đầu lỗi nghiêm trọng?"}:::am
+  P -->|"Có"| P2["Ghi Risk (sơ đồ 08), giữ S5"]:::am
+  P2 -->|"Risk đã xử lý"| O
+  P -->|"Không"| Q["S6 ổn định vận hành, theo dõi 8 tiêu chí exit"]:::am
+  Q --> R["Đề xuất G4"]:::am
+  R --> T{"G4: Leader AM duyệt?"}:::lead
+  T -->|"Trả về S6"| Q
+  T -->|"Duyệt"| U["S7 quản lý thường xuyên, ghi BAU Date"]:::sys
+  U --> Z(["Kết thúc"]):::endn
+</div>
+<div class="warn">Kho / DSP đang tạm hoãn, giai đoạn đầu AM ghi nhận thay.</div>
+
+<h3 id="f08">08 · Sức khoẻ khách hàng và rủi ro <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> B{"Đã có đồng bộ dữ liệu FFM và công thức 10 chỉ số? (giai đoạn đầu: Chưa)"}:::sys
+  B -->|"Chưa"| C["AM đánh giá Health thủ công"]:::am
+  C --> D
+  B -->|"Có — giai đoạn sau"| A["Đồng bộ đơn, kho, SSC, hợp đồng; tính 10 chỉ số"]:::sys
+  A --> D["Health Xanh / Vàng / Đỏ kèm lý do, lưu lịch sử"]:::sys
+  D --> E{"Health Đỏ?"}:::sys
+  E -->|"Không"| X(["Tiếp tục theo dõi"]):::endn
+  E -->|"Có"| F["Bổ sung bối cảnh, lập Action Plan (owner, hạn)"]:::am
+  F --> G["Tạo hoặc cập nhật Risk: mức, nhóm, mô tả, nguồn, owner, hạn"]:::am
+  G --> H{"Critical hoặc quá hạn?"}:::sys
+  H -->|"Có"| I["Escalate TP.TNKH (L3: COO)"]:::lead
+  I --> J
+  H -->|"Không"| J["Thực hiện Action Plan, theo dõi"]:::am
+  J --> K{"Có Resolution?"}:::am
+  K -->|"Chưa"| J
+  K -->|"Có"| L["Đóng Risk"]:::am
+  L --> Z(["Kết thúc"]):::endn
+</div>
+<div class="warn">Giai đoạn đầu chỉ có nhánh "Chưa": AM tự đánh giá Health (Xanh / Vàng / Đỏ kèm lý do). Tính tự động 10 chỉ số làm khi có đồng bộ dữ liệu FFM. Lỗi nghiêm trọng của khách (vd lô đơn đầu lỗi) ghi thành Risk.</div>
+
+<h3 id="f09">09 · Gia hạn hợp đồng <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Đến mốc nhắc gia hạn đã cấu hình: tạo Renewal (Not Started), gửi nhắc theo cấu hình"]:::sys
+  A --> B["Reviewing: xem hợp đồng, Health, Risk"]:::am
+  B --> C{"Đánh giá"}:::am
+  C -->|"Bình thường"| F
+  C -->|"Cần hành động"| D["Action Required: nhập Renewal Action"]:::am
+  C -->|"Có rủi ro"| E["At Risk: nhập Renewal Action, theo dõi rủi ro"]:::am
+  D --> F{"Có thay đổi thương mại?"}:::am
+  E --> F
+  F -->|"Không"| H{"Khách gia hạn?"}:::cust
+  H -->|"Có"| I["Renewed: bấm Gia hạn, tạo hợp đồng mới từ hợp đồng cũ (sao chép điều khoản, cùng mã KH, không cần báo giá); hợp đồng cũ, lead cũ giữ nguyên"]:::sys
+  I --> Y(["Tiếp tục quản lý"]):::endn
+  H -->|"Không"| J["Not Renewed: bắt buộc nhập lý do"]:::am
+  J --> Z(["Kết thúc"]):::endn
+  F -->|"Có"| G["Negotiating: PKD là Commercial Owner, tạo deal mới vào Proposal: đủ trường kế thừa, phải có báo giá còn hiệu lực; không cảnh báo trùng với chính khách"]:::pkd
+  G --> G2["Deal đi theo sơ đồ 05, 06"]:::pkd
+  G2 --> G3{"Kết quả deal"}:::sys
+  G3 -->|"Closed Won: hợp đồng mới từ deal, cùng mã KH"| Y2["Renewed"]:::sys
+  G3 -->|"Closed Lost"| J
+  Y2 --> Y
+</div>
+<div class="warn">Mặc định PKD User chưa có quyền xem / sửa Renewal; System Admin bật cả cặp quyền khi cần.</div>
+
+<h3 id="f10">10 · Tăng trưởng (upsell, mở thị trường) <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  A1["AM ghi nhận: khách muốn thêm thị trường, thiếu dịch vụ, khách yêu cầu"]:::am --> C
+  A2["Giai đoạn sau — hệ thống phát hiện: sản lượng, doanh thu tăng, cần thêm năng lực kho"]:::sys -.-> C
+  C["Tạo tín hiệu tăng trưởng: chọn loại (danh mục dùng chung), ghi bằng chứng"]:::am --> D{"Có cơ hội?"}:::am
+  D -->|"Không"| X["Loại tín hiệu, ghi lý do"]:::am
+  X --> X2(["Kết thúc"]):::endn
+  D -->|"Có"| E["Cơ hội tăng trưởng: nhu cầu, dịch vụ hoặc thị trường đề xuất, tiềm năng"]:::am
+  E --> F["Chuyển cho PKD (không đổi Customer Owner)"]:::am
+  F --> G["PKD tạo deal mới: nguồn Khách hiện hữu – từ AM, vào Qualification; bổ sung trường kế thừa của Lead"]:::pkd
+  G --> H["Không cảnh báo trùng với chính khách này; deal đi theo Pipeline (sơ đồ 03)"]:::sys
+  H --> I["Kết quả deal cập nhật lại Cơ hội tăng trưởng"]:::sys
+  I --> Z(["Kết thúc"]):::endn
+</div>
+<div class="warn">Giai đoạn đầu chỉ có tín hiệu AM ghi nhận tay; nhánh hệ thống phát hiện (nét đứt) làm khi có đồng bộ dữ liệu FFM. Loại tín hiệu là danh mục dùng chung (7 giá trị mẫu, sửa được).</div>
+
+<h3 id="f12a">12a · Thiết lập tổ chức và phân quyền <span class="tnew">v0.2</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Trên FFM: khai báo phòng ban (PKD, P.TNKH)"]:::lead
+  A --> B["Trên FFM: khai báo vai trò theo phòng ban, cấp Nhân viên / Quản lý / Trưởng phòng; phạm vi dữ liệu một lần cho cả vai trò"]:::lead
+  B --> C["CRM · Phân quyền: chọn vai trò, tích quyền (67 quyền / 11 nhóm)"]:::lead
+  C --> D{"Quyền thao tác có kèm quyền xem cùng nhóm?"}:::sys
+  D -->|"Không — sửa"| C
+  D -->|"Có"| E["System Admin cấu hình nghiệp vụ: danh mục, Pipeline, trường theo stage, SLA, kiểm tra trùng, Telegram"]:::lead
+  E --> F["Trên FFM: thêm người dùng cấp Quản lý"]:::lead
+  F --> G["Trên FFM: tạo team: phòng ban, trưởng nhóm cấp Quản lý, Chat ID nhóm Telegram"]:::lead
+  G --> H["Trên FFM: thêm nhân viên: email, mã PIC, phòng ban, vai trò, team"]:::lead
+  H --> I["Trạng thái Chưa kích hoạt"]:::sys
+  I --> J["Người dùng đăng nhập lần đầu"]:::pkd
+  J --> K["Đang hoạt động; quyền = quyền của vai trò được gán"]:::sys
+  K --> Z(["Kết thúc"]):::endn
+</div>
+<div class="warn">7 vai trò: PKD User · PKD Manager · PKD Master · AM · AM Leader · TP.TNKH · System Admin. System Admin không thuộc phòng ban / team, là vai trò duy nhất vào Cài đặt hệ thống, không có quyền nghiệp vụ. 4 phạm vi: Của mình · Cả team · Tất cả · Chỉ xem. Quốc gia: xem C4. Màn Tổ chức &amp; người dùng trong CRM chỉ xem (C3).</div>
+
+<h3 id="f12b">12b · Kiểm tra quyền ở mỗi thao tác</h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["Thao tác, vd sửa trường trên màn lead"]:::pkd
+  A --> B["Lấy vai trò của người dùng"]:::sys
+  B --> C{"Vai trò có quyền?"}:::sys
+  C -->|"Không"| X["Từ chối, ẩn chức năng"]:::sys
+  C -->|"Có"| D{"Bản ghi trong phạm vi dữ liệu của vai trò?"}:::sys
+  D -->|"Không"| X
+  D -->|"Có"| E["Cho phép, ghi nhật ký"]:::sys
+  X --> Z1(["Kết thúc"]):::endn
+  E --> Z2(["Kết thúc"]):::endn
+</div>
+
+<h3 id="f13">13 · Cấu hình stage và trường bắt buộc <span class="tnew">v0.2</span> <span class="tadd">bổ sung 19/10</span></h3>
+<div class="mermaid">
+flowchart TD
+  S((Bắt đầu)) --> A["System Admin: Cài đặt · Pipeline &amp; Lead Status: tab Stage hoặc tab Trường bắt buộc"]:::lead
+  A --> D["Thay đổi: mức ✔ / ○ / trống trong ma trận; thêm, đổi tên, đổi thứ tự, ngừng dùng, xoá stage; Lead Status"]:::lead
+  D --> D2["Hệ thống tự kế thừa: ✔ ở một stage thì ✔ ở mọi stage đứng sau, gồm Thắng, trừ Thua (tính lại theo thứ tự mới)"]:::sys
+  D2 --> E["Bấm Lưu"]:::lead
+  E --> F{"Hợp lệ? Trường khoá vẫn ✔; còn Lead đầu tiên, ≥ 1 stage Đang mở / Thắng / Thua; stage xoá có stage nhận"}:::sys
+  F -->|"Không"| F2["Báo lỗi, giữ giá trị cũ"]:::sys
+  F2 --> D
+  F -->|"Có"| G0{"Có lead Đang mở bị ảnh hưởng? (trường hoặc điều kiện báo giá / hợp đồng vừa thành ✔ ở stage của lead, kể cả do kế thừa, đổi thứ tự hoặc lead được chuyển sang stage nhận)"}:::sys
+  G0 -->|"Có"| G1["Chưa áp dụng thay đổi; liệt kê lead bị ảnh hưởng: số lượng, stage, trường / điều kiện thiếu, PIC"]:::sys
+  G1 --> G2["Khắc phục: bổ sung dữ liệu cho các lead này, rồi lưu lại cấu hình"]:::pkd
+  G2 --> E
+  G0 -->|"Không"| G["Lưu cấu hình, áp dụng ngay; stage xoá: chuyển lead sang stage nhận, Lead Status và chất lượng về giá trị hợp lệ; ghi nhật ký cũ → mới"]:::sys
+  G --> Z(["Kết thúc"]):::endn
+</div>
+<div class="warn">Lead Thắng không bị liệt kê. Khi sửa lead Thắng, trường thiếu do cấu hình mới chỉ hiện nhắc, không chặn lưu.</div>
+
+</main>
+<script>
+  const defs = `
+  classDef pkd fill:#dbeafe,stroke:#6b9bd8,color:#1f2328;
+  classDef sys fill:#eef1f4,stroke:#9aa4ae,color:#1f2328;
+  classDef am fill:#dcfce7,stroke:#5fb07a,color:#1f2328;
+  classDef appr fill:#ffedd5,stroke:#e0a060,color:#1f2328;
+  classDef ops fill:#ede9fe,stroke:#9b8ad8,color:#1f2328;
+  classDef lead fill:#fef3c7,stroke:#d4a72c,color:#1f2328;
+  classDef cust fill:#fce7f3,stroke:#d77fb0,color:#1f2328;
+  classDef endn fill:#ffffff,stroke:#57606a,color:#1f2328;`;
+  document.querySelectorAll('.mermaid').forEach(el => { el.textContent = el.textContent.trim() + '\n' + defs; });
+  mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, wrappingWidth: 230 } });
+</script>
+</body>
+</html>

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luồng tính phí fulfillment theo size sản phẩm</title>
+<style>
+  :root{
+    --kt:#3b6fd8; --kt-bg:#e8f0fe;
+    --kho:#2f9e5b; --kho-bg:#e6f6ec;
+    --ht:#8a4fc7; --ht-bg:#f2eafb;
+    --don:#5f6b7a; --don-bg:#f1f3f5;
+    --q:#c99a06; --q-bg:#fff4cc;
+    --block:#d1453b; --block-bg:#fde8e6;
+    --old:#8d939b; --old-bg:#eceff1;
+    --ds:#d9822b; --ds-bg:#fff0e0;
+    --note:#fffbe8; --note-b:#efd77a;
+    --ink:#1f2937; --muted:#6b7280; --line:#94a3b8; --hl:#2563eb;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#f7f8fb;font-size:15.5px;line-height:1.7}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 56px}
+  header{padding:48px 0 8px}
+  h1{margin:0 0 12px;font-size:32px;letter-spacing:-.3px}
+  h2{font-size:23px;margin:0 0 6px}
+
+  .section{padding:34px 0 10px;opacity:0;transform:translateY(18px);transition:opacity .7s ease, transform .7s ease}
+  .section.show{opacity:1;transform:none}
+  .desc{color:var(--muted);margin:0 0 20px}
+
+  .toc{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+  .toc a{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:8px 18px;text-decoration:none;color:var(--ink);font-weight:600;font-size:14px;transition:all .2s}
+  .toc a:hover{border-color:var(--hl);color:var(--hl);transform:translateY(-1px)}
+
+  .gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:18px}
+  .term{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px 24px;transition:box-shadow .2s, transform .2s}
+  .term:hover{box-shadow:0 8px 22px rgba(0,0,0,.07);transform:translateY(-2px)}
+  .term h3{margin:0 0 6px;font-size:17px}
+  .term .sys{display:inline-block;font-size:12.5px;background:#eef2ff;color:#3730a3;border-radius:6px;padding:2px 8px;margin-bottom:8px;font-family:ui-monospace,Menlo,monospace}
+  .term .ex{display:block;margin-top:10px;padding:10px 14px;background:var(--note);border:1px dashed var(--note-b);border-radius:10px;font-size:14.5px}
+  .term .warn{display:block;margin-top:10px;padding:10px 14px;background:#fff1f2;border-left:4px solid #e11d48;border-radius:8px;font-size:14.5px}
+
+  .controls{position:sticky;top:0;z-index:20;background:rgba(247,248,251,.94);backdrop-filter:blur(6px);padding:14px 0;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .btn{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px 18px;font-size:14.5px;font-weight:600;cursor:pointer;transition:all .15s}
+  .btn:hover{border-color:var(--hl);color:var(--hl)}
+  .btn.primary{background:var(--hl);color:#fff;border-color:var(--hl)}
+  .btn.primary:hover{background:#1d4ed8;color:#fff}
+  .stepinfo{font-weight:700;color:var(--hl);margin-left:6px}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;font-size:13.5px;margin:16px 0 4px}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .legend i{width:15px;height:15px;border-radius:4px;display:inline-block;border:2px solid}
+
+  .scroll{overflow-x:auto;padding:30px 4px 26px;scroll-behavior:smooth}
+  .flow{display:grid;grid-template-columns:repeat(14,250px);column-gap:76px;width:max-content;padding:0 10px}
+  .col{display:flex;flex-direction:column;align-items:center}
+  .row{height:210px;display:flex;align-items:center;justify-content:center;position:relative;width:100%}
+  .node{width:100%;min-height:124px;border-radius:18px;border:2px solid;padding:16px 18px;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px;font-size:15.5px;position:relative;z-index:1;cursor:pointer;transition:transform .25s, box-shadow .25s, opacity .3s, filter .3s}
+  .node:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.10)}
+  .node .n{font-weight:800;font-size:22px}
+  .who{font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;font-weight:800}
+  .kt{border-color:var(--kt);background:var(--kt-bg)}  .kt .who{color:var(--kt)}
+  .kho{border-color:var(--kho);background:var(--kho-bg)} .kho .who{color:var(--kho)}
+  .ht{border-color:var(--ht);background:var(--ht-bg)}  .ht .who{color:var(--ht)}
+  .don{border-color:var(--don);background:var(--don-bg)} .don .who{color:var(--don)}
+  .ds{border-color:var(--ds);background:var(--ds-bg)}  .ds .who{color:var(--ds)}
+
+  .diamond{width:180px;height:180px;transform:rotate(45deg);border:2px solid var(--q);background:var(--q-bg);border-radius:14px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;cursor:pointer;transition:box-shadow .25s, opacity .3s, filter .3s}
+  .diamond:hover{box-shadow:0 10px 24px rgba(0,0,0,.10)}
+  .diamond > div{transform:rotate(-45deg);text-align:center;font-size:14.5px;width:170px;line-height:1.45}
+  .diamond .n{font-weight:800;font-size:22px}
+
+  .row::after{content:"";position:absolute;right:-76px;top:50%;width:68px;height:4px;transform:translateY(-50%);
+    background:repeating-linear-gradient(90deg,var(--line) 0 10px,transparent 10px 16px);background-size:32px 4px;animation:flowdash 1.1s linear infinite;border-radius:2px}
+  .row::before{content:"";position:absolute;right:-78px;top:50%;transform:translateY(-50%);border-left:12px solid var(--line);border-top:8px solid transparent;border-bottom:8px solid transparent;z-index:2}
+  .col:last-child .row::after,.col:last-child .row::before{display:none}
+  @keyframes flowdash{to{background-position:32px 0}}
+  .yes{position:absolute;right:-60px;top:calc(50% - 32px);font-size:14px;font-weight:800;color:#334155;z-index:3}
+
+  .down{height:240px;width:100%;display:flex;flex-direction:column;align-items:center}
+  .vline{width:4px;height:48px;position:relative;border-radius:2px;background-size:4px 32px;animation:flowdown 1.1s linear infinite}
+  @keyframes flowdown{to{background-position:0 32px}}
+  .vline::after{content:"";position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);border-top:11px solid currentColor;border-left:8px solid transparent;border-right:8px solid transparent}
+  .v-old{color:var(--old);background-image:repeating-linear-gradient(180deg,var(--old) 0 10px,transparent 10px 16px)}
+  .v-block{color:var(--block);background-image:repeating-linear-gradient(180deg,var(--block) 0 10px,transparent 10px 16px)}
+  .vlbl{font-size:14.5px;font-weight:800;margin:10px 0 12px}
+  .branch{width:100%;border-radius:16px;border:2px solid;padding:16px 18px;text-align:center;font-size:15px;line-height:1.6;cursor:pointer;transition:opacity .3s, filter .3s, box-shadow .25s}
+  .branch:hover{box-shadow:0 10px 24px rgba(0,0,0,.08)}
+  .branch .go{display:block;margin-top:8px;font-size:14px;font-weight:700}
+  .b-old{border-color:var(--old);background:var(--old-bg);color:#374151}
+  .b-block{border-color:var(--block);background:var(--block-bg)}
+  .b-block .go{color:var(--block)}
+
+  .flow.playing .node,.flow.playing .diamond,.flow.playing .branch{opacity:.35;filter:grayscale(.6)}
+  .flow.playing .done{opacity:.8 !important;filter:none !important}
+  .flow.playing .active{opacity:1 !important;filter:none !important;box-shadow:0 0 0 5px rgba(37,99,235,.28),0 14px 30px rgba(37,99,235,.18);animation:pulse 1.6s ease-in-out infinite}
+  .diamond.active{animation:pulseD 1.6s ease-in-out infinite !important}
+  @keyframes pulse{0%,100%{transform:translateY(-3px) scale(1)}50%{transform:translateY(-3px) scale(1.035)}}
+  @keyframes pulseD{0%,100%{transform:rotate(45deg) scale(1)}50%{transform:rotate(45deg) scale(1.05)}}
+  .selected{outline:3px solid var(--hl);outline-offset:4px}
+
+  .detailgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:24px;margin-top:6px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:26px 30px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .card h3{margin:0 0 4px;font-size:19px}
+  .card .who2{font-size:12px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+  #detail-body{animation:fadein .45s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card ul{padding-left:22px;margin:10px 0} .card li{margin-bottom:6px}
+  .exbox{margin-top:14px;padding:14px 18px;background:var(--note);border:1px dashed var(--note-b);border-radius:12px}
+  .tracker .line{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px dashed #e5e7eb;opacity:0;transform:translateX(-8px);transition:all .45s}
+  .tracker .line.on{opacity:1;transform:none}
+  .tracker .total{font-weight:800;font-size:18px;color:var(--hl);border-bottom:none}
+  .tracker .msg{margin:10px 0 14px;padding:12px 16px;background:#eff6ff;border-radius:12px;min-height:52px;animation:fadein .4s ease}
+  .items{margin:8px 0 6px;padding-left:20px}
+
+  .formula{background:#f0fdf4;border:1px solid #bbe5c9;border-radius:14px;padding:18px 22px;font-weight:700;font-size:17px;margin:10px 0 24px}
+  .formula span{display:inline-block;padding:2px 10px;border-radius:8px;margin:2px}
+  .f1{background:#dbeafe}.f2{background:#ede9fe}.f3{background:#ffedd5}
+  table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0 22px;background:#fff}
+  th,td{border:1px solid #e5e7eb;padding:11px 14px;text-align:left;vertical-align:top}
+  th{background:#f9fafb}
+  td.num{text-align:right;white-space:nowrap}
+  .sz{display:inline-block;min-width:44px;text-align:center;padding:3px 10px;border-radius:8px;font-weight:800}
+  .sz.S{background:#dbeafe;color:#1e40af}.sz.M{background:#ede9fe;color:#5b21b6}.sz.X{background:#fee2e2;color:#b91c1c}
+
+  .oneline{font-size:19px;font-weight:600;color:#1e3a8a;background:linear-gradient(90deg,#dbeafe,#f5f3ff);display:inline-block;padding:12px 22px;border-radius:14px;margin:4px 0 22px}
+  .story{background:#fff;border:1px solid #e5e7eb;border-left:6px solid var(--hl);border-radius:16px;padding:22px 30px;max-width:1100px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .story-t{font-weight:800;font-size:17px;margin-bottom:6px;color:var(--hl)}
+  .story p{margin:10px 0;font-size:16px}
+  .main-flow{background:linear-gradient(180deg,#ffffff,#f8faff);border:2px solid #c7d7fe;border-radius:24px;padding:30px 34px 34px !important;margin-top:28px;box-shadow:0 18px 40px rgba(37,99,235,.10)}
+  .main-flow h2{font-size:28px;color:#1e3a8a}
+  .main-flow .controls{background:rgba(248,250,255,.95)}
+  .flow .col{opacity:0;transform:translateY(16px);animation:colin .55s ease forwards}
+  @keyframes colin{to{opacity:1;transform:none}}
+
+  .decided td:first-child{font-weight:700;white-space:nowrap}
+  .open td:first-child{font-weight:700;white-space:nowrap;color:#b45309}
+  .tag{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:1px 8px;margin-left:6px}
+  .tag.ok{background:#dcfce7;color:#166534}.tag.wait{background:#fef3c7;color:#92400e}
+  footer{padding:30px 0 50px;color:var(--muted);font-size:13px}
+  @media (max-width:1000px){.detailgrid{grid-template-columns:1fr}.wrap{padding:0 22px}}
+  /* ---------- prototype ---------- */
+  .pt-wrap{display:grid;grid-template-columns:1fr;gap:22px;align-items:start;max-width:1100px}
+  .pt-card{background:#fff;border:1px solid #d9d9d9;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.08);font-size:14px;line-height:1.5715}
+  .pt-head{padding:14px 22px;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:16px;display:flex;justify-content:space-between}
+  .pt-body{padding:20px 22px}
+  .pt-foot{padding:10px 16px;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:8px}
+  .pt-row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start;margin-bottom:14px}
+  .pt-label{text-align:right;padding-top:5px;color:rgba(0,0,0,.88)}
+  .pt-label.req:before{content:"* ";color:#ff4d4f}
+  .pt-input,.pt-select,.pt-ta{width:100%;border:1px solid #d9d9d9;border-radius:6px;padding:4px 11px;font-size:14px;font-family:inherit;background:#fff}
+  .pt-ta{min-height:64px;font-family:ui-monospace,Menlo,monospace}
+  .pt-input:focus,.pt-ta:focus{outline:none;border-color:#4096ff;box-shadow:0 0 0 2px rgba(5,145,255,.1)}
+  .pt-tagbox{border:1px solid #d9d9d9;border-radius:6px;padding:2px 6px;min-height:32px}
+  .pt-tag{display:inline-block;background:rgba(0,0,0,.04);border:1px solid #d9d9d9;border-radius:4px;padding:0 7px;margin:2px;font-size:12.5px}
+  .pt-tag.blue{background:#1677ff;color:#fff;border-color:#1677ff;font-family:ui-monospace,Menlo,monospace;cursor:copy}
+  .pt-btn{border:1px solid #d9d9d9;background:#fff;border-radius:6px;padding:4px 15px;font-size:14px;cursor:pointer}
+  .pt-btn:hover{color:#4096ff;border-color:#4096ff}
+  .pt-btn.primary{background:#1677ff;border-color:#1677ff;color:#fff}
+  .pt-btn.primary:hover{background:#4096ff;color:#fff}
+  .pt-btn.dashed{border-style:dashed;width:100%;margin-top:4px}
+  .pt-gear{cursor:pointer;font-size:16px;color:#1677ff;margin-left:4px}
+  .pt-gear:hover{color:#0958d9}
+  .pt-field{margin-bottom:12px}
+  .pt-field small{display:block;color:rgba(0,0,0,.45);margin:2px 0 0 2px}
+  .pt-badge{display:inline-block;font-size:11.5px;border-radius:4px;padding:0 6px;margin-left:6px}
+  .pt-badge.ok{background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f}
+  .pt-badge.miss{background:#fff2f0;color:#cf1322;border:1px solid #ffccc7}
+  .pt-badge.off{background:#fafafa;color:rgba(0,0,0,.45);border:1px solid #d9d9d9}
+  .pt-ex{background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;padding:8px 12px;margin-top:6px;font-size:13px}
+  .pt-err{color:#ff4d4f;font-size:13px;margin-top:4px}
+  .pt-ok{color:#389e0d;font-size:13px;margin-top:4px}
+  .pt-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:60px 0}
+  .pt-mask.open{display:flex}
+  .pt-modal{width:640px;max-width:94vw}
+  .pt-size{border:1px solid #f0f0f0;border-radius:8px;padding:10px 12px;margin-bottom:10px}
+  .pt-size-h{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+  .pt-size-h span{font-weight:400;color:rgba(0,0,0,.45)}
+  .pt-fee{display:grid;grid-template-columns:1fr 150px 28px;gap:8px;margin-bottom:6px;align-items:center}
+  .pt-price{display:flex;border:1px solid #d9d9d9;border-radius:6px;overflow:hidden}
+  .pt-price input{border:none;width:100%;padding:4px 8px;font-size:14px;text-align:right}
+  .pt-price input:focus{outline:none}
+  .pt-price i{font-style:normal;background:#fafafa;border-left:1px solid #d9d9d9;padding:4px 8px;color:rgba(0,0,0,.45)}
+  .pt-del{cursor:pointer;color:rgba(0,0,0,.45);text-align:center}
+  .pt-del:hover{color:#ff4d4f}
+  .pt-note{background:var(--note);border:1px dashed var(--note-b);border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:12px}
+  .pt-sim table td,.pt-sim table th{padding:4px 8px}
+  .pt-qty{width:64px;border:1px solid #d9d9d9;border-radius:6px;padding:2px 6px;text-align:right}
+  .pt-grid4{display:grid;grid-template-columns:1fr 1.6fr 1fr 1fr;gap:12px;margin-bottom:12px}
+  .pt-lbl{font-weight:600;margin-bottom:4px}
+  .pt-lbl.req:before{content:"* ";color:#ff4d4f}
+  .pt-divider{display:flex;align-items:center;gap:10px;margin:8px 0 14px;font-weight:600}
+  .pt-divider:before,.pt-divider:after{content:"";border-top:1px solid #f0f0f0;flex:1}
+  .pt-divider:before{flex:0 0 90px}
+  .pt-cfg{display:grid;grid-template-columns:70px 1fr 1fr 1.4fr 60px;gap:12px;align-items:center;margin-bottom:8px}
+  .pt-cfg.h{font-weight:600}
+  .pt-fwrap{display:flex;gap:6px;align-items:center}
+  .pt-fwrap .pt-input{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:#fafafa;cursor:pointer;text-overflow:ellipsis}
+  .pt-fwrap .pt-input.bad{border-color:#ff4d4f}
+  .pt-cfgbtn{border:1px solid #1677ff;color:#1677ff;background:#fff;border-radius:6px;width:32px;height:32px;flex:0 0 32px;cursor:pointer;font-size:16px;line-height:1}
+  .pt-cfgbtn:hover{background:#e6f4ff}
+  .pt-rowmsg{font-size:12.5px;margin-top:2px}
+  .pt-fmask{z-index:40}
+  .pt-fmodal{width:820px;max-width:96vw}
+  .pt-fgrid{display:grid;grid-template-columns:1fr 280px;gap:18px}
+  .pt-new{display:inline-block;background:#fff7e6;color:#d46b08;border:1px solid #ffd591;border-radius:4px;font-size:11.5px;padding:0 6px;margin-left:6px}
+  @media (max-width:1000px){.pt-wrap{grid-template-columns:1fr}.pt-grid4,.pt-cfg,.pt-fgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <h1>Luồng tính phí fulfillment theo size sản phẩm</h1>
+  <div style="color:#666;font-size:14px;margin:-4px 0 10px">Cập nhật lần cuối: 13/10/2026 · Issue Panchat (kênh ffm_dev): <a href="https://pancakework.vn/issues/w4/c5024/i449">#449</a> · <a href="https://pancakework.vn/issues/w4/c5024/i450">#450</a> · <a href="https://pancakework.vn/issues/w4/c5024/i451">#451</a></div>
+  <div class="oneline">Thêm FFM Fee Type mới <b>FFM Fee By Size</b> trên màn <b>Create Shared Rate</b> có sẵn: dòng Service Type chọn loại này có <b>1 công thức tính phí cho cả đơn</b> do kế toán tự viết, ghép từ các field có sẵn. Giá theo size khai trong modal của từng field (bấm icon bánh răng). Biểu phí GIP viết là <code>{largest_item} + {additional_items}</code>: phí sản phẩm đầu và đóng gói tính 1 lần theo sản phẩm lớn nhất, mỗi sản phẩm còn lại tính theo size của chính nó.</div>
+  <div class="story">
+    <div class="story-t">Hình dung nhanh cả luồng</div>
+    <p>Kho đo <b>dài × rộng × cao</b> cho từng Variation. Kế toán khai báo <b>cấu hình size</b> (biểu phí GIP: S, M, L, XL, XXL, xếp theo thể tích) và cấu hình <b>Shared Rate</b> (màn có sẵn: danh sách Shop, Start Date – End Date, mỗi Service Type một dòng FFM Fee): Service Type nào tính theo size thì chọn FFM Fee Type <b>FFM Fee By Size</b>. Từ kích thước và cấu hình size, hệ thống tự xếp mỗi Variation vào một size.</p>
+    <p>Một đơn được tính phí theo size khi Service Type của đơn được cấu hình <b>FFM Fee By Size</b> trong Shared Rate của Shop, chọn theo ngày gửi đơn sang đơn vị vận chuyển (giống phí FFM hiện tại). Đơn như vậy mà thiếu kích thước thì <b>bị chặn ngay lúc đẩy đơn sang đơn vị vận chuyển</b>.</p>
+    <p>Khi đơn chuyển sang <b>shipped</b> (GIP gọi là lúc xuất kho), hệ thống tìm <b>Largest Item</b> (sản phẩm có size lớn nhất), tính giá trị các field dùng trong công thức (ví dụ <code>{largest_item}</code> = các khoản phí của size Largest Item, <code>{additional_items}</code> = cộng giá từng sản phẩm còn lại theo size của nó), rồi chạy công thức. Kết quả là phí. Đơn có 2 Service Type cùng dùng FFM Fee By Size thì <b>tính 2 lần</b>.</p>
+    <p>Kết quả được lưu cố định vào đơn, cộng vào FFM Fee và đi vào đối soát với seller.</p>
+  </div>
+  <nav class="toc">
+    <a href="#luong">Luồng chính</a>
+    <a href="#quyet-dinh">Đã quyết định</a>
+    <a href="#tu-ngu">Từ ngữ mới</a>
+    <a href="#cong-thuc">Cách tính tiền</a>
+    <a href="#prototype">Prototype màn cấu hình</a>
+    <a href="#combo">Combo và composite</a>
+    <a href="#dev">Lưu ý cho dev</a>
+  </nav>
+</header>
+
+<!-- ================= FLOW ================= -->
+<section class="section show main-flow" id="luong">
+  <h2>Luồng chính</h2>
+  <p class="desc">Bấm <b>▶ Chạy luồng</b> để xem lần lượt từng bước kèm đơn ví dụ, hoặc bấm vào bất kỳ ô nào để xem giải thích chi tiết.</p>
+
+  <div class="controls">
+    <button class="btn primary" id="play">▶ Chạy luồng</button>
+    <button class="btn" id="prev">◀ Bước trước</button>
+    <button class="btn" id="next">Bước sau ▶</button>
+    <button class="btn" id="reset">↺ Xem toàn bộ</button>
+    <span class="stepinfo" id="stepinfo"></span>
+  </div>
+
+  <div class="legend">
+    <span><i style="border-color:var(--kho);background:var(--kho-bg)"></i>Kho làm</span>
+    <span><i style="border-color:var(--kt);background:var(--kt-bg)"></i>Kế toán làm</span>
+    <span><i style="border-color:var(--ht);background:var(--ht-bg)"></i>Hệ thống tự làm</span>
+    <span><i style="border-color:var(--don);background:var(--don-bg)"></i>Đơn hàng</span>
+    <span><i style="border-color:var(--q);background:var(--q-bg);transform:rotate(45deg)"></i>Câu hỏi rẽ nhánh</span>
+    <span><i style="border-color:var(--block);background:var(--block-bg)"></i>Chặn / cảnh báo</span>
+    <span><i style="border-color:var(--old);background:var(--old-bg)"></i>Cách tính cũ, giữ nguyên</span>
+    <span><i style="border-color:var(--ds);background:var(--ds-bg)"></i>Đối soát</span>
+  </div>
+
+  <div class="scroll" id="scroller">
+    <div class="flow" id="flow"></div>
+  </div>
+
+  <div class="detailgrid">
+    <div class="card" id="detail">
+      <div class="who2" id="detail-who"></div>
+      <div id="detail-body"></div>
+    </div>
+    <div class="card tracker">
+      <h3>Đơn ví dụ đi qua luồng</h3>
+      <div>Đơn của Shop A, Service Type “Đơn lẻ” (Shared Rate “GIP – Shop A”, dòng “Đơn lẻ” là FFM Fee By Size), gửi sang đơn vị vận chuyển ngày 05/11, gồm:</div>
+      <ul class="items">
+        <li>2 áo thun – mỗi cái 20 × 15 × 3 cm</li>
+        <li>1 hộp giày – 35 × 25 × 12 cm</li>
+      </ul>
+      <div class="msg" id="tmsg">Bấm ▶ Chạy luồng để xem đơn này đi qua từng bước.</div>
+      <div class="line" id="t1"><span>{largest_item}: hộp giày (L) → 30 + 5</span><b>35</b></div>
+      <div class="line" id="t2"><span>{additional_items}: 2 áo thun (S) × 3</span><b>6</b></div>
+      <div class="line" id="t3"><span>Công thức: {largest_item} + {additional_items} = 35 + 6</span></div>
+      <div class="line total" id="t4"><span>Phí fulfillment theo size (Service Type “Đơn lẻ”)</span><span>41 PHP</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DECISIONS ================= -->
+<section class="section" id="quyet-dinh">
+  <h2>Đã quyết định</h2>
+  <p class="desc">Các điểm dưới đây khác với hoặc bổ sung cho mô tả gốc của issue #449, #451. Cuối mục là lỗi chung cần kiểm tra thêm, ngoài phạm vi task.</p>
+  <div class="card">
+    <h3>Đã quyết định <span class="tag ok">09–13/10/2026</span></h3>
+    <table class="decided">
+      <tr><th>Nội dung</th><th>Quyết định</th><th>Khác gì so với issue</th></tr>
+      <tr><td>Chặn khi thiếu kích thước</td><td>Chặn <b>lúc đẩy đơn sang đơn vị vận chuyển</b>, dùng cấu hình <b>Precheck customer fee before send to courier(s)</b> có sẵn: công thức đã cấu hình không tính ra được phí thì là lỗi, không cho đẩy đơn (ví dụ công thức dùng field ⚙ tính theo size mà có sản phẩm thiếu kích thước; công thức đồng giá như <code>{total_quantity} * 5</code> thì không cần kích thước). Với courier có bật Precheck, đơn không tính được phí thì không đẩy đi được nên không tới shipped. Courier không bật Precheck, nhập / import mã vận đơn khi Shop đã có Reconciliation Account, đơn đồng bộ từ POS và đơn sàn hiện không chạy Precheck, nên vẫn có thể tới shipped: lúc đó cảnh báo (quy tắc chung bên dưới). Nếu cấu hình này rộng quá thì xem xét thêm một cấu hình bổ sung cho phần chặn đẩy đơn này.</td><td>#449 ghi chặn mọi đơn lúc bàn giao (handover). Nay chỉ chặn đơn tính phí theo size, và chặn sớm hơn, lúc đẩy đơn sang đơn vị vận chuyển.</td></tr>
+      <tr><td>Thời điểm tính phí</td><td>Tính khi đơn chuyển sang trạng thái từ <b>shipped</b> trở lên (shipped, delivered, returning, returned), cùng chỗ hệ thống đang tạo dòng FFM Fee. Biểu phí GIP ghi “thu khi xuất kho”: coi như lúc đơn sang shipped. Đã tính rồi thì các lần đổi trạng thái sau không tính lại.<br>Cấu hình size và Shared Rate chọn theo <b>ngày gửi đơn sang đơn vị vận chuyển</b> (<code>get_send_to_partner_date/2</code>, theo múi giờ của nước), giống phí FFM hiện tại ở <code>order_action.ex</code> lúc đơn sang shipped.</td><td>#451 ghi “khi đơn handover”. Đơn có thể chuyển thẳng sang delivered mà không qua shipped, nên điều kiện là “từ shipped trở lên”.</td></tr>
+      <tr><td>Cách tính giá trong báo giá</td><td>Không làm màn báo giá riêng. Trên màn <b>Create Shared Rate</b> có sẵn (Name, Shops, Start Date, End Date, bảng FFM fee configuration theo Service Type), thêm FFM Fee Type mới <b>FFM Fee By Size</b> cạnh Fixed / COD Percentage / Fixed By SKU / Custom Formula. Dòng chọn FFM Fee By Size có <b>1 ô custom formula cho cả đơn</b>, kế toán bấm icon ⚙ cạnh ô FFM Fee Per Order để mở modal Custom Formula, viết công thức bằng các field trong khung “Available Formula's Fields” của modal. <b>Không field nào bắt buộc</b>: khách cần field nào thì dùng field đó. Field có icon bánh răng mở modal khai giá theo size (mỗi size một danh sách khoản phí <b>name</b> + <b>price</b>, giống cách mở Discount By Region ở màn Import File Template):
+        <ul>
+          <li><code>{largest_item}</code> ⚙: tổng các khoản phí của size của <b>Largest Item</b>, tính 1 lần.</li>
+          <li><code>{additional_items}</code> ⚙: cộng các khoản phí của <b>từng sản phẩm còn lại</b> (trừ Largest Item), theo size của chính sản phẩm đó.</li>
+          <li><code>{all_items}</code> ⚙: cộng các khoản phí của <b>mọi sản phẩm</b> theo size của nó (khách không có khái niệm sản phẩm đầu).</li>
+          <li><code>{total_quantity}</code>: số sản phẩm cả đơn.</li>
+        </ul>
+        Biểu phí GIP: <code>{largest_item} + {additional_items}</code>. Xem mục <a href="#prototype">Prototype màn cấu hình</a>.</td><td>#450 ghi màn báo giá riêng, mỗi size 3 mức cố định. Các phương án trước (1 công thức với giá thêm chung; mỗi size 1 công thức) đã bỏ: cách đầu sai với biểu phí GIP ở 990/1.023 tổ hợp đơn chạy thử, cách sau làm người đọc hiểu là size nào cũng cộng phí sản phẩm đầu.</td></tr>
+      <tr><td>Giá sản phẩm tiếp theo</td><td>Theo <b>size của chính sản phẩm đó</b> (biểu phí GIP: “Phí cho sản phẩm trong combo”, Peso/sp): khai trong modal của <code>{additional_items}</code>. Tính cả cái thứ 2 trở đi của chính Largest Item.</td><td>Đúng quy tắc 4 của #451.</td></tr>
+      <tr><td>Sản phẩm đầu (Largest Item)</td><td>Sản phẩm có <b>size lớn nhất</b> trong đơn, đúng như #451. Nhiều sản phẩm cùng size lớn nhất thì chọn 1 sản phẩm (số tiền không đổi vì khoản phí khai báo theo size). Phí sản phẩm đầu và phí vật liệu đóng gói lấy theo size này, tính 1 lần cho mỗi Service Type dùng FFM Fee By Size.</td><td>Không đổi so với #451.</td></tr>
+      <tr><td>Xếp size</td><td>Theo <b>thể tích</b> như biểu phí GIP (S ≤ 1.000 · M ≤ 5.000 · L ≤ 12.000 · XL ≤ 25.000 · XXL ≤ 40.000 cm³). Giới hạn cạnh dài nhất để <b>tuỳ chọn</b> trong cấu hình size (GIP không dùng). Kế toán tự khai số size và tên size.</td><td>#449 ghi 4 size X/S/M/L, có giới hạn 1 chiều. Biểu phí GIP có 5 size, chỉ theo thể tích.</td></tr>
+      <tr><td>Tiền Peso có số lẻ</td><td>Không cần làm tròn: FFM lưu tiền Philippines dạng <code>PHP100</code> (gấp 100 lần), nên 17,5 Peso lưu thành 1750.</td><td>Mới.</td></tr>
+      <tr><td>Combo và sản phẩm composite</td><td>Tính theo <b>hàng thật kho lấy</b>, giống picking: <b>bỏ dòng cha composite</b>, tính dòng con và sản phẩm thường. Largest Item, các field của công thức và Precheck đều dùng các dòng này. Combo khuyến mãi không cần xử lý riêng: sản phẩm trong combo là dòng thường của đơn. Danh sách sản phẩm và số Total quantity trên màn chi tiết đơn giữ nguyên, không hiển thị dòng con (màn này dành cho Telesale chốt đơn; đóng gói đã có màn riêng). Xem mục <a href="#combo">Combo và composite</a>.</td><td>#451 để mở câu “Combo/bundle tính theo từng sp con hay theo kiện?”. Đã chọn theo từng sản phẩm con.</td></tr>
+      <tr><td>Sản phẩm quà tặng</td><td>Tính <b>như sản phẩm thường</b> (sản phẩm tặng kèm giá 0 vẫn được kho lấy và đóng gói).</td><td>Mới, #451 chưa nhắc tới.</td></tr>
+      <tr><td>Đơn hoàn</td><td>Phí của đơn đã tính từ lúc đơn sang shipped; đơn bị hoàn <b>không tính thêm và không hoàn lại</b> phí size.</td><td>#451 để mở câu “Đơn hoàn có thu lại / hoàn phí đóng gói không?”. Biểu phí GIP có dòng “Phí nhập sản phẩm của đơn hoàn” (thu khi nhập kho hàng hoàn): không làm khoản riêng.</td></tr>
+      <tr><td>Đơn có nhiều Service Type</td><td><b>Tính 2 lần</b>: mỗi Service Type của đơn tính theo dòng FFM Fee của Service Type đó trong Shared Rate (kể cả phí đóng gói), rồi cộng các kết quả.</td><td>#451 ghi “phí đóng gói 1 lần / đơn”. Nay mỗi Service Type tính một lần đầy đủ.</td></tr>
+      <tr><td>Phí size và phí FFM cũ</td><td>Cùng 1 Service Type, cùng 1 thời điểm chỉ có <b>1 cấu hình phí</b>: FFM Fee By Size là một FFM Fee Type của dòng Service Type đó, nên thay cho Fixed / COD Percentage / … chứ không cộng thêm. Phí FFM cấp Reconciliation Account và phí Special Product vẫn cộng như hiện tại.</td><td>#451 ghi “không cộng trùng với biểu phí FFM cũ cho cùng service type”: khớp.</td></tr>
+      <tr><td>Chặn trùng</td><td>Dùng kiểm tra có sẵn của Shared Rate: không lưu được 2 Shared Rate chung ít nhất 1 Shop mà khoảng ngày giao nhau, tính cả ngày đầu và ngày cuối.</td><td>#450 AC3 đã có sẵn trong Shared Rate.</td></tr>
+      <tr><td>Hàng đặc biệt / vượt size</td><td>Hàng đặc biệt tính theo <b>Special Product</b> có sẵn trên Shared Rate, hoặc GIP tự viết công thức để xử lý, đều được. <b>Sản phẩm vượt size lớn nhất</b> (không xếp được vào size nào) thì <b>báo lỗi</b> khi đơn có Service Type tương ứng và Service Type đó cấu hình FFM Fee By Size: Precheck chặn đẩy đơn, đơn không qua Precheck thì cảnh báo.</td><td>Biểu phí GIP: “Hàng đặc biệt: trao đổi riêng / theo thực tế”.</td></tr>
+      <tr><td>Không tính được phí</td><td>Áp dụng cho <b>mọi trường hợp</b>: không tính trước được phí thì cảnh báo (lúc đẩy đơn là chặn qua Precheck).</td><td>#451 AC5 ghi “không tìm thấy báo giá thì không tính phí, gắn cảnh báo”.</td></tr>
+    </table>
+
+    <h3>Cần kiểm tra thêm <span class="tag wait">lỗi chung, ngoài phạm vi task</span></h3>
+    <table class="open">
+      <tr><th>Vấn đề</th><th>Bối cảnh</th><th>Người xử lý</th></tr>
+      <tr><td>Số tiền viết thẳng trong custom formula</td><td>Với tiền tệ lưu gấp 100 lần (PHP100, và các tiền tệ khác ngoài danh sách tiền không có số lẻ), giá trị field đã nhân 100 trước khi thay vào công thức, còn số viết thẳng thì giữ nguyên. Ví dụ PH, công thức phí FFM <code>{cod} * 0.02 + 15</code> với COD 1.000 Peso ra 20,15 Peso thay vì 35 Peso. Gặp ở phí FFM loại Custom Formula và công thức file đối soát courier của FFM; công thức file đối soát của CA chạy công thức trước khi quy đổi nên hiểu số viết thẳng khác với phần xem thử (cần kiểm tra thêm). Hệ số nhân / chia (<code>* 0.02</code>) không bị ảnh hưởng. Xem Lưu ý cho dev.</td><td>Anh SH, dev</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ================= GLOSSARY ================= -->
+<section class="section" id="tu-ngu">
+  <h2>Từ ngữ mới trong luồng</h2>
+  <p class="desc">Chỉ gồm các khái niệm luồng này mới đưa vào. Các từ hệ thống đã có (Variation, Service Type, shipped, FFM Fee, Customer Reconciliation…) giữ nguyên nghĩa hiện tại.</p>
+  <div class="gloss">
+    <div class="term"><h3>Sản phẩm trong đơn (item)</h3><span class="sys">cách đếm trong luồng này</span>
+      Đếm theo số lượng, không theo dòng. Dòng “Áo thun × 3” là 3 sản phẩm của cùng 1 Variation. Kích thước đo theo Variation, phí tính theo từng sản phẩm.
+      <span class="warn">Chỉ tính <b>hàng thật kho lấy</b>: bỏ dòng cha của sản phẩm composite, tính các dòng con và sản phẩm thường. Sản phẩm trong combo khuyến mãi và sản phẩm quà tặng (giá 0) là dòng thường, tính bình thường.</span></div>
+    <div class="term"><h3>Thể tích</h3><span class="sys">mới · hệ thống tự tính</span>
+      Dài × rộng × cao của Variation, đơn vị cm³.
+      <span class="ex">Hộp giày 35 × 25 × 12 = 10.500 cm³</span></div>
+    <div class="term"><h3>Cạnh dài nhất</h3><span class="sys">mới · tuỳ chọn</span>
+      Số lớn nhất trong 3 số dài, rộng, cao. Chỉ dùng khi cấu hình size có khai giới hạn cạnh (biểu phí GIP không dùng).
+      <span class="ex">Hộp 40 × 8 × 8 → cạnh dài nhất 40 cm</span></div>
+    <div class="term"><h3>Size (size tính phí)</h3><span class="sys">mới · #449</span>
+      Nhóm cỡ dùng để chọn giá khai trong modal của các field. Biểu phí GIP: S, M, L, XL, XXL. Variation thuộc size nhỏ nhất có <b>thể tích tối đa</b> lớn hơn hoặc bằng thể tích của nó (và vừa giới hạn cạnh, nếu size có khai).
+      <span class="warn">Đây là size để tính phí, không phải size quần áo. Áo size L vẫn có thể thuộc size S để tính phí.</span></div>
+    <div class="term"><h3>Cấu hình size</h3><span class="sys">mới · #449</span>
+      Bảng giới hạn của từng size do kế toán khai báo. Mỗi lần sửa, hệ thống tạo <b>phiên bản mới có ngày áp dụng</b>, phiên bản cũ vẫn giữ để tra cứu.
+      <span class="ex">Biểu phí GIP: S ≤ 1.000 · M ≤ 5.000 · L ≤ 12.000 · XL ≤ 25.000 · XXL ≤ 40.000 cm³</span></div>
+    <div class="term"><h3>Shared Rate (báo giá)</h3><span class="sys">màn có sẵn · Create Shared Rate</span>
+      Cấu hình phí FFM áp cho một danh sách Shop trong một khoảng Start Date – End Date. Mỗi Service Type một dòng FFM Fee (Default, FFM Service Type, FFM Fee Type, FFM Fee Per Order), kèm Special Product. Trong issue và comment gọi là “báo giá” / “bảng giá”: cùng một khái niệm.
+      <span class="warn">Không lưu được 2 Shared Rate chung ít nhất 1 Shop mà khoảng ngày giao nhau (tính cả ngày đầu và ngày cuối): đã có sẵn.</span></div>
+    <div class="term"><h3>FFM Fee By Size</h3><span class="sys">mới · FFM Fee Type thứ 5</span>
+      Loại phí mới của một dòng Service Type trong Shared Rate (cạnh Fixed, COD Percentage, Fixed By SKU, Custom Formula). Ô FFM Fee Per Order là 1 custom formula ghép từ các field có ⚙.
+      <span class="ex">Dòng “Đơn lẻ” · FFM Fee By Size · {largest_item} + {additional_items}</span></div>
+    <div class="term"><h3>Đơn tính phí theo size</h3><span class="sys">mới · #451 + comment của Long</span>
+      Với từng Service Type của đơn: Shared Rate của Shop (chọn theo ngày gửi đơn sang đơn vị vận chuyển) có dòng Service Type đó với FFM Fee Type là FFM Fee By Size.</div>
+    <div class="term"><h3>Sản phẩm đầu (Largest Item)</h3><span class="sys">mới · #451</span>
+      <b>Đúng 1 sản phẩm</b> có <b>size lớn nhất</b> trong đơn. <code>{largest_item}</code> lấy khoản phí theo size của sản phẩm này; <code>{additional_items}</code> bỏ sản phẩm này ra.
+      <span class="ex">Đơn 2 áo thun (S) + 1 hộp giày (L) → Largest Item là hộp giày</span></div>
+    <div class="term"><h3>Field của công thức</h3><span class="sys">mới · khung Available Formula's Fields</span>
+      Kế toán ghép các field vào công thức. Field có ⚙ khai giá theo size trong modal; field không dùng trong công thức thì không phải khai.
+      <span class="ex">{largest_item} ⚙ khoản phí theo size của Largest Item, 1 lần<br>{additional_items} ⚙ cộng từng sản phẩm còn lại theo size của nó<br>{all_items} ⚙ cộng mọi sản phẩm theo size của nó<br>{total_quantity} số sản phẩm cả đơn</span></div>
+    <div class="term"><h3>Khoản phí của size</h3><span class="sys">mới · quyết định 09/10</span>
+      Một dòng kế toán thêm trong modal của field (bấm icon bánh răng cạnh field), gồm <b>name</b> và <b>price</b>. Mỗi size một danh sách, số dòng tuỳ ý; giá trị của size = tổng price.
+      <span class="ex">Modal {largest_item}, size L: Phí sản phẩm đầu 30 · Phí vật liệu đóng gói 5 → 35<br>Modal {additional_items}, size S: Phí sản phẩm thêm 3</span></div>
+    <div class="term"><h3>Công thức tính phí (custom formula)</h3><span class="sys">mới · cùng cơ chế custom formula của phí FFM hiện có</span>
+      1 công thức cho mỗi dòng FFM Fee By Size, chạy 1 lần cho mỗi đơn (mỗi Service Type).
+      <span class="ex">GIP: {largest_item} + {additional_items}<br>Khách đồng giá: {total_quantity} * 5<br>Khách tính mọi sản phẩm theo size: {all_items}</span>
+      <span class="warn">Viết số liền, không có dấu chấm phân cách nghìn (trình tính công thức đọc 2.000 là 2, không báo lỗi). Không có hàm MAX, MIN, IF: viết điều kiện dạng <code>a &gt; b ? a : b</code>.</span></div>
+    <div class="term"><h3>Phí fulfillment theo size</h3><span class="sys">mới · khoản mới trong FFM Fee</span>
+      Kết quả công thức FFM Fee By Size của một Service Type của đơn. Cộng vào FFM Fee của đơn.</div>
+    <div class="term"><h3>Dữ liệu tính phí lưu trong đơn (snapshot)</h3><span class="sys">mới · #451</span>
+      Lúc tính phí, hệ thống lưu vào đơn: size từng sản phẩm, Largest Item, phiên bản cấu hình size, báo giá đã dùng, công thức, giá trị từng field, các khoản phí đã dùng (name + price), kết quả. Sau này đổi giá, đổi cấu hình size hay đo lại Variation thì phí đã lưu của đơn <b>không thay đổi</b>.</div>
+  </div>
+</section>
+
+<!-- ================= FORMULA ================= -->
+<section class="section" id="cong-thuc">
+  <h2>Cách tính tiền</h2>
+  <div class="formula">
+    Phí fulfillment theo size (cho 1 Service Type cấu hình FFM Fee By Size) = <span class="f3">kết quả công thức của dòng đó</span>. Biểu phí GIP:
+    <span class="f1">{largest_item} = khoản phí theo size của Largest Item (1 lần)</span> +
+    <span class="f2">{additional_items} = cộng khoản phí của từng sản phẩm còn lại theo size của nó</span>
+  </div>
+  <div class="card">
+    <h3>Shared Rate “GIP – Shop A”, dòng Service Type “Đơn lẻ” · FFM Fee By Size, dùng trong các ví dụ (theo biểu phí GIP, đơn vị Peso)</h3>
+    <p>Công thức: <code>{largest_item} + {additional_items}</code>. Field <code>{all_items}</code> không dùng nên không khai modal.</p>
+    <table>
+      <tr><th>Size</th><th>Thể tích tối đa</th><th>Modal <code>{largest_item}</code></th><th>Tổng</th><th>Modal <code>{additional_items}</code></th></tr>
+      <tr><td><span class="sz S">S</span></td><td>1.000 cm³</td><td>Phí sản phẩm đầu 17,5 · Phí vật liệu đóng gói 3</td><td class="num">20,5</td><td>Phí sản phẩm thêm 3</td></tr>
+      <tr><td><span class="sz M">M</span></td><td>5.000 cm³</td><td>Phí sản phẩm đầu 25 · Phí vật liệu đóng gói 3</td><td class="num">28</td><td>Phí sản phẩm thêm 3</td></tr>
+      <tr><td><span class="sz M">L</span></td><td>12.000 cm³</td><td>Phí sản phẩm đầu 30 · Phí vật liệu đóng gói 5</td><td class="num">35</td><td>Phí sản phẩm thêm 5</td></tr>
+      <tr><td><span class="sz M">XL</span></td><td>25.000 cm³</td><td>Phí sản phẩm đầu 35 · Phí vật liệu đóng gói 5</td><td class="num">40</td><td>Phí sản phẩm thêm 5</td></tr>
+      <tr><td><span class="sz M">XXL</span></td><td>40.000 cm³</td><td>Phí sản phẩm đầu 50 · Phí vật liệu đóng gói 8</td><td class="num">58</td><td>Phí sản phẩm thêm 10</td></tr>
+    </table>
+
+    <h3>Ví dụ tính từng bước</h3>
+    <p>Đơn của Shop A, Service Type “Đơn lẻ”: 2 áo thun 20 × 15 × 3 + 1 hộp giày 35 × 25 × 12.</p>
+    <table>
+      <tr><th>Bước</th><th>Hệ thống làm gì</th><th>Kết quả</th></tr>
+      <tr><td>1. Xếp size từng sản phẩm</td><td>Áo thun 900 cm³ → S. Hộp giày 10.500 cm³ → L.</td><td>S, S, L</td></tr>
+      <tr><td>2. Chọn Largest Item</td><td>Sản phẩm có size lớn nhất là hộp giày (L).</td><td>Hộp giày</td></tr>
+      <tr><td>3. Tính <code>{largest_item}</code></td><td>Modal size L: Phí sản phẩm đầu 30 + Phí vật liệu đóng gói 5.</td><td>35</td></tr>
+      <tr><td>4. Tính <code>{additional_items}</code></td><td>Các sản phẩm còn lại: 2 áo thun, mỗi cái theo modal size S: 3.</td><td>6</td></tr>
+      <tr><td>5. Chạy công thức</td><td><code>{largest_item} + {additional_items}</code> → <code>35 + 6</code></td><td><b>41 PHP</b></td></tr>
+    </table>
+    <p class="desc">Đối chiếu biểu phí GIP: sản phẩm đầu L 30 + 2 áo × 3 + đóng gói L 5 = 41.</p>
+
+    <h3>Ví dụ tính phí (đơn chỉ có Service Type “Đơn lẻ”)</h3>
+    <p class="desc">Sản phẩm dùng trong ví dụ: áo thun 20 × 15 × 3 (900 cm³, S) · hộp mỹ phẩm 20 × 15 × 10 (3.000 cm³, M) · hộp giày 35 × 25 × 12 (10.500 cm³, L) · thùng 40 × 30 × 30 (36.000 cm³, XXL).</p>
+    <table>
+      <tr><th>Đơn hàng</th><th>Largest Item</th><th><code>{largest_item}</code></th><th><code>{additional_items}</code></th><th>Phí</th></tr>
+      <tr><td>2 áo thun + 1 hộp giày</td><td>Hộp giày (L)</td><td class="num">35</td><td>2 áo × 3 = 6</td><td class="num"><b>41</b></td></tr>
+      <tr><td>3 áo thun</td><td>1 áo thun (S)</td><td class="num">20,5</td><td>2 áo × 3 = 6</td><td class="num"><b>26,5</b></td></tr>
+      <tr><td>2 hộp giày</td><td>1 hộp giày (L)</td><td class="num">35</td><td>1 hộp giày × 5 = 5</td><td class="num"><b>40</b></td></tr>
+      <tr><td>1 áo thun + 1 hộp mỹ phẩm + 1 thùng</td><td>Thùng (XXL)</td><td class="num">58</td><td>áo 3 + hộp mỹ phẩm 3 = 6</td><td class="num"><b>64</b></td></tr>
+      <tr><td>2 áo thun + 1 hộp giày + 1 thùng</td><td>Thùng (XXL)</td><td class="num">58</td><td>2 áo × 3 + hộp giày 5 = 11</td><td class="num"><b>69</b></td></tr>
+      <tr><td>1 hộp giày</td><td>Hộp giày (L)</td><td class="num">35</td><td>0 (không còn sản phẩm nào)</td><td class="num"><b>35</b></td></tr>
+    </table>
+    <div class="exbox">Kế toán muốn tăng phí vật liệu đóng gói size L lên 6: sửa khoản “Phí vật liệu đóng gói” của size L trong modal <code>{largest_item}</code> → mọi đơn có Largest Item size L tăng 1 (đơn 2 áo thun + 1 hộp giày ra 42). Muốn tăng giá sản phẩm thêm size S lên 4: sửa size S trong modal <code>{additional_items}</code> → đơn 2 áo thun + 1 hộp giày ra 43, đơn 3 áo thun ra 28,5. Cả hai trường hợp không sửa công thức.</div>
+
+    <h3>Các cách viết công thức cho khách khác</h3>
+    <table>
+      <tr><th>Cách thu</th><th>Công thức</th><th>Khai modal</th><th>Ví dụ</th></tr>
+      <tr><td>GIP, thêm phí tối thiểu 50 cho cả đơn</td><td><code>({largest_item} + {additional_items}) &lt; 50 ? 50 : ({largest_item} + {additional_items})</code></td><td>Như GIP</td><td>2 áo thun + 1 hộp giày: 41 → 50 · 1 áo thun + 1 hộp mỹ phẩm + 1 thùng: 64</td></tr>
+      <tr><td>GIP, giảm 10% cho đơn từ 10 sản phẩm</td><td><code>({largest_item} + {additional_items}) * ({total_quantity} &gt;= 10 ? 0.9 : 1)</code></td><td>Như GIP</td><td>12 áo thun: (20,5 + 11 × 3) × 0,9 = 48,15</td></tr>
+      <tr><td>Mọi sản phẩm theo size của nó, không có sản phẩm đầu</td><td><code>{all_items}</code></td><td>Chỉ modal <code>{all_items}</code>, ví dụ S 6, L 12</td><td>2 áo thun + 1 hộp giày: 6 + 6 + 12 = 24</td></tr>
+      <tr><td>Đồng giá mọi sản phẩm, không cần size</td><td><code>{total_quantity} * 5</code></td><td>Không khai modal nào</td><td>3 sản phẩm: 15</td></tr>
+    </table>
+    <p class="desc">Các công thức trên đã chạy thử bằng trình tính công thức (Abacus) mà custom formula của phí FFM đang dùng. Viết công thức: dùng <code>+ - * /</code>, ngoặc, so sánh, điều kiện <code>điều_kiện ? giá_trị_đúng : giá_trị_sai</code>; số viết liền. Không có hàm MAX, MIN, IF. Số tiền viết thẳng trong công thức (như <code>50</code>, <code>5</code>) đang bị lỗi chung với <code>PHP100</code> (xem mục “Cần kiểm tra thêm”): nếu chưa sửa thì <code>{total_quantity} * 5</code> ra 0,05 Peso mỗi sản phẩm. Giá khai trong modal thì không bị vấn đề này.</p>
+
+    <h3>Ví dụ xếp size (biểu phí GIP, chỉ theo thể tích)</h3>
+    <table>
+      <tr><th>Sản phẩm</th><th>Kích thước</th><th>Thể tích</th><th>Kết quả</th><th>Vì sao</th></tr>
+      <tr><td>Áo thun</td><td>20 × 15 × 3</td><td>900</td><td><span class="sz S">S</span></td><td>≤ 1.000</td></tr>
+      <tr><td>Hộp mỹ phẩm</td><td>20 × 15 × 10</td><td>3.000</td><td><span class="sz M">M</span></td><td>Quá S, ≤ 5.000</td></tr>
+      <tr><td>Hộp giày</td><td>35 × 25 × 12</td><td>10.500</td><td><span class="sz M">L</span></td><td>Quá M, ≤ 12.000</td></tr>
+      <tr><td>Thùng</td><td>40 × 30 × 30</td><td>36.000</td><td><span class="sz M">XXL</span></td><td>Quá XL, ≤ 40.000</td></tr>
+      <tr><td>Thùng lớn</td><td>60 × 40 × 30</td><td>72.000</td><td><span class="sz X">Vượt</span></td><td>Quá XXL → báo lỗi nếu đơn có Service Type cấu hình FFM Fee By Size</td></tr>
+    </table>
+
+    <h3>Ví dụ đơn có 2 Service Type cùng dùng FFM Fee By Size → tính 2 lần</h3>
+    <p>Shared Rate “GIP – Shop A” có thêm dòng Service Type “Hàng dễ vỡ” · FFM Fee By Size: công thức <code>{largest_item} + {additional_items}</code>; modal <code>{largest_item}</code> mọi size có “Phí bọc chống sốc” 6; modal <code>{additional_items}</code> mọi size có “Phí bọc thêm” 1. Đơn 1 áo thun + 1 hộp giày có cả 2 Service Type “Đơn lẻ” và “Hàng dễ vỡ”:</p>
+    <table>
+      <tr><th>Service Type</th><th><code>{largest_item}</code></th><th><code>{additional_items}</code></th><th>Phí</th></tr>
+      <tr><td>Đơn lẻ</td><td class="num">35 (hộp giày, L)</td><td>1 áo × 3 = 3</td><td class="num">38</td></tr>
+      <tr><td>Hàng dễ vỡ</td><td class="num">6</td><td>1 áo × 1 = 1</td><td class="num">7</td></tr>
+      <tr><td colspan="3"><b>Phí fulfillment theo size của đơn</b></td><td class="num"><b>45</b></td></tr>
+    </table>
+    <div class="exbox">
+      <b>Đơn có thêm Service Type dùng FFM Fee Type khác:</b> Service Type đó tính theo loại phí của dòng mình. Ví dụ đơn trên chỉ có “Đơn lẻ” và thêm Service Type “Call” (tên ví dụ do kế toán đặt) với phí cố định 10 → FFM Fee của đơn = 10 + 38 = <b>48</b>. Ví dụ giả định Shop không có phí FFM cấp Reconciliation Account và đơn không có hàng Special Product (2 khoản này vẫn cộng thêm như hiện tại nếu có).
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROTOTYPE ================= -->
+<section class="section" id="prototype">
+  <h2>Prototype màn Create Shared Rate với FFM Fee By Size</h2>
+  <p class="desc">Bản vẽ thử dựa trên màn Create Shared Rate hiện có, chạy được trên trang này, không phải giao diện thật. Phần mới là FFM Fee Type “FFM Fee By Size”: ô FFM Fee Per Order chỉ hiện công thức, bấm ⚙ cạnh ô để mở modal Custom Formula; trong modal đó bấm ⚙ cạnh field để mở modal khai giá theo size. Dữ liệu điền sẵn là biểu phí GIP; sửa giá, sửa công thức rồi xem phần “Thử tính phí” bên dưới đổi theo. Nhãn tiếng Anh theo cách màn FFM hiện có đang dùng.</p>
+  <div class="pt-wrap">
+    <div class="pt-card">
+      <div class="pt-head">Create Shared Rate<span style="color:rgba(0,0,0,.45);font-weight:400">✕</span></div>
+      <div class="pt-body">
+        <div class="pt-grid4">
+          <div><div class="pt-lbl req">Name</div><input class="pt-input" value="GIP – Shop A"></div>
+          <div><div class="pt-lbl req">Shops</div><div class="pt-tagbox"><span class="pt-tag">Shop A ✕</span></div></div>
+          <div><div class="pt-lbl req">Start Date</div><input class="pt-input" value="2026-11-01"></div>
+          <div><div class="pt-lbl req">End Date</div><input class="pt-input" value="2026-12-31"></div>
+        </div>
+        <div class="pt-divider">FFM Fee</div>
+        <div class="pt-row"><div class="pt-label">FFM Fee Description</div><div><textarea class="pt-ta" style="min-height:40px;font-family:inherit" placeholder="FFM Fee Description"></textarea></div></div>
+        <div class="pt-row"><div class="pt-label">Special Product</div><div style="display:flex;gap:8px"><select class="pt-select" style="width:200px"><option>Special Product Type</option><option>Fixed</option><option>COD Percentage</option></select><div class="pt-price" style="width:220px"><input placeholder="Special Product Value"><i>₱</i></div></div></div>
+        <hr style="border:none;border-top:1px solid #f0f0f0;margin:6px 0 12px">
+        <div style="margin-bottom:12px"><label><input type="checkbox" checked> Require service type for all orders</label></div>
+        <div class="pt-cfg h"><div>Default</div><div>FFM Service Type</div><div>FFM Fee Type</div><div>FFM Fee Per Order</div><div>Action</div></div>
+        <div class="pt-cfg">
+          <div><input type="checkbox" checked></div>
+          <div><select class="pt-select"><option>Đơn lẻ</option></select></div>
+          <div><select class="pt-select" id="pt-feetype"><option value="fixed">Fixed</option><option value="cod_percentage">COD Percentage</option><option value="fixed_by_sku">Fixed By SKU</option><option value="custom_formula">Custom Formula</option><option value="by_size" selected>FFM Fee By Size (mới)</option></select></div>
+          <div id="pt-perorder">
+            <div class="pt-fwrap"><input class="pt-input" id="pt-fview" readonly title="Bấm để cấu hình công thức"><button class="pt-cfgbtn" id="pt-fopen" title="Setting Custom Formula">⚙</button></div>
+            <div class="pt-rowmsg" id="pt-rowmsg"></div>
+          </div>
+          <div style="color:#ff4d4f">🗑</div>
+        </div>
+        <div class="pt-cfg">
+          <div><input type="checkbox"></div>
+          <div><select class="pt-select"><option>Call</option></select></div>
+          <div><select class="pt-select"><option>Fixed</option></select></div>
+          <div><div class="pt-price"><input value="10"><i>₱</i></div></div>
+          <div style="color:#ff4d4f">🗑</div>
+        </div>
+        <button class="pt-btn dashed">+ Add FFM fee configuration</button>
+      </div>
+      <div class="pt-foot"><span id="pt-save-msg" style="margin-right:auto"></span><button class="pt-btn">Cancel</button><button class="pt-btn primary" id="pt-save">Save</button></div>
+    </div>
+
+    <div class="card pt-sim">
+      <h3>Thử tính phí cho 1 đơn</h3>
+      <p class="desc" style="margin-bottom:10px">Nhập số sản phẩm của từng size (đã xếp size). Hệ thống chọn Largest Item = 1 sản phẩm của size lớn nhất.</p>
+      <table id="pt-qty"></table>
+      <div id="pt-result" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div class="pt-mask pt-fmask" id="pt-fmask">
+    <div class="pt-card pt-fmodal">
+      <div class="pt-head"><span>Setting Custom Formula · Đơn lẻ · FFM Fee By Size <span class="pt-new">mới</span></span><span style="cursor:pointer;color:rgba(0,0,0,.45);font-weight:400" id="pt-fx">✕</span></div>
+      <div class="pt-body">
+        <div class="pt-fgrid">
+          <div>
+            <div class="pt-lbl req">Custom Formula</div>
+            <textarea class="pt-ta" id="pt-formula">{largest_item} + {additional_items}</textarea>
+            <div class="pt-ex" id="pt-ex"></div>
+            <div id="pt-formula-msg"></div>
+          </div>
+          <div>
+            <div style="text-align:center;font-weight:600">Available Formula's Fields</div>
+            <hr style="border:none;border-top:1px solid #f0f0f0;margin:8px 0 12px">
+            <div id="pt-fields"></div>
+          </div>
+        </div>
+      </div>
+      <div class="pt-foot"><button class="pt-btn" id="pt-fcancel">Cancel</button><button class="pt-btn primary" id="pt-fsave">Save</button></div>
+    </div>
+  </div>
+
+  <div class="pt-mask" id="pt-mask">
+    <div class="pt-card pt-modal">
+      <div class="pt-head"><span id="pt-mtitle"></span><span style="cursor:pointer;color:rgba(0,0,0,.45);font-weight:400" id="pt-x">✕</span></div>
+      <div class="pt-body">
+        <div class="pt-note" id="pt-mnote"></div>
+        <div id="pt-msizes"></div>
+        <div class="pt-err" id="pt-merr"></div>
+      </div>
+      <div class="pt-foot"><button class="pt-btn" id="pt-mcancel">Cancel</button><button class="pt-btn primary" id="pt-msave">Save</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMBO / COMPOSITE ================= -->
+<section class="section" id="combo">
+  <h2>Combo và sản phẩm composite</h2>
+  <p class="desc">Hai khái niệm khác nhau trong hệ thống, dù đôi chỗ trên giao diện cùng gọi là “combo”.</p>
+  <div class="card">
+    <table>
+      <tr><th></th><th>Combo khuyến mãi</th><th>Sản phẩm composite (sản phẩm bộ)</th></tr>
+      <tr><td>Là gì</td><td>Chương trình giảm giá của POS, ví dụ “2 áo + 1 hộp giày giảm 10%”. Lưu ở <code>orders.activated_combo_products</code>.</td><td>Một sản phẩm bán ra gồm nhiều thành phần. Lưu thành 1 <b>dòng cha</b> (<code>is_composite</code> = true, Variation của bộ) và các <b>dòng con</b> (<code>composite_pos_id</code> trỏ về dòng cha) trong <code>order_items</code>.</td></tr>
+      <tr><td>Hàng thật kho lấy</td><td>Các sản phẩm trong combo là dòng thường của đơn.</td><td>Chỉ các dòng con; picking, packing, tồn kho đều bỏ dòng cha.</td></tr>
+      <tr><td>Phí size tính trên</td><td>Các dòng thường, không đọc thông tin combo. Combo không có kích thước ở đâu nên không tính “theo kiện” được.</td><td>Các dòng con (bỏ dòng cha). Seller nhập kích thước cho từng thành phần.</td></tr>
+    </table>
+
+    <h3>Các trường hợp, dùng Shared Rate “GIP – Shop A”, dòng “Đơn lẻ” (áo thun size S, hộp giày size L; công thức <code>{largest_item} + {additional_items}</code>)</h3>
+    <table>
+      <tr><th>Trường hợp</th><th>Dòng trong đơn</th><th>Dòng được tính</th><th>Kết quả</th></tr>
+      <tr><td>1 bộ composite + 1 sản phẩm thường</td><td>Dòng cha “Bộ quà” × 1 (Variation của bộ, kích thước 0)<br>Dòng con: áo thun × 2, hộp giày × 1<br>Áo thun × 1 (thường)</td><td>Áo thun × 3, hộp giày × 1; Largest Item = hộp giày (L)</td><td>35 + 3 áo × 3 = <b>44</b>. Nếu tính cả dòng cha thì dòng cha không có kích thước làm Precheck chặn nhầm.</td></tr>
+      <tr><td>2 bộ composite</td><td>Dòng cha × 2; dòng con: áo thun × 4, hộp giày × 2</td><td>Largest Item = 1 hộp giày (L)</td><td>35 + (4 áo × 3 + 1 hộp giày × 5) = <b>52</b></td></tr>
+      <tr><td>Combo khuyến mãi</td><td>Combo “2 áo + 1 hộp giày”: áo thun × 2, hộp giày × 1 (dòng thường)</td><td>Như đơn thường</td><td><b>41</b>, giống hệt đơn không có combo.</td></tr>
+      <tr><td>Combo + mua lẻ cùng sản phẩm</td><td>Combo trên + mua thêm 1 áo thun (có thể gộp chung dòng áo thành × 3)</td><td>Áo thun × 3, hộp giày × 1</td><td><b>44</b>; không cần biết cái nào thuộc combo.</td></tr>
+      <tr><td>Sản phẩm quà tặng</td><td>Áo thun × 1 tặng kèm, giá 0</td><td>Tính như sản phẩm thường</td><td>Thêm 3 vào <code>{additional_items}</code> (giá sản phẩm thêm size S) khi quà tặng không phải Largest Item.</td></tr>
+      <tr><td>Composite thêm trên FFM, POS chưa tách thành phần</td><td>Chỉ có 1 dòng thường mang Variation của bộ (kích thước 0)</td><td>Dòng đó (chưa phải dòng cha)</td><td>Precheck chặn, báo SKU của bộ thiếu kích thước. Sau khi POS tách thành dòng cha + dòng con thì tính như trường hợp 1.</td></tr>
+      <tr><td>Dòng con còn, dòng cha đã mất (dữ liệu lỗi)</td><td>Dòng con áo thun × 6, không có dòng cha</td><td>Vẫn tính, vì kho vẫn lấy hàng này (giống picking); Largest Item = 1 áo thun (S)</td><td>20,5 + 5 áo × 3 = <b>35,5</b>.</td></tr>
+    </table>
+    <div class="exbox"><b>Lưu ý tên field:</b> <code>{total_quantity}</code> và các field tính theo từng sản phẩm đếm <b>các dòng con và sản phẩm thường</b>, không phải cột <code>orders.total_quantity</code>. Cột này và số Total quantity trên màn chi tiết đơn đều đếm 1 bộ = 1, bỏ dòng con; giữ nguyên như vậy vì màn chi tiết đơn dành cho Telesale chốt đơn, còn đóng gói có màn riêng. Không đọc cột này để tính phí: cột còn không được cập nhật khi đơn đã delivered / returned. Ví dụ trường hợp 1: màn chi tiết đơn hiện Total quantity = 2, còn {total_quantity} = 4.</div>
+  </div>
+</section>
+
+<!-- ================= DEV NOTES ================= -->
+<section class="section" id="dev">
+  <h2>Lưu ý cho dev</h2>
+  <p class="desc">Những chỗ code hiện tại khác với giả định của issue, hoặc sẽ làm sai quy tắc nếu không sửa. Hạn mong muốn: chạy được luồng vào cuối tháng 10/2026 (comment của Long). #449 và #450 làm song song được; #451 làm sau.</p>
+  <div class="card">
+    <table>
+      <tr><th>Chỗ cần sửa</th><th>Hiện tại</th><th>Cần làm</th></tr>
+      <tr><td>Chọn dòng sản phẩm để tính</td><td><code>Order.preload_items/1</code> trả mọi dòng, kể cả dòng cha composite. Đã có hàm bỏ dòng cha: <code>OrderItem.composite_parent?/1</code>, <code>OrderItem.exclude_composite_parent/1</code>, hiện chỉ phần tồn kho gọi (<code>warehouse_action.ex</code>, <code>order_action.ex</code>). Picking và Return QC mỗi nơi có hàm riêng, packing và Return QC còn viết thẳng điều kiện <code>coalesce(is_composite, false) == false</code> ở vài chỗ. Cột <code>orders.total_quantity</code> làm ngược lại: bỏ dòng con, giữ dòng cha. Phí FFM loại <code>fixed_by_sku</code> hiện cộng phí cho cả dòng cha lẫn dòng con, và Precheck đòi cấu hình phí cho cả SKU của bộ (lỗi có sẵn, ngoài phạm vi task này).</td><td>Viết 1 hàm lấy danh sách hàng thật (bỏ dòng cha theo <code>is_composite</code> của từng dòng, không lọc theo <code>variation_id</code> vì dòng cha có thể trùng Variation với 1 dòng con), dùng chung cho Precheck, lúc shipped, lúc nhập COD và tính lại. Tính <code>{total_quantity}</code>, <code>{additional_items}</code>, <code>{all_items}</code> từ <code>order_items</code> lúc tính phí theo các dòng con và dòng thường (kể cả quà tặng), không đọc cột <code>orders.total_quantity</code>, không suy ra từ số bộ của dòng cha. Không đổi danh sách sản phẩm và số Total quantity trên màn chi tiết đơn. Báo riêng lỗi có sẵn của <code>fixed_by_sku</code>: tính trùng dòng cha.</td></tr>
+      <tr><td>Công thức tính phí</td><td>Phí FFM đã có loại “custom formula”: <code>get_value_from_formula/3</code> thay <code>{tên}</code> bằng số rồi tính bằng Abacus; <code>{discount_by_region}</code> là field dạng “cấu hình trước” (<code>need_pre_setting</code>), giá trị tra theo vùng của đơn lúc tính. Discount By Region chỉ giống một phần: thuộc công thức file đối soát của courier, lưu theo courier, modal có 5 vùng cố định, không có ô tên, không thêm/xoá dòng. Kiểm tra tên field lúc lưu hiện chỉ chạy ở FE (API lưu Shop chỉ kiểm tra công thức trống). Nhánh custom formula của phí FFM loại mọi biến có giá trị 0 trước khi thay số (trừ <code>marketplace_fee</code>). Abacus đọc <code>2.000</code> là 2; <code>round</code>/<code>floor</code> với số nguyên raise lỗi thay vì trả <code>{:error, ...}</code>, và có nơi gọi viết <code>{:ok, value} =</code>.</td><td>Báo giá lưu <b>1 công thức</b> và modal giá theo size của từng field có bánh răng. Field: <code>{largest_item}</code> (tổng khoản phí của size Largest Item), <code>{additional_items}</code> (cộng khoản phí của từng sản phẩm trừ Largest Item, theo size của sản phẩm đó), <code>{all_items}</code> (cộng khoản phí của mọi sản phẩm theo size của nó), <code>{total_quantity}</code>. Ba field đầu là field dạng “cấu hình trước” giống <code>{discount_by_region}</code> (<code>need_pre_setting</code>). Làm modal mới: mỗi size một danh sách name + price, thêm/xoá dòng; lưu trong báo giá. BE tự kiểm tra lúc lưu: công thức chỉ dùng field cho phép và chạy thử ra số; <b>chỉ field có trong công thức</b> mới phải khai đủ mọi size (theo #450 AC5), field không dùng thì không bắt khai. <b>Thay số 0 vào công thức, không loại biến bằng 0</b>: đơn chỉ có 1 sản phẩm có <code>{additional_items}</code> = 0; nếu loại biến như nhánh custom formula hiện tại thì ra chuỗi <code>35 + </code> và Abacus báo lỗi. Thêm <code>rescue</code> cho lỗi raise của Abacus. Abacus không có hàm MAX, MIN, IF. Công thức lỗi lúc Precheck → chặn đẩy đơn; lỗi lúc shipped (đơn không qua Precheck) → cảnh báo, không được trả phí 0 mà không báo như nhánh <code>custom_formula</code> hiện tại. Snapshot lưu công thức, giá trị từng field và các khoản phí đã dùng.</td></tr>
+      <tr><td>Số tiền viết thẳng trong công thức (<code>PHP100</code>), lỗi chung</td><td>Đối soát Philippines lưu tiền gấp 100 lần (<code>OrderAction.get_reconciliation_currency/1</code>). Ô nhập tiền trên FE tự quy đổi (<code>parseCurrencyValue</code>), ô custom formula thì không. Phí FFM Custom Formula: giá trị field đã ở đơn vị gấp 100 rồi mới thay vào công thức (<code>customer_reconciliation_order.ex</code> nhánh <code>custom_formula</code>), nên số viết thẳng bị nhỏ đi 100 lần. Công thức file đối soát courier FFM cũng vậy: nhân 100 các field tiền trước (<code>reconciliation_worker.ex:170</code>) rồi mới chạy công thức (dòng 181-187). CA chạy công thức trên số trong file trước rồi mới quy đổi (<code>ca_worker.ex:145-159</code>), còn phần xem thử (<code>simple_check_formula/3</code>) nhân 100 giá trị ví dụ, nên 2 bên đang hiểu số viết thẳng khác nhau (cần kiểm tra thêm currency thật của <code>ca_orders</code>). Áp cho mọi tiền tệ ngoài <code>int_currency_list</code>, không riêng PHP.</td><td>Ngoài phạm vi task này, cần quyết định sửa riêng: thống nhất 1 cách (đề xuất: chạy công thức theo đơn vị hiển thị rồi nhân 100, như CA), sửa cả phần xem thử, và kiểm tra cấu hình đang có số viết thẳng (<code>shops.ffm_fee_configs</code>, <code>seller_service_fees.ffm_fee_settings</code>, công thức mặc định của Service Type, template đối soát) trước khi đổi. Biểu phí GIP (<code>{largest_item} + {additional_items}</code>) không có số viết thẳng nên không bị ảnh hưởng.</td></tr>
+      <tr><td>Kích thước Variation</td><td>FFM đã cho sửa dài/rộng/cao và gửi sang POS khi đổi; POS đồng bộ sang thì ghi đè lại. 3 field kiểu số nguyên, mặc định 0. (Câu “FFM chỉ đọc từ POS” trong #449 đã không còn đúng.)</td><td>Chỉ lấy số POS ở lần đầu, sau đó không gửi sang POS và không để POS ghi đè. “Thiếu kích thước” = có số bằng 0. Thêm lịch sử sửa. Cấu hình size: thể tích bắt buộc, giới hạn cạnh dài nhất tuỳ chọn, kế toán tự khai số size.</td></tr>
+      <tr><td>Chặn lúc đẩy đơn</td><td>Precheck chỉ chạy với courier có trong “Precheck customer fee before send to courier(s)”; không tính được FFM Fee thì không cho gửi. Gửi tay và tự động đẩy luôn chạy Precheck. Nhập tay hoặc import mã vận đơn chỉ chạy Precheck khi tạo mới vận đơn và Shop <b>không</b> có Reconciliation Account; đơn đồng bộ từ POS và đơn sàn không chạy. (Tooltip trên màn cài đặt courier đang nói Precheck chạy cả khi nhập mã vận đơn: không khớp code.)</td><td>Gọi Precheck ở luồng nhập / import mã vận đơn cả khi Shop đã có Reconciliation Account. Đưa phí size vào phần tính thử FFM Fee của Precheck: công thức FFM Fee By Size không tính ra được phí (ví dụ dùng field ⚙ theo size mà có sản phẩm thiếu kích thước, hoặc công thức lỗi) → báo lỗi kèm lý do (tên sản phẩm nếu thiếu kích thước). Sản phẩm vượt size lớn nhất cũng báo lỗi kèm tên sản phẩm.</td></tr>
+      <tr><td>Thêm FFM Fee Type mới</td><td>FFM Fee Type hiện có 4 giá trị: <code>fixed</code>, <code>cod_percentage</code>, <code>fixed_by_sku</code>, <code>custom_formula</code> (FE <code>ShopSettingFFMFee.js</code>, dùng chung cho Shared Rate và Shop Rates). Shared Rate active được chép xuống <code>shops.ffm_fee_configs</code>; lúc tính phí, <code>SellerServiceFee.apply_to_shop/2</code> chọn Shared Rate theo Shop + ngày. <code>calc_ffm_fee/5</code> rơi vào nhánh cuối (phí 0, Precheck báo lỗi) với fee type lạ.</td><td>Thêm fee type (đề xuất tên <code>fee_by_size</code>): option + ô công thức + khung field ⚙ ở <code>ShopSettingFFMFee.js</code>, <code>renderFee</code> ở <code>SellerServiceFeeShopRates.js</code>; nhánh mới trong <code>calc_ffm_fee/5</code> (cần <code>need_check_order_items</code> để có sản phẩm); validate ở <code>ffm_fee_configs_error/1</code> (công thức không trống, field ⚙ trong công thức khai đủ size); kiểm tra <code>fee_per_order</code> rỗng ở <code>reconciliation_worker.ex</code>. Kiểm tra pos-api có xử lý theo fee type khi nhận <code>ffm_fee_configs</code> không. Key chống tính lặp vẫn là tên Service Type, vì mỗi Service Type chỉ có 1 dòng.</td></tr>
+      <tr><td>Tính lại FFM Fee</td><td>Có chức năng tính lại FFM Fee cho Customer Reconciliation chưa đối soát xong, tính lại toàn bộ theo cấu hình mới.</td><td>Phần phí size phải dùng lại số đã lưu trong đơn, không tính lại.</td></tr>
+      <tr><td>File SOA</td><td>Cột FFM Fee nhóm theo Service Type; file Excel xuất ở FE phải giữ cùng cách nhóm cột.</td><td>Thêm cột chi tiết (sản phẩm đầu, giá trị từng field, các khoản phí đã dùng, phí) ở cả file SOA gửi email và file Excel trên FE.</td></tr>
+    </table>
+  </div>
+</section>
+
+<footer>Nguồn: issue #449, #450, #451 (kênh ffm_dev) và biểu phí GIP (ảnh đính kèm trong #451), comment của Long ngày 06–07/10/2026, comment của Tien Dat ngày 11/10/2026 trong #450, quyết định của anh SH ngày 09–13/10/2026.</footer>
+</div>
+
+<script>
+const steps = [
+ {id:1, type:'node', cls:'kho', who:'Kho', title:'Đo dài × rộng × cao cho từng Variation',
+  detail:`<h3>① Kho đo kích thước</h3>
+  <ul><li>Kho nhập <b>dài, rộng, cao (cm)</b> cho từng Variation trên FFM.</li>
+  <li>Lần đầu, hệ thống lấy số có sẵn từ POS (nếu có). Sau đó kích thước trên FFM độc lập: sửa trên FFM <b>không gửi sang POS</b>, POS đồng bộ sang <b>không ghi đè</b>.</li>
+  <li>Mỗi lần sửa đều lưu lịch sử: ai sửa, lúc nào, số cũ → số mới.</li>
+  <li>Số bằng 0 được coi là chưa có kích thước (đề xuất, vì 3 field hiện mặc định là 0).</li>
+  <li>Từ 3 số này, hệ thống tự tính <b>thể tích</b> (và cạnh dài nhất, nếu cấu hình size có dùng).</li></ul>
+  <div class="exbox">Hộp giày: 35 × 25 × 12 → thể tích 10.500 cm³</div>`,
+  track:'Kho đo: áo thun 20 × 15 × 3, hộp giày 35 × 25 × 12.'},
+ {id:2, type:'node', cls:'kt', who:'Kế toán', title:'Tạo cấu hình size (GIP: S → XXL)',
+  detail:`<h3>② Kế toán tạo cấu hình size</h3>
+  <ul><li>Kế toán tự khai các size; mỗi size có <b>thể tích tối đa</b> (bắt buộc) và <b>cạnh dài nhất tối đa</b> (tuỳ chọn, biểu phí GIP không dùng).</li>
+  <li>Mỗi lần sửa, hệ thống tạo <b>phiên bản mới có ngày áp dụng</b>, phiên bản cũ không bị ghi đè và xem lại được.</li>
+  <li>Khi tính phí, hệ thống dùng phiên bản có hiệu lực vào <b>ngày gửi đơn sang đơn vị vận chuyển</b>, giống phí FFM hiện tại.</li></ul>
+  <div class="exbox">Biểu phí GIP: S ≤ 1.000 · M ≤ 5.000 · L ≤ 12.000 · XL ≤ 25.000 · XXL ≤ 40.000 cm³</div>`,
+  track:'Cấu hình size GIP: S ≤ 1.000, M ≤ 5.000, L ≤ 12.000, XL ≤ 25.000, XXL ≤ 40.000 cm³.'},
+ {id:3, type:'node', cls:'kt', who:'Kế toán', title:'Shared Rate: dòng Service Type chọn FFM Fee By Size',
+  detail:`<h3>③ Kế toán cấu hình Shared Rate</h3>
+  <ul><li>Màn <b>Create Shared Rate</b> có sẵn: Name, <b>Shops</b>, <b>Start Date – End Date</b>, Special Product, bảng FFM fee configuration (mỗi Service Type một dòng).</li>
+  <li>Dòng Service Type tính theo size chọn FFM Fee Type mới <b>FFM Fee By Size</b>, bấm ⚙ cạnh ô FFM Fee Per Order mở modal Custom Formula: ô công thức + khung “Available Formula's Fields” (<code>{largest_item}</code> ⚙, <code>{additional_items}</code> ⚙, <code>{all_items}</code> ⚙, <code>{total_quantity}</code>). Bấm ⚙ mở modal khai khoản phí (<b>name</b> + <b>price</b>) cho <b>mỗi size</b>. Không field nào bắt buộc.</li>
+  <li>Chặn lưu nếu field có trong công thức còn size chưa khai khoản phí, hoặc công thức không tính được.</li>
+  <li>Chặn trùng Shared Rate (chung Shop, giao khoảng ngày) dùng kiểm tra có sẵn.</li>
+  <li>Các Service Type khác vẫn dùng Fixed / COD Percentage / Fixed By SKU / Custom Formula như hiện tại. Xem <a href="#prototype">prototype</a>.</li></ul>
+  <div class="exbox">Shared Rate “GIP – Shop A”, 01/11 – 31/12<br>Dòng “Đơn lẻ” · FFM Fee By Size · {largest_item} + {additional_items}<br>Modal {largest_item}: S 17,5 + 3 · M 25 + 3 · L 30 + 5 · XL 35 + 5 · XXL 50 + 8<br>Modal {additional_items}: S 3 · M 3 · L 5 · XL 5 · XXL 10</div>`,
+  track:'Shared Rate “GIP – Shop A”: dòng “Đơn lẻ” · FFM Fee By Size · {largest_item} + {additional_items}; size L: sản phẩm đầu 30 + đóng gói 5; size S: sản phẩm thêm 3.'},
+ {id:4, type:'node', cls:'ht', who:'Hệ thống', title:'Tự xếp size cho từng Variation',
+  detail:`<h3>④ Hệ thống tự xếp size</h3>
+  <ul><li>Thử lần lượt từ size <b>nhỏ nhất</b> lên.</li>
+  <li>Ở mỗi size, hỏi: thể tích có ≤ thể tích tối đa không (và cạnh dài nhất có ≤ cạnh tối đa không, nếu size có khai giới hạn cạnh)?</li>
+  <li>Size đầu tiên trả lời “có” là size của Variation.</li>
+  <li>Không size nào vừa → <b>báo lỗi</b> khi đơn có Service Type cấu hình FFM Fee By Size (Precheck chặn đẩy đơn; đơn không qua Precheck thì cảnh báo).</li>
+  <li>Màn sản phẩm hiển thị size theo phiên bản cấu hình đang hiệu lực (có thể khác size đã lưu trong đơn cũ).</li></ul>
+  <div class="exbox">Hộp giày 35 × 25 × 12 = 10.500 cm³: quá S (1.000), quá M (5.000), ≤ L (12.000) → <b>L</b></div>`,
+  track:'Xếp size: áo thun → S (900 cm³). Hộp giày → L (10.500 cm³).'},
+ {id:5, type:'node', cls:'don', who:'Đơn hàng', title:'Đơn được gắn Service Type',
+  detail:`<h3>⑤ Đơn được gắn Service Type</h3>
+  <ul><li>Service Type được gắn khi lên đơn: nhân viên chọn, gửi kèm từ POS, hoặc hệ thống tự gắn Service Type mặc định của Shop.</li>
+  <li>Một đơn có thể có nhiều Service Type.</li>
+  <li>Mỗi Service Type của đơn tính theo dòng FFM Fee của Service Type đó trong Shared Rate của <b>đúng Shop</b>. Hai Shop dùng chung một Service Type vẫn có thể có hai Shared Rate khác nhau.</li></ul>`,
+  track:'Đơn của Shop A được gắn Service Type “Đơn lẻ”.'},
+ {id:6, type:'node', cls:'don', who:'Đơn hàng', title:'Đẩy đơn sang đơn vị vận chuyển',
+  detail:`<h3>⑥ Đẩy đơn sang đơn vị vận chuyển</h3>
+  <ul><li>Gồm các luồng: gửi tay, tự động đẩy, nhập hoặc import mã vận đơn.</li>
+  <li>Ngày gửi đơn (theo múi giờ của nước) là <b>ngày dùng để chọn Shared Rate và cấu hình size</b>, giống phí FFM hiện tại.</li></ul>`,
+  track:'Đơn được đẩy sang đơn vị vận chuyển ngày 05/11.'},
+ {id:7, type:'diamond', title:'Service Type dùng FFM Fee By Size?', yes:'Có',
+  branch:{cls:'b-old', v:'v-old', lbl:'Không', html:'<b>Service Type đó tính theo FFM Fee Type của dòng mình</b><br>Fixed / COD Percentage / Fixed By SKU / Custom Formula', go:'Như hiện tại'},
+  detail:`<h3>⑦ Service Type của đơn dùng FFM Fee By Size không?</h3>
+  <ul><li>Lấy Shared Rate của Shop theo ngày gửi đơn, xem dòng của từng Service Type của đơn.</li>
+  <li><b>Có:</b> Service Type đó đi tiếp luồng tính phí theo size.</li>
+  <li><b>Không:</b> tính theo FFM Fee Type đang cấu hình, như hiện tại.</li></ul>`,
+  track:'Shared Rate “GIP – Shop A” (05/11 nằm trong 01/11 – 31/12): dòng “Đơn lẻ” là FFM Fee By Size.'},
+ {id:8, type:'diamond', title:'Precheck: công thức tính ra được phí?', yes:'Được',
+  branch:{cls:'b-block', v:'v-block', lbl:'Không', html:'<b>Không cho đẩy đơn</b><br>Báo lý do (ví dụ tên sản phẩm thiếu kích thước)', go:'↩ sửa xong, đẩy đơn lại'},
+  detail:`<h3>⑧ Chặn lúc đẩy đơn (Precheck)</h3>
+  <ul><li>Dùng cấu hình <b>Precheck customer fee before send to courier(s)</b> có sẵn: hệ thống tính thử FFM Fee trước khi gửi đơn; không tính được thì không cho gửi.</li>
+  <li>Phí size nằm trong phần tính thử này: <b>công thức đã cấu hình không tính ra được phí là lỗi</b>. Ví dụ công thức dùng field ⚙ tính theo size mà có sản phẩm thiếu dài, rộng hoặc cao (bằng 0); có sản phẩm vượt size lớn nhất; công thức lỗi cú pháp. Công thức không dùng size (đồng giá) thì không cần kích thước.</li>
+  <li>Chỉ xét hàng thật: bỏ dòng cha composite, xét dòng con và sản phẩm thường.</li>
+  <li>Với courier có bật Precheck, đơn không tính được phí thì không đẩy đi được, nên không tới shipped. Các luồng không chạy Precheck (courier không bật, nhập mã vận đơn khi đã có Reconciliation Account, đơn POS, đơn sàn) vẫn có thể tới shipped và được xử lý ở bước ⑩.</li>
+  <li>Lưu ý: luồng nhập tay hoặc import mã vận đơn hiện <b>chưa chạy</b> phần tính thử này khi Shop đã có Reconciliation Account; dev phải bổ sung (xem Lưu ý cho dev).</li></ul>`,
+  track:'Precheck: công thức tính ra 41 → cho đẩy đơn.'},
+ {id:9, type:'node', cls:'don', who:'Đơn hàng', title:'Đơn chuyển sang shipped (hoặc sau shipped)',
+  detail:`<h3>⑨ Đơn chuyển sang shipped</h3>
+  <ul><li>Đơn vị vận chuyển báo đã lấy hàng, đơn chuyển sang <b>shipped</b>. Đơn cũng có thể chuyển thẳng sang delivered / returning.</li>
+  <li>Phí size tính khi đơn chuyển sang trạng thái từ shipped trở lên, cùng chỗ với phí FFM hiện tại. Đã tính rồi thì các lần đổi trạng thái sau không tính lại.</li>
+  <li>Bàn giao trên FFM (phiên bàn giao) không phải thời điểm tính phí: lúc đó đơn vẫn ở trạng thái chờ lấy hàng. Biểu phí GIP ghi “thu khi xuất kho”: coi như lúc đơn sang shipped.</li>
+  <li>Đơn sau đó bị hoàn: không tính thêm, không hoàn lại phí size.</li></ul>`,
+  track:'Đơn vị vận chuyển lấy hàng, đơn sang shipped → bắt đầu tính phí.'},
+ {id:10, type:'diamond', title:'Tính được phí size?', yes:'Được',
+  branch:{cls:'b-block', v:'v-block', lbl:'Không', html:'<b>Cảnh báo</b><br>Không tính trước được phí', go:'Áp dụng cho mọi trường hợp'},
+  detail:`<h3>⑩ Kiểm tra lại lúc tính phí</h3>
+  <ul><li>Đơn đi qua Precheck mà không tính được phí đã bị chặn ở bước ⑧. Đơn không qua Precheck (courier không bật, nhập mã vận đơn khi đã có Reconciliation Account, đơn POS, đơn sàn) vẫn có thể tới đây.</li>
+  <li>Quy tắc chung: trường hợp nào không tính trước được phí thì cảnh báo.</li></ul>`,
+  track:'Tính được.'},
+ {id:11, type:'node', cls:'ht', who:'Hệ thống', title:'Tìm Largest Item, tính các field',
+  detail:`<h3>⑪ Largest Item và các field</h3>
+  <ul><li>Largest Item là <b>đúng 1 sản phẩm</b> có <b>size lớn nhất</b> trong đơn, chọn trong hàng thật (bỏ dòng cha composite).</li>
+  <li>Chỉ tính các field có trong công thức: <code>{largest_item}</code> = tổng khoản phí size của Largest Item; <code>{additional_items}</code> = cộng khoản phí từng sản phẩm còn lại theo size của nó; <code>{all_items}</code> = cộng mọi sản phẩm; <code>{total_quantity}</code> = số sản phẩm.</li>
+  <li>Nhiều sản phẩm cùng size lớn nhất thì chọn 1 sản phẩm; số tiền không đổi.</li></ul>
+  <div class="exbox">2 áo thun (S) + 1 hộp giày (L) → Largest Item = hộp giày<br>{largest_item} = 30 + 5 = 35<br>{additional_items} = 2 áo × 3 = 6</div>`,
+  track:'Largest Item = hộp giày (L) → {largest_item} = 35; {additional_items} = 2 áo × 3 = 6.', line:'t1', line2:'t2'},
+ {id:12, type:'node', cls:'ht', who:'Hệ thống', title:'Chạy công thức của báo giá',
+  detail:`<h3>⑫ Chạy công thức</h3>
+  <ul><li>Thay giá trị các field vào công thức (field bằng 0 thì thay số 0), chạy 1 lần.</li>
+  <li>Kết quả là phí fulfillment theo size của Service Type đó.</li>
+  <li>Công thức không tính được → cảnh báo (như bước ⑩).</li></ul>
+  <div class="exbox">{largest_item} + {additional_items} → 35 + 6 = <b>41 PHP</b></div>`,
+  track:'Công thức: 35 + 6 = 41.', line:'t3'},
+ {id:13, type:'node', cls:'ht', who:'Hệ thống', title:'Lặp cho từng Service Type dùng FFM Fee By Size, lưu vào đơn',
+  detail:`<h3>⑬ Lặp và lưu</h3>
+  <ul>
+  <li>Đơn có 2 Service Type cùng dùng FFM Fee By Size thì làm lại ⑪–⑫ cho Service Type thứ 2 theo dòng của nó: <b>tính 2 lần</b>.</li>
+  <li>Hệ thống lưu vào đơn: size từng sản phẩm, Largest Item, phiên bản cấu hình size, báo giá đã dùng, công thức, giá trị từng field, các khoản phí đã dùng (name + price), kết quả của từng Service Type.</li>
+  <li>Sau này đổi giá, đổi cấu hình size, đo lại Variation, hay bấm tính lại FFM Fee thì phí size đã lưu <b>không thay đổi</b>.</li>
+  <li>Màn chi tiết đơn hiển thị phần phí size: Largest Item và size của nó, giá trị từng field, các khoản phí đã dùng, công thức và kết quả (không hiển thị dòng con).</li></ul>`,
+  track:'Đơn chỉ có 1 Service Type dùng FFM Fee By Size → phí size = 41 PHP, lưu vào đơn.', line:'t4'},
+ {id:14, type:'node', cls:'ds', who:'Đối soát', title:'FFM Fee → Customer Reconciliation → Customer Bank Transfer + SOA',
+  detail:`<h3>⑭ Đối soát</h3>
+  <ul><li>Phí size là một khoản mới trong <b>FFM Fee</b> của đơn đối soát, cộng vào <b>total_fee</b>.</li>
+  <li>Service Type dùng FFM Fee Type khác vẫn tính như hiện tại rồi cộng lại.</li>
+  <li>Chi tiết (sản phẩm đầu, giá trị từng field, các khoản phí đã dùng, phí) hiện trong thông tin phí FFM của đơn đối soát, trong file <b>SOA</b> gửi seller và file Excel xuất trên FFM.</li></ul>`,
+  track:'41 PHP được cộng vào FFM Fee của đơn → vào đối soát → SOA gửi seller.'}
+];
+const circled = ['','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭'];
+
+const flow = document.getElementById('flow');
+steps.forEach(s=>{
+  const col = document.createElement('div'); col.className='col'; col.style.animationDelay=(s.id*0.09)+'s';
+  let main;
+  if(s.type==='node'){
+    main = `<div class="node ${s.cls}" data-id="${s.id}"><span class="who">${s.who}</span><span class="n">${circled[s.id]}</span>${s.title}</div>`;
+  } else {
+    main = `<div class="diamond" data-id="${s.id}"><div><span class="n">${circled[s.id]}</span><br>${s.title}</div></div><span class="yes">${s.yes}</span>`;
+  }
+  let down = '';
+  if(s.branch){
+    down = `<div class="vline ${s.branch.v}"></div><div class="vlbl" style="color:${s.branch.v==='v-old'?'#4b5563':'var(--block)'}">${s.branch.lbl}</div>
+            <div class="branch ${s.branch.cls}" data-id="${s.id}">${s.branch.html}<span class="go">${s.branch.go}</span></div>`;
+  }
+  col.innerHTML = `<div class="row">${main}</div><div class="down">${down}</div>`;
+  flow.appendChild(col);
+});
+
+const detailWho = document.getElementById('detail-who');
+const detailBody = document.getElementById('detail-body');
+const stepinfo = document.getElementById('stepinfo');
+const tmsg = document.getElementById('tmsg');
+let cur = 0, timer = null;
+
+function showDetail(id){
+  const s = steps[id-1];
+  detailWho.textContent = s.who ? s.who : 'Câu hỏi rẽ nhánh';
+  detailBody.innerHTML = s.detail;
+  detailBody.style.animation='none'; void detailBody.offsetWidth; detailBody.style.animation='';
+  document.querySelectorAll('.selected').forEach(e=>e.classList.remove('selected'));
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(e=>{ if(!e.classList.contains('branch')) e.classList.add('selected'); });
+}
+function setTracker(n){
+  ['t1','t2','t3','t4'].forEach(t=>document.getElementById(t).classList.remove('on'));
+  steps.slice(0,n).forEach(s=>{
+    if(s.line) document.getElementById(s.line).classList.add('on');
+    if(s.line2) document.getElementById(s.line2).classList.add('on');
+  });
+  if(n>0){ tmsg.textContent = circled[n]+' '+steps[n-1].track; tmsg.style.animation='none'; void tmsg.offsetWidth; tmsg.style.animation=''; }
+  else tmsg.textContent = 'Bấm ▶ Chạy luồng để xem đơn này đi qua từng bước.';
+}
+function goTo(n){
+  cur = Math.max(1, Math.min(steps.length, n));
+  flow.classList.add('playing');
+  document.querySelectorAll('.node,.diamond,.branch').forEach(e=>{
+    const id = +e.dataset.id; e.classList.remove('active','done');
+    if(e.classList.contains('branch')) return;
+    if(id < cur) e.classList.add('done');
+    if(id === cur) e.classList.add('active');
+  });
+  stepinfo.textContent = `Bước ${cur} / ${steps.length}`;
+  showDetail(cur); setTracker(cur);
+  const el = document.querySelector(`.node[data-id="${cur}"], .diamond[data-id="${cur}"]`);
+  const sc = document.getElementById('scroller');
+  const col = el.closest('.col');
+  const target = sc.scrollLeft + col.getBoundingClientRect().left - sc.getBoundingClientRect().left - sc.clientWidth/2 + col.offsetWidth/2;
+  sc.scrollTo({left:target, behavior:'smooth'});
+}
+function stop(){ clearInterval(timer); timer=null; document.getElementById('play').textContent='▶ Chạy luồng'; }
+document.getElementById('play').onclick = ()=>{
+  if(timer){ stop(); return; }
+  if(cur>=steps.length) cur=0;
+  goTo(cur+1);
+  document.getElementById('play').textContent='⏸ Tạm dừng';
+  timer = setInterval(()=>{ if(cur>=steps.length){ stop(); return; } goTo(cur+1); }, 2600);
+};
+document.getElementById('next').onclick = ()=>{ stop(); goTo(cur+1); };
+document.getElementById('prev').onclick = ()=>{ stop(); goTo(cur-1); };
+document.getElementById('reset').onclick = ()=>{
+  stop(); cur=0; flow.classList.remove('playing');
+  document.querySelectorAll('.active,.done,.selected').forEach(e=>e.classList.remove('active','done','selected'));
+  stepinfo.textContent=''; setTracker(0); showDetail(1);
+  document.getElementById('scroller').scrollTo({left:0,behavior:'smooth'});
+};
+flow.addEventListener('click', e=>{
+  const t = e.target.closest('[data-id]'); if(!t) return;
+  stop(); goTo(+t.dataset.id);
+});
+showDetail(1);
+
+const io = new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting) en.target.classList.add('show'); }),{threshold:.08});
+document.querySelectorAll('.section').forEach(s=>io.observe(s));
+</script>
+
+<script>
+(function(){
+  const SIZES=[{k:'S',max:1000},{k:'M',max:5000},{k:'L',max:12000},{k:'XL',max:25000},{k:'XXL',max:40000}];
+  const FIELDS=[
+    {key:'total_quantity',label:'Total quantity',gear:false,help:'Số sản phẩm cả đơn'},
+    {key:'largest_item',label:'Largest item',gear:true,help:'Khoản phí theo size của sản phẩm lớn nhất, tính 1 lần',
+      note:'Giá trị = tổng các khoản phí của <b>size của Largest Item</b> (sản phẩm có size lớn nhất), tính <b>1 lần</b> cho đơn. Thường khai phí sản phẩm đầu và phí vật liệu đóng gói.'},
+    {key:'additional_items',label:'Additional items',gear:true,help:'Cộng từng sản phẩm còn lại theo size của nó',
+      note:'Giá trị = cộng khoản phí của <b>từng sản phẩm còn lại</b> (trừ Largest Item), mỗi sản phẩm lấy theo <b>size của chính nó</b>. Tính cả cái thứ 2 trở đi của chính Largest Item.'},
+    {key:'all_items',label:'All items',gear:true,help:'Cộng mọi sản phẩm theo size của nó',
+      note:'Giá trị = cộng khoản phí của <b>mọi sản phẩm</b>, mỗi sản phẩm theo size của nó. Dùng cho khách không có khái niệm sản phẩm đầu.'}
+  ];
+  const cfg={
+    largest_item:{S:[['Phí sản phẩm đầu',17.5],['Phí vật liệu đóng gói',3]],M:[['Phí sản phẩm đầu',25],['Phí vật liệu đóng gói',3]],L:[['Phí sản phẩm đầu',30],['Phí vật liệu đóng gói',5]],XL:[['Phí sản phẩm đầu',35],['Phí vật liệu đóng gói',5]],XXL:[['Phí sản phẩm đầu',50],['Phí vật liệu đóng gói',8]]},
+    additional_items:{S:[['Phí sản phẩm thêm',3]],M:[['Phí sản phẩm thêm',3]],L:[['Phí sản phẩm thêm',5]],XL:[['Phí sản phẩm thêm',5]],XXL:[['Phí sản phẩm thêm',10]]},
+    all_items:{S:[],M:[],L:[],XL:[],XXL:[]}
+  };
+  const qty={S:2,M:0,L:1,XL:0,XXL:0};
+  const $=id=>document.getElementById(id);
+  const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmt=n=>(typeof n==='number'&&isFinite(n))?(Math.round(n*100)/100).toLocaleString('vi-VN'):'—';
+  const sizeTotal=(key,k)=>cfg[key][k].reduce((a,r)=>a+(+r[1]||0),0);
+  const usedKeys=()=>{const f=$('pt-formula').value;return [...f.matchAll(/\{(.*?)\}/g)].map(m=>m[1]);};
+  const complete=key=>SIZES.every(s=>cfg[key][s.k].length>0&&cfg[key][s.k].every(r=>String(r[0]).trim()&&r[1]!==''&&!isNaN(+r[1])));
+
+  function values(){
+    const units=[];SIZES.forEach(s=>{for(let i=0;i<(+qty[s.k]||0);i++)units.push(s.k);});
+    const order=SIZES.map(s=>s.k);
+    let big=null;units.forEach(u=>{if(big===null||order.indexOf(u)>order.indexOf(big))big=u;});
+    const rest=units.slice();if(big)rest.splice(rest.indexOf(big),1);
+    return {big,units,
+      v:{total_quantity:units.length,
+         largest_item:big?sizeTotal('largest_item',big):0,
+         additional_items:rest.reduce((a,k)=>a+sizeTotal('additional_items',k),0),
+         all_items:units.reduce((a,k)=>a+sizeTotal('all_items',k),0)},
+      h:{total_quantity:`${units.length} sản phẩm`,
+         largest_item:big?`Largest Item size ${big}: `+cfg.largest_item[big].map(r=>esc(r[0])+' '+fmt(+r[1])).join(' + '):'đơn chưa có sản phẩm',
+         additional_items:rest.length?SIZES.filter(s=>rest.includes(s.k)).map(s=>{const c=rest.filter(x=>x===s.k).length;return `${c} sp size ${s.k} × ${fmt(sizeTotal('additional_items',s.k))}`;}).join(' + '):'không còn sản phẩm nào → 0',
+         all_items:units.length?SIZES.filter(s=>units.includes(s.k)).map(s=>{const c=units.filter(x=>x===s.k).length;return `${c} sp size ${s.k} × ${fmt(sizeTotal('all_items',s.k))}`;}).join(' + '):'0'}};
+  }
+  function evaluate(formula,v){
+    const keys=[...formula.matchAll(/\{(.*?)\}/g)].map(m=>m[1]);
+    const bad=keys.filter(k=>!FIELDS.some(f=>f.key===k));
+    if(bad.length) return {err:'Field không có trong danh sách: '+esc(bad.map(k=>'{'+k+'}').join(', '))};
+    let expr=formula;keys.forEach(k=>{expr=expr.split('{'+k+'}').join('('+v[k]+')');});
+    if(!/^[0-9+\-*/().\s<>=!?:]*$/.test(expr)||!expr.trim()||expr.includes('**')) return {err:'Công thức có ký tự không hợp lệ'};
+    try{const r=Function('"use strict";return ('+expr+')')();if(typeof r!=='number'||!isFinite(r))return {err:'Công thức không ra số'};return {r,expr};}
+    catch(e){return {err:'Công thức sai cú pháp'};}
+  }
+  function renderFields(){
+    const used=usedKeys();
+    $('pt-fields').innerHTML=FIELDS.map(f=>{
+      let badge='';
+      if(f.gear){badge=!used.includes(f.key)?'<span class="pt-badge off">Không dùng</span>':complete(f.key)?'<span class="pt-badge ok">Đã khai đủ</span>':'<span class="pt-badge miss">Chưa khai đủ</span>';}
+      return `<div class="pt-field"><span class="pt-tag blue" data-copy="${f.key}" title="Bấm để chèn vào công thức">{${f.key}}</span>${f.label}${f.gear?` <span class="pt-gear" data-gear="${f.key}" title="Setting ${f.label}">⚙</span>`:''}${badge}<small>${f.help}</small></div>`;}).join('');
+  }
+  function renderSim(){
+    $('pt-qty').innerHTML='<tr><th>Size</th>'+SIZES.map(s=>`<th>${s.k}</th>`).join('')+'</tr><tr><td>Số sản phẩm</td>'+SIZES.map(s=>`<td><input class="pt-qty" type="number" min="0" data-q="${s.k}" value="${qty[s.k]}"></td>`).join('')+'</tr>';
+  }
+  function renderResult(){
+    const f=$('pt-formula').value, V=values(), used=usedKeys(), e=evaluate(f,V.v);
+    const miss=FIELDS.filter(x=>x.gear&&used.includes(x.key)&&!complete(x.key));
+    let html=`<div><b>Largest Item:</b> ${V.big?'1 sản phẩm size '+V.big:'—'}</div><table style="margin-top:6px"><tr><th>Field</th><th>Cách ra số</th><th>Giá trị</th></tr>`;
+    FIELDS.filter(x=>used.includes(x.key)).forEach(x=>{html+=`<tr><td><code>{${x.key}}</code></td><td>${V.h[x.key]}</td><td class="num">${fmt(V.v[x.key])}</td></tr>`;});
+    html+='</table>';
+    if(e.err) html+=`<div class="pt-err">${e.err}</div>`;
+    else html+=`<div style="margin-top:8px">Thay số: <code>${esc(e.expr.replace(/\((\d+(\.\d+)?)\)/g,'$1'))}</code></div><div style="font-size:20px;margin-top:4px"><b>Phí: ${fmt(e.r)} PHP</b></div>`;
+    if(miss.length) html+=`<div class="pt-err">Cảnh báo: ${miss.map(x=>'{'+x.key+'}').join(', ')} chưa khai đủ mọi size, bấm Save sẽ bị chặn.</div>`;
+    $('pt-result').innerHTML=html;
+    $('pt-ex').innerHTML=e.err?'<span style="color:#ff4d4f">'+e.err+'</span>':`Ex (đơn ở khung Thử tính phí): ${FIELDS.filter(x=>used.includes(x.key)).map(x=>esc(x.label)+': <b>'+fmt(V.v[x.key])+'</b>').join(' · ')} → <b>${fmt(e.r)}</b>`;
+  }
+  function renderRow(){
+    const f=$('pt-formula').value, used=usedKeys(), e=evaluate(f,values().v);
+    const miss=FIELDS.filter(x=>x.gear&&used.includes(x.key)&&!complete(x.key));
+    $('pt-fview').value=f;$('pt-fview').title=f;
+    const bad=e.err||miss.length;
+    $('pt-fview').classList.toggle('bad',!!bad);
+    $('pt-rowmsg').innerHTML=e.err?'<span class="pt-err">'+e.err+'</span>':miss.length?'<span class="pt-err">'+miss.map(x=>'{'+x.key+'}').join(', ')+' chưa khai đủ size</span>':'<span style="color:rgba(0,0,0,.45)">Ex: '+fmt(e.r)+' ₱ (đơn ở khung Thử tính phí)</span>';
+  }
+  function refresh(){renderFields();renderResult();renderRow();}
+
+  // ----- modal -----
+  let editing=null, draft=null;
+  function openModal(key){
+    editing=key;draft=JSON.parse(JSON.stringify(cfg[key]));
+    const f=FIELDS.find(x=>x.key===key);
+    $('pt-mtitle').textContent='Setting '+f.label+' ({'+key+'})';
+    $('pt-mnote').innerHTML=f.note;$('pt-merr').textContent='';
+    renderModal();$('pt-mask').classList.add('open');
+  }
+  function renderModal(){
+    $('pt-msizes').innerHTML=SIZES.map(s=>`<div class="pt-size"><div class="pt-size-h">Size ${s.k} <span>≤ ${s.max.toLocaleString('vi-VN')} cm³ · Tổng: <b>${fmt(draft[s.k].reduce((a,r)=>a+(+r[1]||0),0))} PHP</b></span></div>`+
+      draft[s.k].map((r,i)=>`<div class="pt-fee"><input class="pt-input" placeholder="Fee name" data-n="${s.k}|${i}" value="${esc(r[0])}"><div class="pt-price"><input type="number" step="0.01" min="0" placeholder="Price" data-p="${s.k}|${i}" value="${r[1]}"><i>PHP</i></div><span class="pt-del" data-d="${s.k}|${i}" title="Xoá">🗑</span></div>`).join('')+
+      `<button class="pt-btn dashed" data-a="${s.k}">+ Add fee</button></div>`).join('');
+  }
+  $('pt-msizes').addEventListener('input',ev=>{
+    const t=ev.target;
+    if(t.dataset.n){const [k,i]=t.dataset.n.split('|');draft[k][i][0]=t.value;}
+    if(t.dataset.p){const [k,i]=t.dataset.p.split('|');draft[k][i][1]=t.value===''?'':+t.value;
+      const box=t.closest('.pt-size');box.querySelector('.pt-size-h span b').textContent=fmt(draft[k].reduce((a,r)=>a+(+r[1]||0),0))+' PHP';}
+  });
+  $('pt-msizes').addEventListener('click',ev=>{
+    const t=ev.target;
+    if(t.dataset.a){draft[t.dataset.a].push(['','']);renderModal();}
+    if(t.dataset.d){const [k,i]=t.dataset.d.split('|');draft[k].splice(+i,1);renderModal();}
+  });
+  const close=()=>$('pt-mask').classList.remove('open');
+  $('pt-x').onclick=close;$('pt-mcancel').onclick=close;
+  $('pt-msave').onclick=()=>{
+    const bad=SIZES.find(s=>draft[s.k].some(r=>!String(r[0]).trim()||r[1]===''||isNaN(+r[1])||+r[1]<0));
+    if(bad){$('pt-merr').textContent='Size '+bad.k+': mỗi khoản phí phải có name và price không âm.';return;}
+    cfg[editing]=draft;close();refresh();
+  };
+  $('pt-mask').addEventListener('click',ev=>{if(ev.target.id==='pt-mask')close();});
+
+  // ----- form -----
+  $('pt-fields').addEventListener('click',ev=>{
+    const t=ev.target;
+    if(t.dataset.gear) openModal(t.dataset.gear);
+    if(t.dataset.copy){const ta=$('pt-formula'),pos=ta.selectionStart??ta.value.length;ta.value=ta.value.slice(0,pos)+'{'+t.dataset.copy+'}'+ta.value.slice(ta.selectionEnd??pos);refresh();ta.focus();}
+  });
+  $('pt-formula').addEventListener('input',()=>{$('pt-formula-msg').innerHTML='';refresh();});
+  $('pt-qty').addEventListener('input',ev=>{if(ev.target.dataset.q){qty[ev.target.dataset.q]=Math.max(0,+ev.target.value||0);renderResult();}});
+  function checkFormula(){
+    const used=usedKeys(), e=evaluate($('pt-formula').value,values().v);
+    const miss=FIELDS.filter(x=>x.gear&&used.includes(x.key)&&!complete(x.key));
+    if(e.err) return e.err;
+    if(miss.length) return 'Need to set up all sizes for '+miss.map(x=>'{'+x.key+'}').join(', ')+' first!';
+    return null;
+  }
+  // ----- modal công thức: Cancel trả lại công thức và giá theo size như lúc mở -----
+  let fsnap=null;
+  function openFormula(){fsnap={f:$('pt-formula').value,c:JSON.parse(JSON.stringify(cfg))};$('pt-formula-msg').innerHTML='';refresh();$('pt-fmask').classList.add('open');$('pt-formula').focus();}
+  function cancelFormula(){$('pt-formula').value=fsnap.f;Object.keys(fsnap.c).forEach(k=>cfg[k]=fsnap.c[k]);$('pt-fmask').classList.remove('open');refresh();}
+  $('pt-fopen').onclick=openFormula;$('pt-fview').onclick=openFormula;
+  $('pt-fx').onclick=cancelFormula;$('pt-fcancel').onclick=cancelFormula;
+  $('pt-fmask').addEventListener('click',ev=>{if(ev.target.id==='pt-fmask')cancelFormula();});
+  $('pt-fsave').onclick=()=>{
+    const err=checkFormula();
+    if(err){$('pt-formula-msg').innerHTML='<div class="pt-err">'+err+'</div>';return;}
+    $('pt-fmask').classList.remove('open');refresh();
+  };
+  $('pt-save').onclick=()=>{
+    const err=$('pt-feetype').value==='by_size'?checkFormula():null, msg=$('pt-save-msg');
+    msg.innerHTML=err?'<span class="pt-err">Đơn lẻ: '+err+'</span>':'<span class="pt-ok">Lưu được (prototype không lưu thật). BE vẫn kiểm tra trùng Shared Rate theo Shop + khoảng ngày như hiện tại.</span>';
+  };
+  const perOrderBySize=$('pt-perorder').innerHTML;
+  $('pt-feetype').addEventListener('change',ev=>{const on=ev.target.value==='by_size';
+    $('pt-perorder').innerHTML=on?perOrderBySize:'<div class="pt-price"><input placeholder="Enter fee per order"><i>₱</i></div>';
+    if(on){$('pt-fopen').onclick=openFormula;$('pt-fview').onclick=openFormula;refresh();}});
+  document.body.appendChild($('pt-fmask'));
+  document.body.appendChild($('pt-mask')); // khung modal nằm ngoài section có transform để position:fixed phủ cả màn hình
+  renderSim();refresh();
+})();
+</script>
+</body>
+</html>

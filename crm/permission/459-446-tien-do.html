@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiến độ #459 Phân quyền CRM và #446 Cấu hình tổ chức</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>#459 · #446 tiến độ</div>
+  <nav class="nav"><a href="#lo-trinh">Lộ trình</a><a href="#bo-sung">Quyền bổ sung</a><a href="#phase3">Phase 3</a><a href="#proto-department">Màn Department</a><a href="#proto-users">Màn User</a><a href="#i459">#459</a><a href="#i446">#446</a><a href="#ap-dung">Cách áp dụng</a><a href="#luat">Luật quyền</a><a href="#khac-spec">Khác spec</a><a href="#con-lai">Việc còn lại</a></nav>
+</div></div>
+<div class="wrap">
+<aside class="roadmap" aria-label="Lộ trình">
+  <div class="rm-h"><b>Lộ trình</b><span>4/4 phase xong · 1 bổ sung</span></div>
+  <ol class="rm-steps">
+    <li class="done"><a href="#lo-trinh">Phase 1 · BE + dữ liệu</a><small>Lên prod 28/10 10:05</small></li>
+    <li class="done"><a href="#lo-trinh">Phase 2 · FE + nước VN</a><small>Lên prod 28/10 16:55 · giao diện antd 29/10</small></li>
+    <li class="done"><a href="#phase3">Phase 3 · Tổ chức (#446)</a><small>Lên prod 29/10 14:19</small></li>
+    <li class="done"><a href="#con-lai">Phase 4 · Triển khai + bàn giao</a><small>BA đóng 2 issue 29/10</small></li>
+    <li class="cur"><a href="#bo-sung">Bổ sung · Quyền từng thành viên</a><small>Lên prod 30/10 17:44 · chờ báo BA</small></li>
+  </ol>
+  <div class="rm-sum"><a class="ok" href="#con-lai"><b>8</b>Đã xử lý</a><a class="bad" href="#con-lai"><b>2</b>Chưa xử lý</a></div>
+  <ul class="rm-todo"><li>Báo BA phần quyền bổ sung (khác BR_28)</li><li>Khai báo quyền CRM cùng tính năng Lead (team CRM)</li></ul>
+</aside>
+
+
+<header class="hero">
+  <div class="eyebrow">FFM · CRM · Tiến độ task</div>
+  <h1>Tiến độ #459 Phân quyền CRM và #446 Cấu hình tổ chức</h1>
+  <p>4 phase đã xong, BA đã đóng #446 và #459 ngày 29/10. Ngày 30/10 thêm <b>quyền bổ sung riêng cho từng thành viên Department</b> (mục 02) và cây Department hiện 2 dòng; cả 2 đã lên prod ngày 30/10 (BE 17:41, FE 17:44). Quyền bổ sung là điểm làm khác spec (BR_28), cần báo BA.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i459">ffm_dev #459</a></span>
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i446">ffm_dev #446</a></span>
+    <span class="chip">Spec <a href="https://ffm-docs-html.pages.dev/crm/permission/phan-quyen">Phân quyền CRM</a></span>
+    <span class="chip">Spec <a href="https://ffm-docs-html.pages.dev/crm/organization/cau-hinh-to-chuc-tren-ffm">Cấu hình tổ chức trên FFM</a></span>
+    <span class="chip">Cập nhật 04/11/2026</span>
+    <span class="chip">Code đã triển khai: BE b9e9b3887 · FE 65d9b78f</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>4/4 phase</b><span>đã triển khai lên prod, BA đóng 2 issue 29/10</span></div>
+  <div class="kpi"><b>6 app FFM</b><span>có màn Phân quyền theo Department, cộng màn riêng của CRM</span></div>
+  <div class="kpi"><b>0 quyền CRM</b><span>trong danh mục, khai báo cùng tính năng Lead</span></div>
+  <div class="kpi"><b>3 migration</b><span>2 của phase 3 (29/10), 1 của quyền bổ sung (30/10), đã chạy trên prod</span></div>
+</div>
+
+<section id="lo-trinh">
+  <div class="sec-h"><span class="n">01</span><h2>Lộ trình</h2><p>Việc mới nhất: quyền bổ sung từng thành viên, đã lên prod 30/10, chờ báo BA</p></div>
+  <div class="card"><div class="phases" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+    <div class="phase"><div class="dot" style="background:var(--green)">1</div><h4>Phase 1 · BE + dữ liệu</h4><p>Cây Department chung cho mọi app, quyền theo từng app (bảng department_app_permissions), bỏ Department CRM thử nghiệm</p><span class="who"><span class="pill p-ok">triển khai lên prod 28/10 10:05</span></span></div>
+    <div class="phase"><div class="dot" style="background:var(--green)">2</div><h4>Phase 2 · FE + nước VN</h4><p>Màn Department dạng cây, Phân quyền trong từng app, Cài đặt chung chạy ở VN, cấp VN cho Super Admin của mọi công ty FFM. Thêm: giao diện antd cho màn Department, Phân quyền</p><span class="who"><span class="pill p-ok">triển khai lên prod 28/10 16:55</span></span><span class="who"><span class="pill p-ok">giao diện antd 29/10</span></span></div>
+    <div class="phase"><div class="dot" style="background:var(--green)">3</div><h4>Phase 3 · Tổ chức (#446)</h4><p>Mã, Trưởng, Mô tả, Trạng thái của Department; Mã nhân viên, Trạng thái của user; sao chép quyền khi tạo Department</p><span class="who"><span class="pill p-ok">triển khai lên prod 29/10 14:19</span></span></div>
+    <div class="phase"><div class="dot" style="background:var(--green)">4</div><h4>Phase 4 · Triển khai + bàn giao</h4><p>Chạy 2 migration, cập nhật BE, triển khai FE, điền ngày kích hoạt cho user cũ, báo BA; BA kiểm tra rồi đóng 2 issue</p><span class="who"><span class="pill p-ok">BA đóng 2 issue 29/10</span></span></div>
+    <div class="phase cur"><div class="dot" style="background:var(--blue)">5</div><h4>Bổ sung · Quyền từng thành viên</h4><p>Quyền bổ sung riêng cho từng thành viên Department ở màn Phân quyền của mọi app; cây Department hiện 2 dòng</p><span class="who"><span class="pill p-ok">triển khai lên prod 30/10 17:44</span></span><span class="who"><span class="pill p-mid">chờ báo BA</span></span></div>
+  </div></div>
+  <div class="card" style="margin-top:14px;padding:8px 10px">
+    <table class="t">
+      <tr><th>Hạng mục</th><th>Trạng thái</th><th>Thời điểm</th></tr>
+      <tr><td><b>Phase 1</b>: cây Department chung cho mọi app, quyền theo từng app, bỏ Department CRM thử nghiệm</td><td><span class="pill p-ok">Đã triển khai lên prod</span></td><td class="num">28/10 10:05</td></tr>
+      <tr><td><b>Phase 2</b>: màn Department dạng cây, Phân quyền trong từng app, Cài đặt chung chạy ở VN</td><td><span class="pill p-ok">Đã triển khai lên prod</span></td><td class="num">28/10 16:55</td></tr>
+      <tr><td>Cấp nước VN cho Super Admin của mọi công ty FFM</td><td><span class="pill p-ok">Đã chạy trên prod</span></td><td class="num">28/10</td></tr>
+      <tr><td>Giao diện màn Department / Phân quyền theo thiết kế antd: cây antd Tree, form 2 cột, danh sách thành viên</td><td><span class="pill p-ok">Đã triển khai lên prod</span></td><td class="num">29/10</td></tr>
+      <tr><td><b>Phase 3</b>: trường thông tin tổ chức của #446 (mục 03)</td><td><span class="pill p-ok">Đã triển khai lên prod</span></td><td class="num">29/10 14:19</td></tr>
+      <tr><td>Thêm nước cho Department đã tạo (form sửa Department, mục 03)</td><td><span class="pill p-ok">Đã triển khai lên prod</span></td><td class="num">29/10 18:12</td></tr>
+      <tr><td><b>Phase 4</b>: triển khai phase 3, bàn giao, đóng #459 và #446 (mục 11)</td><td><span class="pill p-ok">BA đã đóng 2 issue</span></td><td class="num">29/10 15:20</td></tr>
+      <tr><td><b>Quyền bổ sung riêng cho từng thành viên Department</b> (mục 02); cây Department hiện 2 dòng: mã + tên, số nước + số thành viên</td><td><span class="pill p-ok">Đã triển khai lên prod</span></td><td class="num">30/10 17:44</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="bo-sung">
+  <div class="sec-h"><span class="n">02</span><h2 style="flex:none">Quyền bổ sung riêng cho từng thành viên</h2><p><span class="pill p-ok">Đã triển khai lên prod</span> 30/10 17:44 · Bấm thử: chọn Department trên cây; bấm "Quyền bổ sung" ở 1 thành viên, tích thêm quyền rồi Lưu (dòng thành viên hiện quyền vừa thêm); tích 1 ô ở lưới quyền của Department (nút "Quyền bổ sung" bị khoá, rê chuột để xem lý do), bấm Hủy để mở lại; ở Sales HCM tích "Xem khách hàng" cho Department rồi Lưu, mở quyền bổ sung của Phạm Ngọc Ánh để xem ghi chú quyền trùng</p></div>
+  <div class="grid2">
+    <div class="note n-info"><span class="ic">i</span><div><p><b>Dùng khi nào</b></p><ul class="clean"><li>1 người cần thêm 1–2 quyền so với những người cùng Department (ví dụ riêng 1 nhân viên được Export đơn): tích thêm cho người đó, không phải tạo Department chỉ có 1 người.</li><li>Có ở màn <b>Phân quyền</b> của mọi app (Order, CSR, WMS, Inventory, Đối soát, Cài đặt) và <b>CRM › Phân quyền</b>: dưới lưới quyền của Department có danh sách <b>Thành viên</b>, mỗi người có nút <b>Quyền bổ sung</b>.</li><li>Quyền bổ sung của mỗi app sửa ở màn Phân quyền của app đó.</li></ul></div></div>
+    <div class="note n-warn"><span class="ic">!</span><div><p><b>Luật</b></p><ul class="clean"><li>Chỉ cộng thêm vào quyền của Department, không bớt được quyền Department đang có.</li><li>Không chọn riêng cho từng người được Phạm vi dữ liệu (CRM) hay danh sách trạng thái đơn được xem / sửa. Nhưng các ô quyền như "View orders in any status", "View all" vẫn tích thêm được, và người đó sẽ thấy rộng hơn Department.</li><li>Chỉ áp dụng ở nước đang chọn; mỗi nước 1 bộ quyền bổ sung riêng.</li><li>Người rời Department hoặc bị bỏ nước đó thì mất quyền bổ sung ở nước đó.</li><li>Người sửa chỉ cấp được quyền mình đang có, không sửa được khi chính mình thuộc Department đó ở nước đang chọn (ADMIN / Super Admin sửa được, kể cả của chính mình). CRM › Phân quyền: chỉ ADMIN / Super Admin sửa được.</li><li>Quyền bổ sung trùng quyền Department đang bật: lần lưu quyền bổ sung kế tiếp của người đó bỏ quyền trùng ra (drawer báo trước). Sau lần lưu đó, Department tắt quyền thì người này cũng mất quyền. Nếu Department tắt quyền <b>trước</b> lần lưu đó, quyền này trở thành quyền bổ sung bình thường: người này vẫn giữ quyền, tới khi có người bỏ tích trong "Quyền bổ sung".</li><li>CRM: quyền thao tác cần quyền xem cùng nhóm (tính cả quyền của Department). Department bỏ quyền xem mà thành viên còn quyền bổ sung cần quyền xem đó thì không lưu được, màn hình báo tên thành viên.</li></ul></div></div>
+  </div>
+  <div class="proto" id="proto-extra" style="margin-top:14px">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/order/permission</span></div>
+    <div class="app" style="min-height:560px">
+      <div class="side">
+        <div class="brand"><b>F</b>Order</div>
+        <a>Đơn hàng</a><a class="on">Phân quyền</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>Phân quyền <span style="font-weight:400;font-size:13px;color:rgba(0,0,0,.65)">· Nước: Philippines</span></h3></div>
+        <div style="display:grid;grid-template-columns:240px 1fr;gap:12px;align-items:start">
+          <div class="panel"><div style="margin-bottom:8px"><b>Danh sách Department</b></div><div id="x-tree"></div></div>
+          <div class="panel" id="x-right"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mask" data-x="close"></div>
+    <div class="drawer" id="x-drawer" style="width:380px;overflow:auto"></div>
+    <div class="toast" id="toast-extra"></div>
+  </div>
+  <p class="caption">Viền tím nét đứt là chỗ thêm ngày 30/10: dòng thứ 2 trên cây và danh sách Thành viên kèm quyền bổ sung. Quyền có sẵn từ Department hiện tích sẵn và bị khoá trong drawer. Dữ liệu là dữ liệu mẫu.</p>
+</section>
+
+<section id="phase3">
+  <div class="sec-h"><span class="n">03</span><h2>Phase 3 làm gì</h2><p><span class="pill p-ok">Đã triển khai lên prod</span> 29/10 14:19</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th style="width:190px">Ở đâu</th><th style="width:250px">Trước phase 3</th><th>Sau phase 3 (đang chạy trên prod từ 29/10)</th></tr>
+      <tr><td><b>Department</b> · Mã Department</td><td>Không có</td><td>Mã không trùng trong cùng công ty và cùng nước, không phân biệt hoa thường (<code>KD</code> và <code>kd</code> tính là trùng). Đặt rồi không đổi được. Trên cây, mã hiện bằng chữ xám trước tên.</td></tr>
+      <tr><td><b>Department</b> · Thêm nước</td><td>Chỉ chọn nước lúc tạo; muốn thêm nước phải tạo Department riêng, không liên kết</td><td>Form sửa có ô chọn nước (các nước người dùng làm mà Department chưa có) và nút <b>Thêm nước</b>, bấm xong hỏi xác nhận. Bản ở nước mới nằm cùng nhóm liên kết, lấy tên, mã, mô tả, trạng thái, quyền mọi app và phạm vi trạng thái đơn của bản ở nước đang chọn (nước chỉ CRM dùng như Việt Nam chỉ nhận quyền CRM và Cài đặt); phạm vi dữ liệu CRM chỉ chép khi người thao tác là System Admin CRM. Thành viên và Trưởng thêm riêng ở nước mới. Department cha phải có bản ở nước mới; người thao tác phải quản lý được mọi nước của nhóm và chỉ chép được quyền mình đang có. Nhóm có nước người dùng không làm thì ô này ẩn.</td></tr>
+      <tr><td><b>Department</b> · Mô tả</td><td>Không có</td><td>Ô nhập tự do. Tên, Department cha, Mã, Mô tả, Trạng thái cập nhật cho mọi nước liên kết của Department.</td></tr>
+      <tr><td><b>Department</b> · Trạng thái</td><td>Không có, Department luôn dùng được</td><td><b>Đang dùng</b> / <b>Ngừng dùng</b>, chỉ có ở form sửa. Chỉ chuyển sang Ngừng dùng được khi đã gỡ hết thành viên ở mọi nước. Department Ngừng dùng không nhận thành viên mới (thay ô thêm thành viên bằng 1 dòng cảnh báo); trên cây hiện nhãn "Ngừng dùng".</td></tr>
+      <tr><td><b>Department</b> · Trưởng Department</td><td>Không có</td><td>Chọn trong nhân viên vận hành làm việc ở nước đó; mỗi nước đặt Trưởng riêng. Không tự đặt mình làm Trưởng, trừ ADMIN / Super Admin. Người đang làm Trưởng bị xoá, bị bỏ nước đó, hoặc bị đổi sang vai không thuộc Department (vai không phải vận hành) thì tự động bị gỡ khỏi vị trí Trưởng.</td></tr>
+      <tr><td><b>Department</b> · Tạo mới</td><td>Form tạo có Tên, Department cha, các nước áp dụng; tích quyền lại từ đầu</td><td>Form ở cột phải thêm Mã, Mô tả, Trưởng (khi tích nhiều nước thì Trưởng chỉ đặt cho nước đang chọn) và ô <b>Sao chép quyền từ</b>: chọn 1 Department có sẵn để sao chép quyền các app FFM, phạm vi trạng thái đơn và quyền app CRM. Tạo cho nhiều nước thì mỗi nước lấy quyền của bản Department nguồn ở nước đó; nguồn không có bản ở nước đó thì lấy bản ở nước đang chọn. Không sao chép phạm vi dữ liệu. Sao chép quyền CRM thì người thao tác phải có quyền ở app CRM; người thao tác vẫn chỉ cấp được quyền mình đang có.</td></tr>
+      <tr><td><b>Phân quyền CRM</b> và <b>Phân quyền theo app</b></td><td>Chỉ hiện tên Department</td><td>Hiện thêm Mã và nhãn Ngừng dùng của Department (sửa trong lượt duyệt code).</td></tr>
+      <tr><td><b>User</b> · Mã nhân viên (<code>staff_code</code>)</td><td>Không có</td><td>Người tạo user hoặc người có quyền sửa user khác đặt; nhân viên tự sửa hồ sơ không đặt được; đặt rồi không đổi; không trùng trong công ty (không phân biệt hoa thường); user đã xoá thì mã được dùng lại.</td></tr>
+      <tr><td><b>User</b> · Trạng thái</td><td>Không có</td><td><span class="pill p-mid">Chưa kích hoạt</span> chưa đăng nhập lần nào · <span class="pill p-ok">Đang hoạt động</span> · <span class="pill p-bad">Ngừng hoạt động</span> user đã xoá, chỉ xem. Đang hoạt động được ghi ở lần đầu đăng nhập hoặc mở trang khi còn phiên đăng nhập, kể cả khi quản trị đăng nhập thay bằng link nhanh. Người tự đăng ký tính là đã kích hoạt ngay. User có từ trước phase 3: người đã bật xác thực 2 lớp được điền sẵn ngày kích hoạt; người khác hiện Chưa kích hoạt cho tới lần đầu mở trang hoặc đăng nhập sau khi triển khai.</td></tr>
+      <tr><td><b>User</b> · Danh sách</td><td>Không lọc theo trạng thái</td><td>Bộ lọc Status trong "Add Filter", mặc định ẩn user đã xoá. Nút xoá bộ lọc xoá cả trạng thái (sửa trong lượt duyệt code). User đã xoá không sửa, không đổi vai, không đăng nhập thay được.</td></tr>
+      <tr><td><b>User</b> · Tạo user</td><td>Form tạo không có ô chọn vai</td><td>Chọn vai ngay trong form tạo. Ô vai chỉ hiện khi người tạo có quyền quản lý user ở nước đó; chỉ chọn được vai vận hành mà người tạo được phép quản lý.</td></tr>
+      <tr><td><b>CRM › Phân quyền</b></td><td>Bước 1 chọn phòng ban, Bước 2 chọn vai trò</td><td>1 cây Department: chọn Department ở cấp nào cũng được, rồi xem và sửa quyền của Department đó.</td></tr>
+    </table>
+  </div>
+  <div class="note n-info" style="margin-top:14px"><span class="ic">i</span><div>
+    <p><b>Cho dev CRM (Bình Quang)</b></p>
+    <ul class="clean">
+      <li>Phạm vi dữ liệu <b>Cả team</b> của 1 người ở nước đang chọn = chính người đó + thành viên của các Department mà người đó làm Trưởng + thành viên của mọi Department con cháu của các Department đó. Chỉ tính user chưa bị xoá và còn làm ở nước đó. Người không làm Trưởng Department nào thì "Cả team" chỉ có chính họ. Sau phase 3, BE có hàm <code>DepartmentAction.team_user_ids/1</code> trả danh sách user này (đã có trên prod từ 29/10).</li>
+      <li>Tính năng Lead đọc <code>data_scope</code> của app <code>crm</code> (lưu theo Department) để lọc dữ liệu.</li>
+      <li>Quyền CRM khai báo vào danh mục cùng lúc làm tính năng; lúc đó tab Danh mục quyền của CRM mới có nội dung.</li>
+    </ul>
+  </div></div>
+</section>
+
+<section id="proto-department">
+  <div class="sec-h"><span class="n">04</span><h2 style="flex:none">Prototype màn Department</h2><p>Bấm thử: chọn Department trên cây; tích nước ở "Thêm nước" rồi bấm Thêm nước (Sales HCM thêm Philippines được, thêm Thái Lan báo lỗi vì Department cha chưa có ở Thái Lan); chọn Trạng thái "Ngừng dùng" rồi Lưu khi còn thành viên (báo lỗi); bấm Gỡ ở từng thành viên cho tới hết, rồi Ngừng dùng và Lưu (cây hiện nhãn "Ngừng dùng", ô thêm thành viên đổi thành dòng cảnh báo); "+ Tạo Department": tích thêm nước để xem ghi chú Trưởng, chọn "Sao chép quyền từ", bỏ trống tên hoặc nhập mã trùng như "kd" để xem lỗi</p></div>
+  <div class="proto" id="proto-dept">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/setting/department</span></div>
+    <div class="app">
+      <div class="side">
+        <div class="brand"><b>F</b>Cài đặt chung</div>
+        <a>User</a><a class="on">Department</a><a>Phân quyền</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>Department <span style="font-weight:400;font-size:13px;color:rgba(0,0,0,.65)">· Nước: Việt Nam</span></h3><button class="btn pri" data-act="new">+ Tạo Department</button></div>
+        <div style="display:grid;grid-template-columns:320px 1fr;gap:12px;align-items:start">
+          <div class="panel">
+            <div style="margin-bottom:8px"><b>Danh sách Department</b></div>
+            <div id="tree"></div>
+          </div>
+          <div class="panel" id="right"></div>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast-dept"></div>
+  </div>
+  <p class="caption">Viền tím nét đứt là chỗ phase 3 thêm; dòng thứ 2 trên cây (số nước khi Department có từ 2 nước, số thành viên ở nước đang chọn) thêm ngày 30/10. Danh sách thành viên chỉ hiện người ở nước đang chọn. Dữ liệu là dữ liệu mẫu.</p>
+</section>
+
+<section id="proto-users">
+  <div class="sec-h"><span class="n">05</span><h2 style="flex:none">Prototype màn User</h2><p>Bấm thử: "Add Filter" → "Status" → chọn 1 trạng thái (bảng lọc lại, nhãn lọc hiện dưới thanh lọc); bấm × trên nhãn để bỏ; nút "Xoá bộ lọc" màu đỏ xoá hết (mặc định ẩn user Ngừng hoạt động); bấm Xem ở user Ngừng hoạt động, Sửa ở user khác</p></div>
+  <div class="proto" id="proto-user">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/user</span></div>
+    <div class="app" style="min-height:380px">
+      <div class="side">
+        <div class="brand"><b>F</b>Cài đặt chung</div>
+        <a class="on">User</a><a>Department</a><a>Phân quyền</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>User</h3><span style="color:rgba(0,0,0,.65)" id="u-count"></span></div>
+        <div class="panel">
+          <div style="display:flex;align-items:center;gap:8px;position:relative">
+            <span class="changed" style="display:inline-flex;gap:8px"><button class="btn" data-act="add-filter">+ Add Filter</button><button class="btn" data-act="clear-filter" style="color:#ff4d4f;border-color:#ff4d4f">Xoá bộ lọc</button></span>
+            <div id="u-menu" style="display:none;position:absolute;top:36px;left:0;z-index:5;background:#fff;border:1px solid #f0f0f0;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);min-width:200px;padding:4px 0"></div>
+          </div>
+          <div id="u-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;min-height:22px"></div>
+          <table class="ant"><thead><tr><th>Họ tên</th><th>Email</th><th><span class="changed">Mã nhân viên</span></th><th>Vai</th><th><span class="changed">Trạng thái</span></th><th>Thao tác</th></tr></thead><tbody id="u-rows"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast-user"></div>
+  </div>
+  <p class="caption">Viền tím nét đứt là chỗ phase 3 thêm. Dữ liệu là dữ liệu mẫu.</p>
+</section>
+
+<section id="i459">
+  <div class="sec-h"><span class="n">06</span><h2>#459 Phân quyền cho CRM: đối chiếu từng story</h2><p>Theo comment ngày 22/10: không cài cứng bộ quyền</p></div>
+  <div class="status">
+    <div class="row"><div><h4>PQ-01 · Xem danh mục quyền</h4><span class="pill p-info">Làm khác spec</span></div><p>Có tab <b>Danh mục quyền</b> (chỉ xem, mỗi quyền hiện số Department đang được cấp). <b>Không khai báo sẵn 67 quyền</b> theo spec: quyền CRM khai báo cùng từng tính năng có API (Lead, báo giá…). Hiện danh mục CRM có 0 quyền nên tab đang trống.</p></div>
+    <div class="row"><div><h4>PQ-02 · Chọn phòng ban, vai trò, xem quyền</h4><span class="pill p-info">Làm khác spec</span></div><p>Phòng ban, vai trò lấy từ cây Department chung ở Cài đặt chung, không tạo riêng trong CRM. Từ phase 3 (lên prod 29/10), màn này chọn Department trên 1 cây (trước đó là 2 bước: chọn Department gốc rồi chọn Department trong nhánh). <b>Phạm vi dữ liệu</b> (Của mình / Cả team / Tất cả / Chỉ xem) chọn được ngay ở màn này, spec ghi chỉ đọc. Giá trị đã được lưu, có tác dụng khi tính năng Lead dùng để lọc dữ liệu.</p></div>
+    <div class="row"><div><h4>PQ-03 · Cấp / bỏ quyền và lưu</h4><span class="pill p-ok">Đã triển khai lên prod</span></div><p>Tích / bỏ rồi Lưu. Luật "muốn có quyền thao tác thì phải có quyền xem cùng nhóm" có ở cả BE lẫn FE, có hiệu lực khi danh mục có quyền. Mỗi lần lưu được ghi vào nhật ký thay đổi. BE luôn kiểm tra quyền; chỉ ADMIN hoặc Super Admin vào được màn này. <b>Ngoại lệ (từ phase 3):</b> người quản lý Department (có quyền <code>department.manage</code>, được vào app CRM) tạo Department mới bằng cách sao chép thì quyền CRM họ đang có được chép theo; hiện danh mục CRM chưa có quyền nên chưa có tác dụng.</p></div>
+    <div class="row"><div><h4>PQ-04 · Hủy bỏ, khôi phục mặc định, cảnh báo chưa lưu</h4><span class="pill p-mid">Một phần</span></div><p>Có nút <b>Hủy bỏ</b> và hộp thoại <b>Ở lại / Bỏ thay đổi</b> khi đổi Department hoặc đổi tab; rời trang thì trình duyệt hỏi xác nhận. <b>Không có Khôi phục mặc định</b> vì không làm mẫu quyền (6 mẫu theo GIP): CRM bán cho nhiều công ty.</p></div>
+  </div>
+</section>
+
+<section id="i446">
+  <div class="sec-h"><span class="n">07</span><h2>#446 Cấu hình tổ chức cho CRM trên FFM: đối chiếu</h2><p>Theo mục "Khái niệm chính" và "Quy tắc quan trọng" của issue</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Phòng ban · Vai trò · Team</h4><span class="pill p-ok">Cây: đã triển khai lên prod</span> <span class="pill p-ok">Mã, Trưởng: lên prod 29/10</span></div><p>Đều là nút trong <b>1 cây Department chung</b> của mỗi công ty ở mỗi nước, quản lý ở Cài đặt chung › Department: nút gốc là phòng ban, nút con là vai trò / team, nhiều cấp, nút ở cấp nào cũng có thành viên. 1 Department áp dụng được cho nhiều nước (nước liên kết). <b>Mã, Trưởng, Mô tả, Trạng thái</b>: đã triển khai lên prod 29/10 (phase 3).</p></div>
+    <div class="row"><div><h4>Người dùng: 1 phòng ban, 1 vai trò, 1 team</h4><span class="pill p-ok">1 Department: đã triển khai lên prod</span> <span class="pill p-ok">Mã nhân viên: lên prod 29/10</span></div><p>Ở mỗi nước, mỗi nhân viên thuộc tối đa 1 Department. <b>Mã nhân viên, Trạng thái user</b> (Chưa kích hoạt / Đang hoạt động / Ngừng hoạt động), chọn vai khi tạo user: đã triển khai lên prod 29/10 (phase 3).</p></div>
+    <div class="row"><div><h4>Phạm vi dữ liệu</h4><span class="pill p-mid">Chờ tính năng Lead</span></div><p>Lưu theo Department cho từng app (cột <code>data_scope</code>, hiện chỉ app CRM). Phase 3 có hàm tính danh sách người trong phạm vi "Cả team" (xem mục 03). Chưa có tác dụng cho tới khi tính năng Lead dùng giá trị này để lọc dữ liệu.</p></div>
+    <div class="row"><div><h4>Quyền cấp theo vai trò, không theo từng người</h4><span class="pill p-info">Làm khác spec</span></div><p>Quyền gắn với Department, từng app một (màn Phân quyền trong app đó). <b>Từ 30/10</b> có thêm quyền bổ sung riêng cho từng thành viên, chỉ cộng thêm vào quyền của Department (mục 02); spec ghi chỉ cấp theo vai trò (BR_28). Nhân viên không ở Department nào thì dùng quyền theo vai ở Role Permission.</p></div>
+    <div class="row"><div><h4>Đồng bộ FFM → CRM</h4><span class="pill p-ok">Đã triển khai lên prod</span></div><p>Không cần đồng bộ: CRM là 1 app trong FFM (từ #453), đọc thẳng các bảng users, Department, quyền. Nhân viên chuyển Department hay nghỉ việc thì CRM thấy ngay.</p></div>
+    <div class="row"><div><h4>CRM không sửa tổ chức; chỉ System Admin cấu hình</h4><span class="pill p-ok">Đã triển khai lên prod</span></div><p>Đã bỏ màn Department riêng của CRM (phase 1, xoá 3 Department CRM thử nghiệm trên prod). Menu CRM chỉ còn Phân quyền, chỉ ADMIN / Super Admin vào.</p></div>
+  </div>
+</section>
+
+<section id="ap-dung">
+  <div class="sec-h"><span class="n">08</span><h2>Cách áp dụng cho 1 công ty</h2><p>Người làm: Super Admin của công ty (Super Admin của mọi công ty FFM đã có nước VN từ 28/10)</p></div>
+  <div class="card">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Tạo cây Department<small>Cài đặt chung › Department: phòng ban → team, chọn các nước áp dụng (thêm nước sau ở form sửa). Điền Mã, Trưởng, Mô tả; tạo mới có thể sao chép quyền</small></div>
+      <div class="s"><b>2</b><br>Thêm thành viên<small>mỗi người 1 Department ở mỗi nước</small></div>
+      <div class="s"><b>3</b><br>Tích quyền trong từng app<small>menu Phân quyền của Order, CSR, WMS, Inventory, Đối soát, Cài đặt</small></div>
+      <div class="s"><b>4</b><br>Phân quyền CRM<small>CRM › Phân quyền: chọn Department, Phạm vi dữ liệu, quyền</small></div>
+      <div class="s"><b>5</b><br>Cấp nước VN cho nhân viên CRM<small>Cài đặt chung › User ở nước VN</small></div>
+    </div>
+    <p class="caption">Mỗi app tự quản lý quyền của mình: quyền đơn hàng tích ở Order › Phân quyền (kèm phạm vi trạng thái đơn), quyền kho ở WMS › Phân quyền… Cài đặt chung › Phân quyền chứa quyền của app Cài đặt: User, Department, Role Permission, mẫu in, seller, shop, kho, cấu hình đơn / CSKH / đối soát, tài khoản đơn vị vận chuyển…; ở VN chỉ hiện 5 quyền User và Department.</p>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="card" style="padding:8px 10px"><table class="t">
+      <tr><th>Ai</th><th>Làm được gì</th></tr>
+      <tr><td>Super Admin / ADMIN</td><td>Mọi màn ở trên, mọi Department</td></tr>
+      <tr><td>Có quyền <code>department.manage</code></td><td>Quản lý cây; chỉ cấp quyền mình đang có; không sửa Department chứa mình; không tự thêm mình vào Department; không tự đặt mình làm Trưởng</td></tr>
+      <tr><td>Nhân viên chỉ làm VN</td><td>Vào thẳng CRM sau khi đăng nhập (khi được bật app CRM và không phải ADMIN / Super Admin). Hiện CRM chỉ có màn Phân quyền nên người này thấy trang "chưa có quyền"</td></tr>
+    </table></div>
+    <div class="note n-info"><span class="ic">i</span><div><p><b>Ở nước VN</b> Cài đặt chung chỉ có 3 mục User, Department, Phân quyền; màn Phân quyền của app Cài đặt chỉ hiện 5 quyền <code>user.view</code>, <code>user.manage</code>, <code>user.create</code>, <code>user.edit_others</code>, <code>department.manage</code>. Ở VN, màn User chỉ sửa được người chỉ làm VN; người có thêm nước FFM khác thì chỉ xem.</p></div></div>
+  </div>
+</section>
+
+<section id="luat">
+  <div class="sec-h"><span class="n">09</span><h2>Luật quyền cần nhớ khi vận hành</h2><p>Các trường hợp vận hành hay hỏi</p></div>
+  <div class="grid2">
+    <div class="note n-red"><span class="ic">!</span><div><p><b>Gỡ khỏi Department = mất hết quyền ở nước đó</b></p><ul class="clean"><li>Gỡ nhân viên khỏi Department, hoặc bỏ nước của nhân viên <b>đang ở Department</b> của nước đó: người đó không còn quyền nào ở nước đó (không quay về quyền theo vai). Màn User hiện nhãn "Đã gỡ khỏi Department".</li><li>Cấp lại nước vẫn không có quyền cho tới khi được thêm lại vào 1 Department.</li><li>Quyền bổ sung riêng của người đó ở nước đó cũng bị xoá; thêm lại vào Department thì phải tích lại.</li></ul></div></div>
+    <div class="note n-info"><span class="ic">i</span><div><p><b>Thứ tự lấy quyền</b></p><ul class="clean"><li>Thành viên Department: quyền của Department ở app đó, cộng quyền bổ sung riêng của người đó ở nước đang chọn (nếu có).</li><li>Không ở Department nào (chưa từng được thêm): quyền theo vai ở Role Permission. Riêng ở VN và trong CRM không có quyền theo vai, nên người chưa ở Department không có quyền nào.</li><li>Công ty tắt app ở Ứng dụng công ty, hoặc nhân viên bị tắt app: không vào được app, dù Department có quyền.</li></ul></div></div>
+  </div>
+</section>
+
+<section id="khac-spec">
+  <div class="sec-h"><span class="n">10</span><h2>Phần làm khác spec</h2><p>3 điểm đầu đã báo BA (Quốc Anh) 29/10; điểm mới 30/10 chưa báo</p></div>
+  <div class="note n-warn"><span class="ic">!</span><div>
+    <p><b>4 điểm làm khác spec phân quyền:</b></p>
+    <ul class="clean">
+      <li>Không có 67 quyền cố định và 6 mẫu quyền theo GIP: quyền CRM khai báo cùng từng tính năng.</li>
+      <li>Không có nút Khôi phục mặc định (vì không có mẫu quyền).</li>
+      <li>Phạm vi dữ liệu sửa được ở màn Phân quyền CRM (spec ghi chỉ đọc).</li>
+      <li><b>Mới 30/10:</b> có quyền bổ sung riêng cho từng thành viên Department, chỉ cộng thêm (spec BR_28 ghi quyền chỉ cấp theo vai trò). Lý do: 1 người cần thêm 1–2 quyền thì không phải tạo Department chỉ có 1 người.</li>
+    </ul>
+    <p><b>Lý do của 3 điểm đầu:</b> CRM bán cho nhiều công ty, GIP chỉ là khách đầu tiên; bộ quyền và mẫu quyền cố định theo 1 công ty không dùng được cho công ty khác.</p>
+  </div></div>
+</section>
+
+<section id="con-lai">
+  <div class="sec-h"><span class="n">11</span><h2>Việc còn lại</h2><p>BA đã đóng 2 issue 29/10; còn báo BA phần quyền bổ sung và tính năng Lead của team CRM</p></div>
+  <div class="steps">
+    <div class="step"><div><h5>Duyệt code phase 3 <span class="dep">xong 29/10</span></h5><div class="v">Verify: <b>người duyệt đồng ý, kiểm thử BE và FE chạy đạt</b></div></div></div>
+    <div class="step you"><div><h5>Chạy 2 migration trên prod: Department (Mã, Mô tả, Trạng thái, Trưởng) và User (Mã nhân viên, ngày kích hoạt) <span class="dep">xong 29/10</span></h5><div class="v">Verify: <b>bảng departments và users có cột mới</b></div></div></div>
+    <div class="step"><div><h5>Cập nhật BE <span class="dep">xong 29/10 14:16</span></h5><div class="v">Verify: <b>lưu được Mã, Trạng thái, Trưởng của Department</b></div></div></div>
+    <div class="step"><div><h5>Triển khai FE <span class="dep">xong 29/10 14:19</span></h5><div class="v">Verify: <b>màn Department, User, CRM › Phân quyền hiện như prototype ở mục 04 và 05</b></div></div></div>
+    <div class="step you"><div><h5>Điền ngày kích hoạt cho user cũ đã từng bật xác thực 2 lớp <span class="dep">xong 29/10</span></h5><div class="v">Ngày kích hoạt lấy bằng ngày bật xác thực 2 lớp. User có từ trước phase 3 mà chưa bật xác thực 2 lớp sẽ hiện Chưa kích hoạt cho tới lần đầu mở trang hoặc đăng nhập sau khi triển khai. Verify: <b>user đã bật xác thực 2 lớp không hiện là Chưa kích hoạt</b></div></div></div>
+    <div class="step"><div><h5>Báo BA phần làm khác spec (mục 10) <span class="dep">xong 29/10</span></h5><div class="v">Verify: <b>BA xác nhận</b></div></div></div>
+    <div class="step"><div><h5>BA (Quốc Anh) kiểm tra lại trên prod rồi đóng #459 và #446 <span class="dep">xong 29/10</span></h5><div class="v">Verify: <b>#446 đóng 11:30, #459 đóng 15:20 ngày 29/10</b></div></div></div>
+    <div class="step"><div><h5>Quyền bổ sung riêng cho từng thành viên, cây Department 2 dòng (mục 02) <span class="dep">xong 30/10 17:44</span></h5><div class="v">Chạy migration trên prod, cập nhật BE, triển khai FE. Verify: <b>màn Phân quyền của các app có danh sách Thành viên và nút Quyền bổ sung như prototype ở mục 02</b></div></div></div>
+    <div class="step"><div><h5>Báo BA phần quyền bổ sung (khác BR_28, mục 10) <span class="dep">chưa làm</span></h5><div class="v">Verify: <b>BA xác nhận</b></div></div></div>
+    <div class="step"><div><h5>Khai báo quyền CRM cùng tính năng Lead <span class="dep par">team CRM (Bình Quang) · song song</span></h5><div class="v">Mỗi tính năng CRM khai báo quyền vào danh mục và đọc phạm vi dữ liệu để lọc. Verify: <b>tab Danh mục quyền của CRM có quyền Lead; danh sách Lead lọc đúng theo phạm vi dữ liệu</b></div></div></div>
+  </div>
+</section>
+</div>
+
+<script>
+// Prototype màn Department: trạng thái giữ trong object D, mỗi thao tác cập nhật D rồi vẽ lại.
+(() => {
+  const root = document.getElementById('proto-dept');
+  const $ = (id) => document.getElementById(id);
+  const staff = {
+    u1: { name: 'Trần Minh Đức', role: 'SALE_MANAGER' }, u2: { name: 'Nguyễn Thu Hà', role: 'SALE_MANAGER' },
+    u3: { name: 'Lê Quang Huy', role: 'SALE' }, u4: { name: 'Phạm Ngọc Ánh', role: 'SALE' },
+    u5: { name: 'Võ Thanh Tâm', role: 'SALE' }, u6: { name: 'Đặng Bảo Ngọc', role: 'CS' },
+    u7: { name: 'Hoàng Gia Bảo', role: 'CS' }, u8: { name: 'Bùi Khánh Linh', role: 'SALE' }, u9: { name: 'Đỗ Minh Khoa', role: 'CS' },
+  };
+  const countries = ['Việt Nam', 'Philippines', 'Thái Lan', 'Malaysia'];
+  const D = {
+    sel: 2, next: 5, mode: 'edit',
+    depts: [
+      { id: 1, name: 'Kinh doanh', code: 'KD', parent: null, status: 'active', head: 'u1', desc: 'Khối kinh doanh', cc: ['Việt Nam', 'Philippines'] },
+      { id: 2, name: 'Sales HCM', code: 'SALES-HCM', parent: 1, status: 'active', head: 'u2', desc: 'Đội bán hàng khu vực Hồ Chí Minh', cc: ['Việt Nam'] },
+      { id: 3, name: 'Sales HN', code: 'SALES-HN', parent: 1, status: 'active', head: 'u5', desc: 'Đội bán hàng khu vực Hà Nội', cc: ['Việt Nam'] },
+      { id: 4, name: 'Trải nghiệm khách hàng', code: 'CSKH', parent: null, status: 'active', head: 'u6', desc: 'Chăm sóc khách hàng sau bán', cc: ['Việt Nam', 'Thái Lan'] },
+    ],
+    // Thành viên ở nước đang chọn (Việt Nam); thành viên nước khác không hiện ở màn này.
+    members: [
+      { dept: 1, user: 'u1' }, { dept: 2, user: 'u2' }, { dept: 2, user: 'u3' }, { dept: 2, user: 'u4' },
+      { dept: 3, user: 'u5' }, { dept: 4, user: 'u6' }, { dept: 4, user: 'u7' },
+    ],
+  };
+  const cur = () => D.depts.find((d) => d.id === D.sel);
+  const membersOf = (id) => D.members.filter((m) => m.dept === id);
+  const toast = (text, bad) => { const el = $('toast-dept'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => el.className = 'toast', 2200); };
+  const opts = (list, value) => list.map(([v, t]) => `<option value="${v}"${String(v) === String(value ?? '') ? ' selected' : ''}>${t}</option>`).join('');
+  const hint = (text, id) => `<small${id ? ` id="${id}"` : ''} style="color:var(--ink3)">${text}</small>`;
+  const headOpts = (value) => opts([['', 'Chưa có Trưởng'], ...Object.entries(staff).map(([k, s]) => [k, `${s.name} · ${s.role}`])], value);
+  const deptOpts = (value, exceptId) => opts([['', 'Không có (Department gốc)'], ...D.depts.filter((x) => x.id !== exceptId).map((x) => [x.id, (x.code ? x.code + ' · ' : '') + x.name])], value);
+
+  function treeRows(parent, level) {
+    return D.depts.filter((d) => d.parent === parent).map((d) => {
+      const kids = D.depts.some((c) => c.parent === d.id);
+      const on = D.mode === 'edit' && d.id === D.sel;
+      const style = `display:flex;align-items:flex-start;gap:6px;padding:5px 8px 5px ${8 + level * 20}px;border-radius:6px;cursor:pointer;${on ? 'background:var(--blue-bg);color:#1677ff;font-weight:600' : ''}`;
+      return `<div data-dept="${d.id}" style="${style}"><span style="width:10px;color:var(--ink3)">${kids ? '▾' : ''}</span>`
+        + `<div style="min-width:0;flex:1"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">`
+        + (d.code ? `<span style="color:var(--ink3);font-weight:400">${d.code} </span>` : '') + `${d.name}</div>`
+        + `<div class="changed" style="font-size:12px;color:var(--ink3);font-weight:400;white-space:nowrap;outline-offset:1px;padding:0 3px">`
+        + (d.status === 'inactive' ? '<span class="pill p-mid" style="margin-right:6px">Ngừng dùng</span>' : '')
+        + (d.cc.length > 1 ? `${d.cc.length} nước · ` : '') + `${membersOf(d.id).length} thành viên</div></div></div>` + treeRows(d.id, level + 1);
+    }).join('');
+  }
+  const renderTree = () => { $('tree').innerHTML = treeRows(null, 0); };
+
+  function renderEdit() {
+    const d = cur();
+    $('right').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>Chi tiết Department</b><button class="btn pri" data-act="save-dept">Lưu</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">
+        <div class="fld" id="fd-name"><label>Tên Department <em>*</em></label><input id="d-name" value="${d.name}"><div class="msg">Vui lòng nhập tên Department</div></div>
+        <div class="fld changed" id="fd-code"><label>Mã Department</label><input id="d-code" value="${d.code || ''}" placeholder="Ví dụ: KD"${d.code ? ' disabled' : ''}><div class="msg">Mã đã tồn tại trong công ty ở nước này</div>${hint(d.code ? 'Mã đã đặt thì không đổi được' : 'Chưa có mã: đặt 1 lần, sau đó không đổi được')}</div>
+        <div class="fld"><label>Department cha</label><select id="d-parent">${deptOpts(d.parent, d.id)}</select></div>
+        <div class="fld changed"><label>Trạng thái</label><select id="d-status">${opts([['active', 'Đang dùng'], ['inactive', 'Ngừng dùng']], d.status)}</select>${hint('Chỉ ngừng dùng được khi không còn thành viên ở nước nào')}</div>
+        <div class="fld changed"><label>Trưởng Department</label><select id="d-head">${headOpts(d.head)}</select>${hint('Đặt riêng từng nước, đang xem: Việt Nam')}</div>
+        <div class="fld changed"><label>Mô tả</label><input id="d-desc" value="${d.desc}"></div>
+        <div class="fld" style="grid-column:1 / -1"><label>Nước liên kết</label><div style="display:flex;gap:6px;flex-wrap:wrap">`
+      + d.cc.map((c) => `<span class="pill ${c === 'Việt Nam' ? 'p-info' : 'p-ok'}">${c}</span>`).join('') + `</div>`
+      + (countries.some((c) => !d.cc.includes(c))
+        ? `<div class="changed" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px;padding:6px 8px">`
+          + countries.filter((c) => !d.cc.includes(c)).map((c) => `<label style="display:inline-flex;align-items:center;gap:6px;margin:0"><input type="checkbox" data-add-cc="${c}" style="width:auto">${c}</label>`).join('')
+          + `<button class="btn" data-act="add-countries">Thêm nước</button></div><div style="margin-top:6px">${hint('Bản ở nước mới lấy tên, mã, mô tả, trạng thái và quyền mọi app; thành viên, Trưởng thêm riêng ở nước đó')}</div>`
+        : '')
+      + `</div>
+      </div>
+      <div id="d-members-wrap"></div>`;
+    renderMembers();
+  }
+  function renderMembers() {
+    const d = cur();
+    const taken = new Set(D.members.map((m) => m.user));
+    const free = Object.entries(staff).filter(([k]) => !taken.has(k));
+    const add = d.status === 'inactive'
+      ? '<div class="note n-warn changed" id="d-inactive-warn" style="padding:8px 12px;margin-bottom:8px"><span class="ic">!</span><div><p>Department ngừng dùng không nhận thành viên mới</p></div></div>'
+      : `<div style="display:flex;gap:6px;margin-bottom:8px" id="d-add-row"><select id="d-add" style="flex:1;border:1px solid #d9d9d9;border-radius:6px;padding:4px 8px;font-size:13px">${free.length ? opts(free.map(([k, s]) => [k, `${s.name} · ${s.role}`])) : '<option value="">Không còn nhân viên chưa có Department</option>'}</select><button class="btn" data-act="add-member">Thêm thành viên</button></div>`;
+    $('d-members-wrap').innerHTML = `<div style="margin:6px 0 8px"><b>Thành viên ở nước đang chọn (Việt Nam)</b></div>${add}
+      <table class="ant"><thead><tr><th>Nhân viên</th><th>Vai</th><th></th></tr></thead><tbody id="d-members">`
+      + (membersOf(d.id).map((m) => `<tr><td>${staff[m.user].name}${d.head === m.user ? ' <span class="pill p-info">Trưởng</span>' : ''}</td><td>${staff[m.user].role}</td><td style="text-align:right"><button class="btn" data-rm="${m.user}">Gỡ</button></td></tr>`).join('')
+        || '<tr><td colspan="3" style="text-align:center;color:#999;padding:18px">Department chưa có thành viên ở nước này</td></tr>')
+      + '</tbody></table>';
+  }
+  function renderCreate() {
+    $('right').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>Tạo Department</b><span style="display:flex;gap:8px"><button class="btn" data-act="cancel-new">Huỷ</button><button class="btn pri" data-act="save-new">Tạo</button></span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">
+        <div class="fld" id="fn-name"><label>Tên Department <em>*</em></label><input id="n-name" placeholder="Ví dụ: Sales Đà Nẵng"><div class="msg">Vui lòng nhập tên Department</div></div>
+        <div class="fld changed" id="fn-code"><label>Mã Department</label><input id="n-code" placeholder="Ví dụ: SALES-DN"><div class="msg">Mã đã tồn tại trong công ty ở nước này</div></div>
+        <div class="fld"><label>Department cha</label><select id="n-parent">${deptOpts('', null)}</select></div>
+        <div class="fld changed"><label>Mô tả</label><input id="n-desc"></div>
+        <div class="fld changed"><label>Trưởng Department</label><select id="n-head">${headOpts('')}</select><small id="n-head-note" style="color:var(--amber);display:none">Trưởng chỉ đặt cho nước đang chọn (Việt Nam); nước khác đặt sau ở nước đó</small></div>
+        <div class="fld changed"><label>Sao chép quyền từ</label><select id="n-copy">${opts([['', 'Không sao chép'], ...D.depts.map((x) => [x.id, (x.code ? x.code + ' · ' : '') + x.name])], '')}</select>${hint('Chép các quyền đã tích ở mọi app của Department nguồn sang Department mới')}</div>
+        <div class="fld" style="grid-column:1 / -1"><label>Áp dụng cho các nước</label><div style="display:flex;gap:16px;flex-wrap:wrap">`
+      + countries.map((c, i) => `<label style="display:inline-flex;align-items:center;gap:6px;margin:0"><input type="checkbox" data-cc="${c}" style="width:auto"${i === 0 ? ' checked disabled' : ''}>${c}</label>`).join('')
+      + `</div></div></div>`;
+    setTimeout(() => $('n-name')?.focus({ preventScroll: true }), 0);
+  }
+  const renderRight = () => (D.mode === 'create' ? renderCreate() : renderEdit());
+  const renderAll = () => { renderTree(); renderRight(); };
+  function codeTaken(code, exceptId) { const c = code.trim().toLowerCase(); return D.depts.some((x) => x.id !== exceptId && x.code && x.code.toLowerCase() === c); }
+
+  root.addEventListener('change', (e) => {
+    if (e.target.matches('[data-cc]')) {
+      const n = root.querySelectorAll('[data-cc]:checked').length;
+      $('n-head-note').style.display = n > 1 ? 'block' : 'none';
+    }
+  });
+  root.addEventListener('click', (e) => {
+    const node = e.target.closest('[data-dept]');
+    if (node) { D.sel = Number(node.dataset.dept); D.mode = 'edit'; renderAll(); return; }
+    const rm = e.target.closest('[data-rm]');
+    if (rm) {
+      const d = cur(); const user = rm.dataset.rm;
+      D.members = D.members.filter((m) => !(m.dept === d.id && m.user === user));
+      renderTree(); renderMembers(); toast(`Đã gỡ ${staff[user].name} khỏi ${d.name}`); return;
+    }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'save-dept') {
+      const d = cur(); const name = $('d-name').value.trim(); const code = $('d-code').value.trim(); const status = $('d-status').value;
+      $('fd-name').classList.toggle('err', !name);
+      if (!name) { toast('Chưa lưu: thiếu tên Department', true); return; }
+      if (!d.code && code && codeTaken(code, d.id)) { $('fd-code').classList.add('err'); toast('Chưa lưu: Mã Department đã tồn tại', true); return; }
+      if (status === 'inactive' && membersOf(d.id).length > 0) { $('d-status').value = d.status; toast('Gỡ hết thành viên ở mọi nước trước khi ngừng dùng', true); return; }
+      Object.assign(d, { name, code: d.code || code || null, status, head: $('d-head').value || null, desc: $('d-desc').value.trim(), parent: $('d-parent').value ? Number($('d-parent').value) : null });
+      renderAll(); toast(`Đã lưu Department ${name}`);
+    }
+    if (act === 'add-member') {
+      const d = cur(); const user = $('d-add').value;
+      if (!user) { toast('Không còn nhân viên chưa có Department', true); return; }
+      D.members.push({ dept: d.id, user }); renderTree(); renderMembers(); toast(`Đã thêm ${staff[user].name} vào ${d.name}`);
+    }
+    if (act === 'add-countries') {
+      const d = cur(); const picked = [...root.querySelectorAll('[data-add-cc]:checked')].map((x) => x.dataset.addCc);
+      if (!picked.length) { toast('Chọn nước cần thêm', true); return; }
+      const parent = D.depts.find((x) => x.id === d.parent);
+      const missing = parent ? picked.filter((c) => !parent.cc.includes(c)) : [];
+      if (missing.length) { toast(`Department cha "${parent.name}" chưa có ở ${missing.join(', ')}`, true); return; }
+      if (!window.confirm(`Thêm Department này vào ${picked.join(', ')}? Quyền mọi app được chép sang nước mới.`)) return;
+      d.cc = countries.filter((c) => d.cc.includes(c) || picked.includes(c)); renderAll(); toast(`Đã thêm ${d.name} vào ${picked.join(', ')}`);
+    }
+    if (act === 'new') { D.mode = 'create'; renderAll(); }
+    if (act === 'cancel-new') { D.mode = 'edit'; renderAll(); }
+    if (act === 'save-new') {
+      const name = $('n-name').value.trim(); const code = $('n-code').value.trim();
+      $('fn-name').classList.toggle('err', !name); $('fn-code').classList.toggle('err', !!code && codeTaken(code, null));
+      if (!name) { toast('Chưa lưu: thiếu tên Department', true); return; }
+      if (code && codeTaken(code, null)) { toast('Chưa lưu: Mã Department đã tồn tại', true); return; }
+      const copy = D.depts.find((x) => String(x.id) === $('n-copy').value);
+      const cc = [...root.querySelectorAll('[data-cc]:checked')].map((x) => x.dataset.cc);
+      const d = { id: D.next++, name, code: code || null, parent: $('n-parent').value ? Number($('n-parent').value) : null, status: 'active', head: $('n-head').value || null, desc: $('n-desc').value.trim(), cc };
+      D.depts.push(d); D.sel = d.id; D.mode = 'edit'; renderAll();
+      toast(`Đã tạo ${name} cho ${cc.length} nước` + (copy ? `, đã sao chép quyền từ ${copy.name}` : ''));
+    }
+  });
+  renderAll();
+})();
+
+// Prototype màn User: bộ lọc Status giữ trong mảng chips, mỗi thao tác cập nhật mảng rồi vẽ lại bảng.
+(() => {
+  const root = document.getElementById('proto-user');
+  const $ = (id) => document.getElementById(id);
+  const users = [
+    { name: 'Nguyễn Thu Hà', email: 'ha.nguyen@vidu.vn', code: 'NV001', role: 'SALE_MANAGER', st: 'active' },
+    { name: 'Lê Quang Huy', email: 'huy.le@vidu.vn', code: 'NV002', role: 'SALE', st: 'active' },
+    { name: 'Bùi Khánh Linh', email: 'linh.bui@vidu.vn', code: '', role: 'SALE', st: 'not_activated' },
+    { name: 'Đỗ Minh Khoa', email: 'khoa.do@vidu.vn', code: 'NV004', role: 'CS', st: 'not_activated' },
+    { name: 'Phạm Văn Tú', email: 'tu.pham@vidu.vn', code: 'NV003', role: 'SALE', st: 'removed' },
+    { name: 'Trịnh Mai Anh', email: 'anh.trinh@vidu.vn', code: '', role: 'CS', st: 'removed' },
+  ];
+  const label = { active: ['Đang hoạt động', 'p-ok'], not_activated: ['Chưa kích hoạt', 'p-mid'], removed: ['Ngừng hoạt động', 'p-bad'] };
+  let chips = []; let menu = 'none';
+  const toast = (text, bad) => { const el = $('toast-user'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => el.className = 'toast', 2200); };
+  const item = (attr, text) => `<div ${attr} style="padding:6px 12px;cursor:pointer">${text}</div>`;
+  function render() {
+    const m = $('u-menu');
+    m.style.display = menu === 'none' ? 'none' : 'block';
+    m.innerHTML = menu === 'fields'
+      ? item('data-field="countries"', 'Countries') + item('data-field="role"', 'Role') + item('data-field="status"', 'Status ›')
+      : menu === 'status' ? Object.entries(label).map(([k, [t, c]]) => item(`data-pick="${k}"`, `<span class="pill ${c}">${t}</span>${chips.includes(k) ? ' ✓' : ''}`)).join('') : '';
+    $('u-chips').innerHTML = chips.map((k) => `<span class="pill p-info">Status: ${label[k][0]} <a data-chip="${k}" style="cursor:pointer;margin-left:4px">×</a></span>`).join('');
+    // Không chọn trạng thái nào: ẩn user đã xoá (Ngừng hoạt động).
+    const list = users.map((u, i) => [u, i]).filter(([u]) => (chips.length ? chips.includes(u.st) : u.st !== 'removed'));
+    $('u-rows').innerHTML = list.map(([u, i]) => `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.code || '<span style="color:#999">chưa có</span>'}</td><td>${u.role}</td>`
+      + `<td><span class="pill ${label[u.st][1]}">${label[u.st][0]}</span></td><td>`
+      + (u.st === 'removed' ? `<a data-view="${i}" style="cursor:pointer">Xem</a>` : `<a data-edit="${i}" style="cursor:pointer">Sửa</a> · <a data-imp="${i}" style="cursor:pointer">Đăng nhập thay</a>`) + '</td></tr>').join('')
+      || '<tr><td colspan="6" style="text-align:center;color:#999;padding:24px">Không có user phù hợp bộ lọc</td></tr>';
+    $('u-count').textContent = `Hiển thị ${list.length} / ${users.length} user`;
+  }
+  root.addEventListener('click', (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'add-filter') { menu = menu === 'none' ? 'fields' : 'none'; render(); return; }
+    if (act === 'clear-filter') { chips = []; menu = 'none'; render(); toast('Đã xoá bộ lọc'); return; }
+    const f = e.target.closest('[data-field]');
+    if (f) { if (f.dataset.field === 'status') { menu = 'status'; render(); } else { menu = 'none'; render(); toast('Prototype chỉ làm bộ lọc Status', true); } return; }
+    const p = e.target.closest('[data-pick]');
+    if (p) { const k = p.dataset.pick; if (!chips.includes(k)) chips.push(k); menu = 'none'; render(); return; }
+    const c = e.target.closest('[data-chip]');
+    if (c) { chips = chips.filter((k) => k !== c.dataset.chip); render(); return; }
+    const v = e.target.closest('[data-view]');
+    if (v) { toast(`${users[v.dataset.view].name}: nhân viên đã ngừng hoạt động, chỉ xem, không sửa được`); return; }
+    const ed = e.target.closest('[data-edit]');
+    if (ed) { toast(`Mở form sửa ${users[ed.dataset.edit].name}`); return; }
+    const im = e.target.closest('[data-imp]');
+    if (im) { toast(`Đăng nhập thay ${users[im.dataset.imp].name}`); }
+  });
+  render();
+})();
+
+// Prototype quyền bổ sung: trạng thái giữ trong object X, mỗi thao tác cập nhật X rồi vẽ lại.
+(() => {
+  const root = document.getElementById('proto-extra');
+  const $ = (id) => document.getElementById(id);
+  const catalog = [
+    { key: 'order.view', name: 'Xem danh sách đơn', group: 'Đơn hàng' }, { key: 'order.create', name: 'Tạo đơn', group: 'Đơn hàng' },
+    { key: 'order.edit', name: 'Sửa đơn', group: 'Đơn hàng' }, { key: 'order.export', name: 'Export đơn', group: 'Đơn hàng' },
+    { key: 'customer.view', name: 'Xem khách hàng', group: 'Khách hàng' }, { key: 'customer.edit', name: 'Sửa khách hàng', group: 'Khách hàng' },
+  ];
+  const groups = [...new Set(catalog.map((p) => p.group))];
+  const label = (key) => { const p = catalog.find((x) => x.key === key); return `${p.group} · ${p.name}`; };
+  const X = {
+    sel: 2, draft: null, editing: null, extraDraft: {},
+    depts: [
+      { id: 1, code: 'KD', name: 'Kinh doanh', parent: null, cc: 2, perms: { 'order.view': true, 'order.edit': true, 'order.export': true, 'customer.view': true }, members: [{ id: 'u1', name: 'Trần Minh Đức', extra: {} }] },
+      { id: 2, code: 'SALES-HCM', name: 'Sales HCM', parent: 1, cc: 1, perms: { 'order.view': true, 'order.create': true }, members: [
+        { id: 'u2', name: 'Nguyễn Thu Hà', extra: {} }, { id: 'u3', name: 'Lê Quang Huy', extra: { 'order.export': true } }, { id: 'u4', name: 'Phạm Ngọc Ánh', extra: { 'customer.view': true } }] },
+      { id: 3, code: 'SALES-HN', name: 'Sales HN', parent: 1, cc: 1, perms: { 'order.view': true }, members: [{ id: 'u5', name: 'Võ Thanh Tâm', extra: {} }] },
+    ],
+  };
+  const cur = () => X.depts.find((d) => d.id === X.sel);
+  const on = (obj) => Object.keys(obj).filter((k) => obj[k] === true);
+  const same = (a, b) => on(a).sort().join() === on(b).sort().join();
+  const dirty = () => !same(X.draft, cur().perms);
+  const toast = (text, bad) => { const el = $('toast-extra'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => el.className = 'toast', 2200); };
+
+  function tree(parent, level) {
+    return X.depts.filter((d) => d.parent === parent).map((d) => {
+      const active = d.id === X.sel;
+      return `<div data-x-dept="${d.id}" style="display:flex;gap:6px;padding:5px 8px 5px ${8 + level * 20}px;border-radius:6px;cursor:pointer;${active ? 'background:var(--blue-bg);color:#1677ff;font-weight:600' : ''}">`
+        + `<span style="width:10px;color:var(--ink3)">${X.depts.some((c) => c.parent === d.id) ? '▾' : ''}</span><div style="min-width:0;flex:1">`
+        + `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:var(--ink3);font-weight:400">${d.code} </span>${d.name}</div>`
+        + `<div class="changed" style="font-size:12px;color:var(--ink3);font-weight:400;white-space:nowrap;outline-offset:1px;padding:0 3px">${d.cc > 1 ? `${d.cc} nước · ` : ''}${d.members.length} thành viên</div></div></div>` + tree(d.id, level + 1);
+    }).join('');
+  }
+  function renderRight() {
+    const d = cur(); const isDirty = dirty();
+    const grid = groups.map((g) => `<div style="border:1px solid #f0f0f0;border-radius:8px;padding:8px 10px"><div style="font-weight:600;margin-bottom:6px">${g}</div>`
+      + catalog.filter((p) => p.group === g).map((p) => `<label style="display:flex;align-items:center;gap:6px;margin:4px 0;cursor:pointer"><input type="checkbox" data-x-perm="${p.key}"${X.draft[p.key] ? ' checked' : ''} style="width:auto">${p.name}</label>`).join('') + '</div>').join('');
+    const members = d.members.map((m) => {
+      const tags = on(m.extra).map((k) => `<span class="pill p-new" style="margin:2px 4px 2px 0">${label(k)}</span>`).join('') || '<span style="color:var(--ink3)">Không có quyền bổ sung</span>';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid #f0f0f0"><div style="flex:1"><div>${m.name}</div><div style="font-size:12px;margin-top:2px">${tags}</div></div>`
+        + `<span title="${isDirty ? 'Lưu thay đổi quyền của Department trước khi sửa quyền bổ sung' : ''}"><button class="btn" data-x-edit="${m.id}"${isDirty ? ' disabled style="opacity:.45;cursor:not-allowed"' : ''}>Quyền bổ sung</button></span></div>`;
+    }).join('');
+    $('x-right').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>${d.name}${d.cc > 1 ? ` <span class="pill p-info" style="font-weight:400">Lưu cho ${d.cc} nước</span>` : ''}</b>`
+      + `<span style="display:flex;gap:8px"><button class="btn" data-x="cancel"${isDirty ? '' : ' disabled style="opacity:.45"'}>Hủy</button><button class="btn pri" data-x="save"${isDirty ? '' : ' disabled style="opacity:.45"'}>Lưu</button></span></div>`
+      + `<div style="margin-bottom:10px;color:var(--ink2)"><span style="color:#1677ff">●</span> Đang bật: ${on(X.draft).length}/${catalog.length} quyền</div>`
+      + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">${grid}</div>`
+      + `<div class="changed" style="padding:2px"><div style="margin:4px 4px 8px"><b>Thành viên</b> <span style="color:var(--ink3)">(${d.members.length})</span></div><div style="border:1px solid #f0f0f0;border-radius:8px;border-top:0">${members}</div></div>`;
+  }
+  function renderDrawer() {
+    const m = X.editing; if (!m) return;
+    const dept = cur().perms;
+    const overlap = on(m.extra).filter((k) => dept[k]);
+    $('x-drawer').innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h4 style="margin:0">Quyền bổ sung · ${m.name}</h4>`
+      + `<span style="display:flex;gap:8px"><button class="btn" data-x="close">Hủy</button><button class="btn pri" data-x="save-extra">Lưu</button></span></div>`
+      + '<p style="color:var(--ink3);font-size:12.5px;margin:0 0 10px">Quyền có sẵn từ Department được tích và khoá. Chỉ tích thêm quyền riêng cho người này; quyền bổ sung bị xoá khi người này rời Department. Quyền bổ sung chỉ áp dụng ở nước đang chọn.</p>'
+      + (overlap.length ? `<div class="note n-info" style="padding:8px 12px;margin-bottom:10px"><span class="ic">i</span><div><p>Đã có từ Department nên sẽ không lưu thành quyền bổ sung: ${overlap.map(label).join(', ')}. Nếu Department tắt quyền này, người này cũng mất quyền.</p></div></div>` : '')
+      + groups.map((g) => `<div style="margin-bottom:10px"><div style="font-size:12px;color:var(--ink3);margin-bottom:4px">${g}</div>`
+        + catalog.filter((p) => p.group === g).map((p) => {
+          const fromDept = dept[p.key] === true;
+          return `<label style="display:flex;align-items:center;gap:6px;margin:4px 0;${fromDept ? 'color:var(--ink3)' : 'cursor:pointer'}"><input type="checkbox" data-x-extra="${p.key}"${fromDept || X.extraDraft[p.key] ? ' checked' : ''}${fromDept ? ' disabled' : ''} style="width:auto">${p.name}${fromDept ? ' <span style="color:var(--ink3)">· từ Department</span>' : ''}</label>`;
+        }).join('') + '</div>').join('');
+  }
+  const renderAll = () => { $('x-tree').innerHTML = tree(null, 0); renderRight(); };
+  const select = (id) => { X.sel = id; X.draft = { ...cur().perms }; renderAll(); };
+  const close = () => { X.editing = null; root.classList.remove('open'); };
+
+  root.addEventListener('change', (e) => {
+    const p = e.target.closest('[data-x-perm]');
+    if (p) { X.draft[p.dataset.xPerm] = p.checked; renderRight(); return; }
+    const x = e.target.closest('[data-x-extra]');
+    if (x) X.extraDraft[x.dataset.xExtra] = x.checked;
+  });
+  root.addEventListener('click', (e) => {
+    const node = e.target.closest('[data-x-dept]');
+    if (node) {
+      if (dirty()) { if (!window.confirm('Có thay đổi chưa lưu. Chuyển sang Department khác sẽ bỏ các thay đổi chưa lưu.')) return; }
+      select(Number(node.dataset.xDept)); return;
+    }
+    const ed = e.target.closest('[data-x-edit]');
+    if (ed && !ed.disabled) {
+      X.editing = cur().members.find((m) => m.id === ed.dataset.xEdit); X.extraDraft = { ...X.editing.extra };
+      renderDrawer(); root.classList.add('open'); return;
+    }
+    const act = e.target.closest('[data-x]')?.dataset.x;
+    if (act === 'cancel') { X.draft = { ...cur().perms }; renderRight(); }
+    if (act === 'save') { cur().perms = Object.fromEntries(on(X.draft).map((k) => [k, true])); renderRight(); toast(`Đã lưu quyền của ${cur().name}`); }
+    if (act === 'close') close();
+    if (act === 'save-extra') {
+      const dept = cur().perms;
+      X.editing.extra = Object.fromEntries(on(X.extraDraft).filter((k) => !dept[k]).map((k) => [k, true]));
+      close(); renderRight(); toast('Đã lưu quyền bổ sung');
+    }
+  });
+  select(2);
+})();
+</script>
+</body>
+</html>

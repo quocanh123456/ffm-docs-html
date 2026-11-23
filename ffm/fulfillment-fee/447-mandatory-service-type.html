@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>#447 Mandatory service type — 3 PR cần thay đổi gì</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: -apple-system, "Segoe UI", sans-serif; max-width: 1200px; margin: 24px auto; padding: 0 16px; line-height: 1.55; color: #1f2328; }
+  h1 { font-size: 22px; } h2 { font-size: 18px; margin-top: 32px; border-bottom: 1px solid #d0d7de; padding-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; font-size: 14px; }
+  th, td { border: 1px solid #d0d7de; padding: 6px 8px; vertical-align: top; text-align: left; }
+  th { background: #f6f8fa; } td:first-child { width: 17%; font-weight: 600; } td:last-child { width: 11%; }
+  code { background: #f6f8fa; padding: 1px 4px; border-radius: 4px; font-size: 13px; }
+  .done { color: #1a7f37; font-weight: 600; } .todo { color: #cf222e; font-weight: 600; } .ask { color: #9a6700; font-weight: 600; }
+  .note { background: #fff8c5; border: 1px solid #d4a72c; padding: 8px 12px; border-radius: 6px; margin: 12px 0; }
+  .warn { background: #ffebe9; border: 1px solid #ff8182; padding: 8px 12px; border-radius: 6px; margin: 12px 0; }
+  .mermaid { background: #fafbfc; border: 1px solid #d0d7de; border-radius: 6px; padding: 8px; }
+  .small { font-size: 13px; color: #57606a; }
+</style>
+</head>
+<body>
+<h1>#447 Mandatory service type — 3 PR cần thay đổi gì</h1>
+<p class="small">Cập nhật: 14/10/2026 · Issue: <a href="https://pancakework.vn/issues/w4/c5024/i447">Panchat #447</a> · PR: <a href="https://github.com/pancake-vn/sea-fulfillment/pull/572">sea-fulfillment#572</a>, <a href="https://github.com/pancake-vn/pos-api/pull/17636">pos-api#17636</a>, <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/525">sea-fulfillment-web#525</a></p>
+<p><b>Kết luận:</b> so với lần review trước, có 2 thay đổi lớn: (1) quy tắc chặn trùng đổi từ "1 Service Type chỉ 1 dòng" thành "1 Service Type tối đa 1 dòng phí không phải % COD + 1 dòng % COD"; (2) POS tự cộng Mandatory ngay lúc tạo đơn, FFM chỉ cộng bù khi POS gửi thiếu. Chi tiết từng việc cần sửa ở các bảng dưới (cột Trạng thái = <span class="todo">Cần sửa</span>); comment theo dòng code nằm trong review của từng PR. Thứ tự deploy giữ nguyên: <b>pos-api → BE → FE</b>.</p>
+<p class="small">"Trước PR" = <code>develop</code> hiện tại (đã có trang Seller Service Fee). Cột cuối: <span class="done">Đã có</span> = HEAD hiện tại của PR đã làm đúng · <span class="todo">Cần sửa</span> = dev phải sửa thêm · <span class="ask">Chờ quyết định</span>. HEAD: BE <code>2789fbda</code>, pos-api <code>38639e2e</code>, FE <code>cf7233c9</code> (không đổi từ 12/10).</p>
+
+<h2>Luồng tạo đơn từ POS sau khi sửa</h2>
+<p>Sơ đồ cho thấy bình thường POS đã gửi sẵn Mandatory, FFM không cộng thêm và không gửi lại đơn; lượt gửi lại 5 giây chỉ còn cho trường hợp POS gửi thiếu.</p>
+<pre class="mermaid">
+sequenceDiagram
+  participant POS
+  participant FFM
+  Note over POS: Cấu hình FFM Fee (kèm cờ Mandatory) đã được FFM đồng bộ sang POS
+  POS->>POS: Điền sẵn danh sách = Default + Mandatory (đẩy qua hàng đợi)
+  POS->>FFM: Tạo đơn: danh sách đã có Mandatory
+  FFM->>FFM: Điền Default nếu đơn rỗng, cộng Mandatory còn thiếu (thường không thiếu)
+  FFM-->>POS: Response có service_types
+  POS->>POS: Lưu danh sách theo response
+  alt POS gửi thiếu Mandatory (cấu hình POS cũ hơn FFM, pos-api bản cũ)
+    FFM-->>POS: Sau 5 giây gửi lại đơn để POS nhận danh sách đã cộng
+  end
+  Note over POS,FFM: Các lần cập nhật sau: POS không cộng lại Mandatory, nhân viên gỡ được
+</pre>
+
+<h2>BE <a href="https://github.com/pancake-vn/sea-fulfillment/pull/572">sea-fulfillment#572</a></h2>
+<table>
+<tr><th>Tính năng</th><th>Trước PR</th><th>Sau PR (mục tiêu)</th><th>Trạng thái</th></tr>
+<tr><td>Tạo đơn cộng Mandatory</td>
+<td>Chỉ có Default, chỉ điền khi đơn chưa có service type.</td>
+<td>Sau bước Default, cộng mọi service type tick Mandatory còn thiếu, kể cả khi đơn đã có service type. Lọc theo sàn như Default; bỏ dòng chưa chọn service type. Chỉ cộng lúc tạo; nhân viên gỡ được. Áp dụng mọi nguồn (POS, sàn, tạo trên FFM, đơn đổi/trả do POS tạo). Với đơn POS, bình thường POS đã gửi sẵn nên FFM không cộng thêm.</td>
+<td><span class="done">Đã có</span></td></tr>
+<tr><td>Default không tạo service type lặp</td>
+<td>2 dòng cùng Service Type cùng tick Default → đơn có <code>["WH", "WH"]</code> (FFM tự điền hoặc POS gửi sang).</td>
+<td>Bỏ trùng danh sách service type ở bước cuối khi tạo đơn (<a href="https://github.com/pancake-vn/sea-fulfillment/blob/2789fbda16ab3bb813cc8681ee812369f34c0b48/lib/app/order_action.ex#L904">order_action.ex:904</a>), xử lý cả danh sách FFM tự điền lẫn danh sách POS gửi sang (Default của POS cũng chưa bỏ trùng; pos-api thêm bỏ trùng trong hàm lấy Default). Cần vì quy tắc mới cho phép 2 dòng cùng Service Type (phí cố định + % COD).</td>
+<td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Gửi lại đơn sang POS sau 5 giây</td>
+<td>Chỉ khi vừa tách địa danh từ địa chỉ, đơn không đẩy tay và không thuộc nhánh <code>added_to_cart</code>.</td>
+<td>Thêm: đơn POS mà FFM phải cộng bù Mandatory. Sau khi pos-api tự cộng, lượt này chỉ chạy khi POS gửi thiếu. Code giữ nguyên; sửa comment ở <a href="https://github.com/pancake-vn/sea-fulfillment/blob/2789fbda16ab3bb813cc8681ee812369f34c0b48/lib/app/order_action.ex#L1007-L1011">order_action.ex:1007-1011</a> cho đúng ý này.</td>
+<td><span class="done">Code đã có</span><br><span class="todo">Cần sửa comment</span></td></tr>
+<tr><td>Chặn cấu hình phí trùng ở Shop Rates và Shared Rates</td>
+<td>Không chặn: lưu được mọi dòng trùng.</td>
+<td>Mỗi Service Type tối đa <b>1 dòng phí không phải % COD</b> (fixed / fixed_by_sku / custom_formula) và <b>1 dòng cod_percentage</b>. Ví dụ WH = phí cố định + % COD lưu được; WH = fixed + custom_formula, hoặc 2 dòng % COD, bị chặn. Dòng chưa chọn service type không tính. Câu lỗi nêu rõ nhóm bị trùng; sửa comment "handle_ffm_fee cộng phí cả 2 dòng" (<a href="https://github.com/pancake-vn/sea-fulfillment/blob/2789fbda16ab3bb813cc8681ee812369f34c0b48/lib/sea_fulfillment_web/model/reconciliation/seller_service_fee.ex#L169-L184">seller_service_fee.ex:169-184</a>).<br>Hiện PR chặn tuyệt đối 1 Service Type chỉ 1 dòng → chặn cả cấu hình hợp lệ đang có shop dùng trên prod (WH = phí cố định + % COD).</td>
+<td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Test chặn trùng</td>
+<td>—</td>
+<td>fixed + cod_percentage cùng Service Type lưu được; fixed + custom_formula hoặc 2 dòng cod_percentage bị chặn; thêm test sửa Shared Rate (PUT) bị chặn; ở các test bị từ chối kiểm tra không gửi việc chép cấu hình xuống shop và không tạo Shared Rate.</td>
+<td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>POS gửi <code>service_types</code> là map rỗng <code>{}</code></td>
+<td>Tạo đơn báo lỗi "service_types is invalid".</td>
+<td>Coi như chưa có service type, điền Default.</td>
+<td><span class="done">Đã có</span></td></tr>
+</table>
+<div class="note">Cách tính phí khi 1 Service Type có cả dòng cố định lẫn dòng % COD <b>không thuộc PR này</b>: đã sửa riêng trên develop (commit 461cc2b4, đã lên prod ngày 14/10) — chỉ Service Type có cả 2 loại mới tính 2 phần độc lập.</div>
+
+<h2>pos-api <a href="https://github.com/pancake-vn/pos-api/pull/17636">#17636</a></h2>
+<table>
+<tr><th>Tính năng</th><th>Trước PR</th><th>Sau PR (mục tiêu)</th><th>Trạng thái</th></tr>
+<tr><td>POS tự cộng Mandatory lúc tạo đơn FFM</td>
+<td>POS không biết Mandatory; danh sách gửi đi = danh sách POS đang lưu → <code>order_partner.service_partner["service_types"]</code> → Default.</td>
+<td>Hàm riêng lấy danh sách Mandatory từ cấu hình FFM Fee POS đang lưu (lọc theo sàn như Default, bỏ dòng rỗng, bỏ trùng). Chỉ cộng ở 2 chỗ: lúc gửi yêu cầu tạo mới đơn sang FFM (<a href="https://github.com/pancake-vn/pos-api/blob/38639e2e9a1595e7beb0396e286f5ea3d60058a7/lib/app/fulfillment.ex#L834-L836">fulfillment.ex:834-836</a>) và lúc điền sẵn danh sách khi đẩy qua hàng đợi (<a href="https://github.com/pancake-vn/pos-api/blob/38639e2e9a1595e7beb0396e286f5ea3d60058a7/lib/app/order_actions.ex#L7464">order_actions.ex:7464</a>).<br><b>Không</b> cộng trong hàm lấy Default: hàm đó chạy cả khi cập nhật đơn có sẵn (<a href="https://github.com/pancake-vn/pos-api/blob/38639e2e9a1595e7beb0396e286f5ea3d60058a7/lib/app/fulfillment.ex#L698-L701">fulfillment.ex:698-701</a>), nhân viên gỡ hết service type trên FFM thì POS sẽ cộng lại Mandatory.</td>
+<td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Đơn WooCommerce có Default + Mandatory như đơn thường</td>
+<td>Chỗ điền sẵn lọc theo mã sàn "-16" → không khớp dòng nào, POS lưu tạm danh sách rỗng (lỗi có từ trước); đơn trên FFM vẫn đủ Default vì lúc gửi POS đổi WooCommerce thành đơn thường.</td>
+<td>Mọi chỗ POS lấy Default / Mandatory theo mã sàn đều dùng cùng hàm đổi mã sàn như lúc gửi sang FFM (<a href="https://github.com/pancake-vn/pos-api/blob/38639e2e9a1595e7beb0396e286f5ea3d60058a7/lib/app/fulfillment.ex#L466-L467">fulfillment.ex:466-467</a>, WooCommerce = đơn thường): chỗ điền sẵn (<a href="https://github.com/pancake-vn/pos-api/blob/38639e2e9a1595e7beb0396e286f5ea3d60058a7/lib/app/order_actions.ex#L7464">order_actions.ex:7464</a>) và giá trị dự phòng khi lưu danh sách sau khi gửi đơn (<a href="https://github.com/pancake-vn/pos-api/blob/38639e2e9a1595e7beb0396e286f5ea3d60058a7/lib/app/fulfillment.ex#L165">fulfillment.ex:165</a>, PR thêm mới). Đơn WooCommerce có Default + Mandatory ngay từ lúc đẩy đơn (quyết định 14/10).</td>
+<td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Kiểm tra trên POS cho đơn WooCommerce</td>
+<td>Khối kiểm tra ở <a href="https://github.com/pancake-vn/pos-api/blob/38639e2e9a1595e7beb0396e286f5ea3d60058a7/lib/app/fulfillment.ex#L1079">fulfillment.ex:1079</a> chỉ chạy cho đơn không có mã sàn → đơn WooCommerce ("-16") được bỏ qua như đơn sàn.</td>
+<td>Điều kiện đổi sang hàm đổi mã sàn (WooCommerce = đơn thường), nên đơn WooCommerce chạy đủ khối kiểm tra như đơn thường (quyết định 14/10):<br>– service type phải có trong cấu hình;<br>– không đổi service type khi đơn đã qua New;<br>– từ Confirmed trở lên không được rỗng (khi shop bật Require service type và có Default);<br>– <b>cùng khối:</b> không huỷ / xoá / sửa COD từ POS khi đơn FFM đã có mã vận đơn (áp dụng vì FFM đẩy đơn WooCommerce sang courier của FFM như đơn thường).</td>
+<td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Lưu danh sách sau khi gửi đơn sang FFM</td>
+<td>POS ghi danh sách của chính nó (hoặc Default), bỏ qua danh sách FFM trả về.</td>
+<td>Ưu tiên danh sách trong response FFM → danh sách POS → Default. Vẫn giữ để POS nhận đúng khi FFM cộng bù.</td>
+<td><span class="done">Đã có</span></td></tr>
+<tr><td>Kiểm tra khi lưu danh sách đó</td>
+<td>Chạy đủ các kiểm tra service type.</td>
+<td>Ở bước lưu ngay sau khi gửi đơn sang FFM, bỏ qua "not configured" và "Cannot update existed FFM service types when status is not New". Kiểm tra "từ Confirmed trở lên mà rỗng" vẫn chạy; người dùng tự đổi trên POS vẫn bị chặn như cũ.</td>
+<td><span class="done">Đã có</span></td></tr>
+</table>
+<div class="warn"><b>Rủi ro mới khi POS tự cộng (chỉ khi cấu hình trên POS cũ hơn FFM, tức bước đồng bộ cấu hình sang POS lỗi hoặc chậm):</b>
+<ul>
+<li>Shop <b>bỏ tick</b> Mandatory (dòng vẫn còn): POS vẫn gửi service type đó, đơn tạo được nhưng bị cộng thừa service type và tính thêm phí, không báo lỗi.</li>
+<li>Shop <b>xoá hẳn dòng</b> service type đó: FFM báo "These service types … are not configured" (<a href="https://github.com/pancake-vn/sea-fulfillment/blob/2789fbda16ab3bb813cc8681ee812369f34c0b48/lib/app/order_action.ex#L884-L888">order_action.ex:884-888</a>, so với mọi dòng cấu hình), đơn không tạo được.</li>
+</ul></div>
+<div class="note"><b>Nghi vấn chưa xác minh (từ trước):</b> FFM trả danh sách rỗng + đơn từ <code>submitted</code> trở lên + shop bật "Require service type" → POS ghi rỗng, kiểm tra "rỗng" rollback cả lần lưu. Cần dev xác nhận.</div>
+
+<h2>FE <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/525">sea-fulfillment-web#525</a></h2>
+<p class="small">Màn hình: Seller Service Fee → Shop Rates / Shared Rates (cả trước và sau PR). Các dòng dưới đều ở form dùng chung <code>components/ShopSettingFFMFee.js</code>.</p>
+<table>
+<tr><th>Tính năng</th><th>Trước PR</th><th>Sau PR (mục tiêu)</th><th>Trạng thái</th></tr>
+<tr><td>Cột Mandatory</td><td>Không có.</td><td>Cột cạnh Default. Tick Mandatory thì tự tick và khoá ô Default (quyết định 14/10); bỏ tick Mandatory thì mở lại ô Default.</td><td><span class="done">Đã có cột</span><br><span class="todo">Cần sửa</span></td></tr>
+<tr><td>2 card Non-marketplace / Marketplace</td><td>1 bảng chung.</td><td>2 card; lưu vẫn 1 danh sách (dòng thường trước, dòng sàn sau); câu giải thích khi card Marketplace trống; tooltip theo loại đơn; số dòng trên tiêu đề; Min FFM Fee theo card.</td><td><span class="done">Đã có</span></td></tr>
+<tr><td>Chặn trùng khi Save</td><td>Không chặn.</td><td>Chỉ báo trùng khi dòng khác (ở cả 2 card) cùng Service Type <b>và</b> cùng nhóm phí (% COD / không phải % COD). Dòng chưa chọn Fee Type chưa tính là trùng (chọn Service Type không có custom_formula thì Fee Type bị xoá trắng). Hiện PR báo trùng chỉ theo Service Type (<a href="https://github.com/pancake-vn/sea-fulfillment-web/blob/cf7233c9fce7a585c760457a7b8df0ab78f6d33d/components/ShopSettingFFMFee.js#L285-L290">ShopSettingFFMFee.js:285-290</a>).</td><td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Dropdown Service Type</td><td>Liệt kê mọi service type.</td><td>Mỗi card chỉ hiện service type thuộc card; chỉ ẩn Service Type đã đủ 2 dòng (mỗi nhóm 1 dòng). Hiện PR ẩn ngay khi đã chọn 1 lần (<a href="https://github.com/pancake-vn/sea-fulfillment-web/blob/cf7233c9fce7a585c760457a7b8df0ab78f6d33d/components/ShopSettingFFMFee.js#L282-L283">:282-283</a>).</td><td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Nút Add</td><td>Không bao giờ khoá (trừ chế độ chỉ xem).</td><td>Khoá kèm lý do khi nước không có service type loại đó / đã cấu hình hết / còn dòng trống. "Đã cấu hình hết" phải đếm theo cùng quy tắc 2 nhóm (<a href="https://github.com/pancake-vn/sea-fulfillment-web/blob/cf7233c9fce7a585c760457a7b8df0ab78f6d33d/components/ShopSettingFFMFee.js#L183-L188">:183-188</a>).</td><td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Đổi Fee Type</td><td>Chỉ xoá Min FFM Fee khi rời % COD.</td><td>Kiểm tra lại ô Service Type của dòng đó và các ô đang báo lỗi (<a href="https://github.com/pancake-vn/sea-fulfillment-web/blob/cf7233c9fce7a585c760457a7b8df0ab78f6d33d/components/ShopSettingFFMFee.js#L352-L356">:352-356</a>): đổi Fee Type làm phát sinh trùng thì lỗi hiện ngay, đổi lại thì mất.</td><td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Comment code</td><td>—</td><td>Sửa comment <a href="https://github.com/pancake-vn/sea-fulfillment-web/blob/cf7233c9fce7a585c760457a7b8df0ab78f6d33d/components/ShopSettingFFMFee.js#L281">:281</a> và <a href="https://github.com/pancake-vn/sea-fulfillment-web/blob/cf7233c9fce7a585c760457a7b8df0ab78f6d33d/components/ShopSettingFFMFee.js#L284">:284</a> ("trùng giữa 2 card thì BE cộng phí cả 2 dòng") theo quy tắc mới.</td><td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Test</td><td>—</td><td>fixed + COD Percentage cùng Service Type lưu được; 2 dòng cùng nhóm báo lỗi; đổi Fee Type gây trùng thì lỗi hiện ngay, đổi lại thì mất; dropdown và nút Add theo quy tắc 2 nhóm.</td><td><span class="todo">Cần sửa</span></td></tr>
+<tr><td>Dòng Default trống / chế độ chỉ xem</td><td>Luôn chèn dòng Default trống; 1 nút Add khoá theo form.</td><td>Chỉ chèn khi nước có service type không gắn sàn; 2 nút Add vẫn khoá như cũ.</td><td><span class="done">Đã có</span></td></tr>
+<tr><td>Mô tả PR</td><td>—</td><td>Sửa 2 câu sai (màn "Shop → Reconciliation → FFM Fee Configuration" nay là Seller Service Fee; câu về shop có cấu hình NULL không còn đúng trên develop), thứ tự deploy (FE sau cả pos-api lẫn BE), và các câu sai theo quyết định mới (tick Mandatory không tự tick Default; ẩn service type đã chọn; chặn trùng tuyệt đối; "handle_ffm_fee cộng phí 2 lần").</td><td><span class="todo">Cần sửa</span></td></tr>
+</table>
+
+<h2>Các quyết định đã có (anh SH, 13–14/10)</h2>
+<ul>
+  <li><b>Mandatory luôn cộng lúc tạo đơn, chỉ 1 lần; nhân viên gỡ được; Mandatory được tham gia chọn courier khi tự đẩy.</b></li>
+  <li><b>Quy tắc trùng:</b> mỗi Service Type tối đa 1 dòng phí không phải % COD + 1 dòng % COD (13/10).</li>
+  <li><b>POS tự cộng Mandatory ngay lúc tạo đơn</b>, không đợi FFM cộng rồi đồng bộ lại (tránh thêm request); FFM chỉ cộng bù khi POS gửi thiếu.</li>
+  <li><b>Đơn WooCommerce</b> xử lý như đơn thường ở mọi chỗ POS lọc theo sàn và ở các kiểm tra trên POS.</li>
+  <li><b>Tick Mandatory → FE tự tick và khoá ô Default.</b> FE #525 cần sửa thêm. Lý do: POS chỉ chặn "đơn từ Confirmed trở lên mà không có service type" khi shop có ít nhất 1 dòng Default; shop chỉ tick Mandatory thì POS bỏ qua kiểm tra này.</li>
+  <li><b>Đơn đổi/trả do POS tạo được cộng Mandatory và tính phí</b> — giữ như hiện tại, không sửa.</li>
+  <li><b>Chấp nhận rủi ro khi cấu hình trên POS cũ hơn FFM</b> — không thêm xử lý.</li>
+</ul>
+<script>mermaid.initialize({ startOnLoad: true });</script>
+</body>
+</html>

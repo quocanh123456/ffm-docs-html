@@ -1,0 +1,82 @@
+/* Chế độ tối cho trang theo file mẫu (sample/mau-thiet-ke.html).
+   functions/_middleware.js gắn file này vào <head> của trang có biến --slate-bg (trang theo mẫu), cùng 1 đoạn script
+   đặt html[data-theme] trước khi vẽ trang; _theme/theme.js thêm nút 🌙/☀️ và lưu lựa chọn.
+   Luật viết theo html[data-theme="dark"] nên mạnh hơn luật cùng tên trong khối style của trang.
+   Thêm thành phần mẫu có màu viết cứng (#fff, #f1f3f8…) thì thêm luật tối tương ứng ở đây, sửa cả 2 repo. */
+
+.docs-theme-btn { margin-left: auto; flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: 15px; line-height: 1; display: grid; place-items: center; padding: 0; }
+.docs-theme-btn:hover { border-color: var(--ink3); }
+.docs-theme-btn.float { position: fixed; top: 12px; right: 12px; z-index: 30; box-shadow: var(--shadow); }
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1120; --card: #131c2e; --ink: #e2e8f0; --ink2: #a3b1c6; --ink3: #6b7b93; --line: #26324a;
+  --blue: #4f8ff7; --blue-bg: rgba(79,143,247,.15); --green: #10b981; --green-bg: rgba(16,185,129,.14);
+  --amber: #f59e0b; --amber-bg: rgba(245,158,11,.13); --red: #ef4444; --red-bg: rgba(239,68,68,.14);
+  --violet: #8b5cf6; --violet-bg: rgba(139,92,246,.16); --slate-bg: #1e293b;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+}
+html[data-theme="dark"] code { color: #cbd5e1; }
+html[data-theme="dark"] .top { background: rgba(11,17,32,.82); }
+html[data-theme="dark"] .nav a:hover { background: var(--slate-bg); }
+html[data-theme="dark"] .hero { box-shadow: 0 0 0 1px var(--line); }
+
+/* Thẻ nền trắng → nền thẻ tối */
+html[data-theme="dark"] :is(.row, .dcard, .node, .tbl, .step, .pipe .s, .roadmap, .tnmap div, .fbtn) { background: var(--card); }
+html[data-theme="dark"] .tile { background: var(--card); border-color: rgba(255,255,255,.06); box-shadow: none; }
+html[data-theme="dark"] table.plan th { background: var(--card); }
+html[data-theme="dark"] :is(.f, table.t td, table.plan td, table.plan td.g) { border-color: var(--line); }
+html[data-theme="dark"] .tbl .th { background: #070b16; }
+html[data-theme="dark"] .f.isnew { background: rgba(139,92,246,.1); }
+
+/* Khối màu theo sản phẩm */
+html[data-theme="dark"] .z-pid { background: rgba(249,115,22,.1); border-color: rgba(249,115,22,.35); }
+html[data-theme="dark"] .z-ffm { background: rgba(14,165,233,.1); border-color: rgba(14,165,233,.35); }
+html[data-theme="dark"] .z-crm { background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.35); }
+html[data-theme="dark"] .z-pos { background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.35); }
+html[data-theme="dark"] .z-bigate { background: rgba(225,29,72,.1); border-color: rgba(225,29,72,.35); }
+
+/* Viền nhạt của quyết định, cảnh báo, cây, bước */
+html[data-theme="dark"] .choice { border-color: rgba(16,185,129,.35); }
+html[data-theme="dark"] .choice.open { border-color: rgba(139,92,246,.4); }
+html[data-theme="dark"] .n-warn { border-color: rgba(245,158,11,.35); }
+html[data-theme="dark"] .n-red { border-color: rgba(239,68,68,.35); }
+html[data-theme="dark"] .n-info { border-color: rgba(79,143,247,.35); }
+html[data-theme="dark"] .node.alt2 { background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.35); }
+html[data-theme="dark"] .step.you::before { background: var(--amber-bg); }
+html[data-theme="dark"] .step .v b { color: #34d399; }
+html[data-theme="dark"] .pipe .s.you { border-color: rgba(245,158,11,.35); background: var(--amber-bg); }
+
+/* Đường nối, mũi tên */
+html[data-theme="dark"] :is(.t-ul li::before, .t-ul li::after) { border-color: #334155; }
+html[data-theme="dark"] .phase::before { background: #334155; }
+html[data-theme="dark"] .arrow { background: linear-gradient(90deg, #475569, #94a3b8); }
+html[data-theme="dark"] .arrow.back { background: linear-gradient(270deg, #475569, #94a3b8); }
+html[data-theme="dark"] .arrow::after { border-left-color: #94a3b8; }
+html[data-theme="dark"] .arrow.back::after { border-right-color: #94a3b8; }
+html[data-theme="dark"] .seq .msg:not(.err)::after { background: #94a3b8; }
+html[data-theme="dark"] .seq .msg:not(.err)::before { border-left-color: #94a3b8; border-right-color: #94a3b8; }
+
+/* Roadmap: chỉ đổi vòng tròn của phase chưa làm (phase xong / đang làm giữ nền xanh và dấu tích) */
+html[data-theme="dark"] .rm-steps li:not(.done):not(.cur)::before { border-color: #475569; background-color: var(--card); }
+html[data-theme="dark"] .rm-steps li:not(:last-child):not(.done)::after { background: #334155; }
+
+/* Bảng kế hoạch, Gantt */
+html[data-theme="dark"] .fbtn.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+html[data-theme="dark"] .pri.p2 { background: rgba(14,165,233,.16); color: #38bdf8; }
+html[data-theme="dark"] pre { box-shadow: 0 0 0 1px var(--line); }
+
+/* Prototype giữ nền sáng như giao diện antd thật: trả lại biến màu sáng cho phần bên trong khung */
+html[data-theme="dark"] .proto {
+  color-scheme: light; color: #0f172a;
+  --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+  --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+  --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+  --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+}
+html[data-theme="dark"] .proto code { color: #334155; }
+
+/* Nút, bảng góp ý và lịch sử (_comments, _history) viết màu sáng trực tiếp trên phần tử: đảo màu cả khối ngoài cùng.
+   Phần tử không tự đặt màu chữ sẽ lấy chữ sáng của trang tối → đảo thành chữ tối trên nền tối: đặt lại chữ tối và
+   color-scheme sáng (nút, ô nhập vẽ kiểu sáng) trước khi đảo. Màu viết trực tiếp trên phần tử vẫn được ưu tiên. */
+html[data-theme="dark"] [data-ffm-comment-ui]:not([data-ffm-comment-ui] *) { filter: invert(.9) hue-rotate(180deg); color: #202124; color-scheme: light; }

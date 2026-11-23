@@ -1,0 +1,169 @@
+[
+  {
+    "name": "Shadow/2xs",
+    "key": "f5ff222534fba4d3847c88e1ab2823017ee23613",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 1,
+        "blur": 0,
+        "spread": 0,
+        "color": "#000000",
+        "opacity": 0.05
+      }
+    ]
+  },
+  {
+    "name": "Shadow/xs",
+    "key": "4d1b5bc11a93b21446662408ba6bc517fc9b3c14",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 1,
+        "blur": 2,
+        "spread": 0,
+        "color": "#000000",
+        "opacity": 0.05
+      }
+    ]
+  },
+  {
+    "name": "Shadow/sm",
+    "key": "9648646ade942c9d307fd369e1fe85cf88eeb14d",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 1,
+        "blur": 3,
+        "spread": 0,
+        "color": "#000000",
+        "opacity": 0.1
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "blur": 2,
+        "spread": -1,
+        "color": "#000000",
+        "opacity": 0.1
+      }
+    ]
+  },
+  {
+    "name": "Shadow/md",
+    "key": "82e783f0b0327e5b1ec59d2c80260ed471463e54",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 4,
+        "blur": 6,
+        "spread": -1,
+        "color": "#000000",
+        "opacity": 0.1
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "blur": 4,
+        "spread": -2,
+        "color": "#000000",
+        "opacity": 0.1
+      }
+    ]
+  },
+  {
+    "name": "Shadow/lg",
+    "key": "263e9ebf7ca42a5871076b8ee4484d8f1a466ba0",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 10,
+        "blur": 15,
+        "spread": -3,
+        "color": "#000000",
+        "opacity": 0.1
+      },
+      {
+        "x": 0,
+        "y": 4,
+        "blur": 6,
+        "spread": -4,
+        "color": "#000000",
+        "opacity": 0.1
+      }
+    ]
+  },
+  {
+    "name": "Shadow/xl",
+    "key": "3b0756bea550b8c379e4dcad2231614a2d56cf2f",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 20,
+        "blur": 25,
+        "spread": -5,
+        "color": "#000000",
+        "opacity": 0.1
+      },
+      {
+        "x": 0,
+        "y": 8,
+        "blur": 10,
+        "spread": -6,
+        "color": "#000000",
+        "opacity": 0.1
+      }
+    ]
+  },
+  {
+    "name": "Shadow/2xl",
+    "key": "b364ba4f114032e36d0ebbfe00d97f2e921b8914",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 25,
+        "blur": 50,
+        "spread": -12,
+        "color": "#000000",
+        "opacity": 0.25
+      }
+    ]
+  },
+  {
+    "name": "Ring/brand",
+    "key": "3b085765e9dac4654770aa59dae7ffaafecb0473",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "spread": 3,
+        "color": "#1570EF",
+        "opacity": 0.46
+      }
+    ]
+  },
+  {
+    "name": "Ring/error",
+    "key": "d709da5537dfb4207b15d64c1e21bd97dab8230f",
+    "type": "DROP_SHADOW",
+    "layers": [
+      {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "spread": 3,
+        "color": "#DC2626",
+        "opacity": 0.24
+      }
+    ]
+  }
+]

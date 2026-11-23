@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch WMS v2 – đầu việc, ưu tiên, phân công, timeline</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  /* Bảng kế hoạch dự án + Gantt theo sprint: .filters lọc, table.plan, thanh .bar theo ưu tiên p0–p3, cột mốc .pilot */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .filters span { color: var(--ink2); font-size: 13px; margin-right: 4px; }
+  .fbtn { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink2); }
+  .fbtn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .plan-wrap { overflow-x: auto; }
+  table.plan { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  table.plan th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink3); font-weight: 700; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; background: #fff; }
+  table.plan td { padding: 8px 6px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+  table.plan td.no { color: var(--ink2); font-weight: 700; text-align: center; width: 28px; }
+  table.plan td.name { min-width: 220px; }
+  table.plan td.name b { display: block; font-size: 13px; }
+  table.plan td.name small { display: block; color: var(--ink2); font-size: 11.5px; line-height: 1.4; }
+  table.plan td.team, table.plan td.own { white-space: nowrap; color: var(--ink2); }
+  table.plan td.srcs { min-width: 92px; }
+  table.plan tr.grp td { background: var(--slate-bg); font-weight: 700; font-size: 12.5px; padding: 6px 10px; }
+  table.plan th.g, table.plan td.g { width: 31px; min-width: 31px; padding: 8px 0; text-align: center; }
+  table.plan td.g { border-left: 1px solid #f1f3f8; }
+  table.plan .pilot { border-right: 2px dashed var(--green) !important; }
+  table.plan th.later, table.plan td.later { width: 40px; min-width: 40px; padding-right: 4px; }
+  .bar { display: block; height: 14px; }
+  .bar.st { border-top-left-radius: 5px; border-bottom-left-radius: 5px; margin-left: 3px; }
+  .bar.en { border-top-right-radius: 5px; border-bottom-right-radius: 5px; margin-right: 3px; }
+  .bar.p0 { background: var(--ink3); } .bar.p1 { background: var(--blue); } .bar.p2 { background: var(--ffm); }
+  .bar.p3 { background: var(--violet-bg); border: 1px dashed var(--violet); }
+  .pri { display: inline-block; font-weight: 700; font-size: 11.5px; padding: 1px 7px; border-radius: 6px; }
+  .pri.p0 { background: var(--slate-bg); color: var(--ink2); } .pri.p1 { background: var(--blue); color: #fff; }
+  .pri.p2 { background: #e0f2fe; color: #0369a1; } .pri.p3 { background: var(--violet-bg); color: var(--violet); }
+  .src { display: inline-block; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; margin: 1px 0; }
+  .src.d { background: var(--blue-bg); color: var(--blue); } .src.t { background: var(--green-bg); color: var(--green); }
+  .src.tn { background: var(--violet-bg); color: var(--violet); } .src.o { background: var(--slate-bg); color: var(--ink2); }
+  .muted { color: var(--ink3); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink2); margin-top: 12px; align-items: center; }
+  .legend .bar { display: inline-block; width: 26px; vertical-align: -2px; margin: 0 6px 0 0; border-radius: 5px; }
+  /* Lưới ánh xạ ngắn (vd take note → hạng mục) */
+  .tnmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tnmap div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; background: #fff; }
+  .tnmap div b { color: var(--violet); margin-right: 4px; }
+  .tnmap div span { display: block; color: var(--ink2); font-size: 12px; }
+
+  @media (max-width: 960px) {
+    .tnmap { grid-template-columns: 1fr 1fr; }
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+</style>
+
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>Kế hoạch WMS v2</div>
+  <nav class="nav"><a href="#ke-hoach">Kế hoạch</a><a href="#take-note">10 take note</a><a href="#chot">Cần anh chốt</a><a href="#ghi-chu">Ghi chú</a></nav>
+</div></div>
+
+<div class="wrap">
+<aside class="roadmap" aria-label="Việc chờ">
+  <div class="rm-h"><b>Việc chờ</b><span>3 câu cần chốt</span></div>
+  <div class="rm-sum"><a class="ok" href="#chot"><b>0</b>Đã xử lý</a><a class="bad" href="#chot"><b>3</b>Chưa xử lý</a></div>
+  <ul class="rm-todo"><li><a href="#chot">Chữ &quot;Lô&quot; anh dùng theo nghĩa nào?</a></li><li><a href="#chot">Làm nền Custom App (#23) ở đợt nào?</a></li><li><a href="#chot">Số dev thật và mốc go-live mong muốn?</a></li></ul>
+</aside>
+
+
+<header class="hero">
+  <div class="eyebrow">FFM · WMS v2 · Kế hoạch dự án</div>
+  <h1>Kế hoạch WMS v2: đầu việc, ưu tiên, phân công, timeline</h1>
+  <p>Gộp đề xuất từ báo cáo công tác GIP của BA Đạt, 13 đề xuất của dev anh Thắng và 10 take note của anh Long. P1 tập trung wave, picking list, location map, app nhặt; pilot ở GIP cuối sprint 6. Phần vận hành riêng từng kho để P3 hoặc Custom App.</p>
+  <div class="meta">
+    <span class="chip">BA Đạt + dev anh Thắng</span>
+    <span class="chip">Cập nhật 04/11/2026</span>
+    <span class="chip">Sprint 2 tuần · dự kiến, chờ anh Thắng ước lượng</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>24 hạng mục</b><span>1 đang làm · 8 P1 · 10 P2 · 5 P3</span></div>
+  <div class="kpi"><b>P1 · S1–S6</b><span>Wave, picking list, location map, app nhặt, chế độ pick</span></div>
+  <div class="kpi"><b>P2 · S7–S10</b><span>Tồn đúng, bổ sung hàng, đóng gói nhanh, rổ ĐVVC</span></div>
+  <div class="kpi"><b>Pilot GIP</b><span>cuối S6, sau khi xong P1</span></div>
+</div>
+
+<section id="ke-hoach">
+  <div class="sec-h"><span class="n">01</span><h2>Bảng kế hoạch</h2><p>Bấm nút để lọc theo ưu tiên hoặc loại</p></div>
+  <div class="card" style="padding:16px 14px">
+    <div class="filters">
+      <span>Lọc:</span>
+      <button class="fbtn on" data-f="all">Tất cả</button>
+      <button class="fbtn" data-f="P1">P1</button>
+      <button class="fbtn" data-f="P2">P2</button>
+      <button class="fbtn" data-f="P3">P3</button>
+      <button class="fbtn" data-f="core">Chỉ lõi</button>
+      <button class="fbtn" data-f="other">Cấu hình / Custom</button>
+    </div>
+    <div class="plan-wrap">
+    <table class="plan">
+      <tr><th>#</th><th>Hạng mục</th><th>Loại</th><th>Ưu tiên</th><th>Nguồn</th><th>Team</th><th>Phụ trách</th><th class="g">S1</th><th class="g">S2</th><th class="g">S3</th><th class="g">S4</th><th class="g">S5</th><th class="g pilot">S6</th><th class="g">S7</th><th class="g">S8</th><th class="g">S9</th><th class="g">S10</th><th class="g later">Sau</th></tr>
+      <tr class="grp"><td colspan="18">Đang làm</td></tr><tr data-p="P0" data-k="core"><td class="no">0</td><td class="name"><b>Hoàn thiện kiểm kê + cất lại hàng đơn huỷ</b><small>Phiếu kiểm kê #468, kiểm kê trên mobile #469, cất lại hàng đơn huỷ #466</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p0">P0</span></td><td class="srcs"><span class="muted">–</span></td><td class="team">BE · FE · Mobile</td><td class="own"><span class="muted">dev …</span></td><td class="g"><i class="bar p0 st "></i></td><td class="g"><i class="bar p0 en"></i></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr class="grp"><td colspan="18">Vị trí kho</td></tr><tr data-p="P1" data-k="core"><td class="no">1</td><td class="name"><b>Gọn còn 3 loại vị trí</b><small>Pick / Storage / Damage; nền cho tách tồn và location map</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src d">Đ10</span> <span class="src t">T8</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"><i class="bar p1 st "></i></td><td class="g"><i class="bar p1 en"></i></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P1" data-k="core"><td class="no">2</td><td class="name"><b>Location map</b><small>Kho tự vẽ sơ đồ trên lưới; nền cho gợi ý vị trí và đường đi</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src d">Đ10</span> <span class="src t">T3</span> <span class="src tn">TN8</span></td><td class="team">FE · BE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"><i class="bar p1 st "></i></td><td class="g"><i class="bar p1 "></i></td><td class="g"><i class="bar p1 en"></i></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr class="grp"><td colspan="18">Wave & picking list</td></tr><tr data-p="P1" data-k="core"><td class="no">3</td><td class="name"><b>Wave + wave rule tuỳ biến</b><small>Màn đơn chờ trong WMS, lưu bộ lọc thành wave rule, tạo wave; wave hoả tốc riêng</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src tn">TN7</span> <span class="src o">Shopee</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"><i class="bar p1 st "></i></td><td class="g"><i class="bar p1 en"></i></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P1" data-k="core"><td class="no">4</td><td class="name"><b>Picking list theo wave</b><small>Tách list theo loại đơn (1 SP / 1 SKU nhiều cái / bộ / mix), ĐVVC, shop, khu; số đơn tối đa; thêm / bỏ đơn</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src d">Đ1</span> <span class="src t">T5</span> <span class="src tn">TN4</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"><i class="bar p1 st "></i></td><td class="g"><i class="bar p1 "></i></td><td class="g"><i class="bar p1 en"></i></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P1" data-k="core"><td class="no">5</td><td class="name"><b>Nhiều người cùng 1 picking list</b><small>Giao việc theo số người có mặt, đổi người, nhân viên tự nhận</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src tn">TN5</span></td><td class="team">BE · FE · Mobile</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p1 st en"></i></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P1" data-k="core"><td class="no">6</td><td class="name"><b>Gom đơn gần nhau + thứ tự đi một vòng</b><small>Gom đơn có sản phẩm nằm gần nhau; sắp điểm lấy theo đường đi trên map</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src d">Đ1</span> <span class="src t">T6</span> <span class="src tn">TN3</span></td><td class="team">BE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p1 st "></i></td><td class="g pilot"><i class="bar p1 en"></i></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P2" data-k="core"><td class="no">7</td><td class="name"><b>Gợi ý vị trí pick theo tồn</b><small>Tính theo tồn lúc bắt đầu pick: vị trí đủ hàng và gần nhất</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src t">T7</span></td><td class="team">BE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"><i class="bar p2 st en"></i></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr class="grp"><td colspan="18">Nhặt hàng</td></tr><tr data-p="P1" data-k="core"><td class="no">8</td><td class="name"><b>App nhặt: ảnh SP + dẫn đường</b><small>Hiện ảnh sản phẩm, vị trí, đường đi trên map cho người mới</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src d">Đ3</span> <span class="src tn">TN3</span></td><td class="team">Mobile</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p1 st "></i></td><td class="g"><i class="bar p1 "></i></td><td class="g pilot"><i class="bar p1 en"></i></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P1" data-k="other"><td class="no">9</td><td class="name"><b>Chế độ pick theo kho</b><small>Quét đầy đủ hoặc Pick theo phiếu; kiểm bù ở đóng gói, thiếu hàng phải chọn lý do</small></td><td><span class="pill p-mid">Cấu hình</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src d">Đ7</span> <span class="src t">T1</span></td><td class="team">BE · Mobile</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p1 st "></i></td><td class="g pilot"><i class="bar p1 en"></i></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P2" data-k="core"><td class="no">10</td><td class="name"><b>Skip pick → task kiểm</b><small>Báo thiếu → tạo task kiểm → kiểm xong mới trừ tồn → ghi log</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src tn">TN10</span></td><td class="team">BE · FE · Mobile</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"><i class="bar p2 st en"></i></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr class="grp"><td colspan="18">Tồn kho</td></tr><tr data-p="P2" data-k="core"><td class="no">11</td><td class="name"><b>Tách tồn stock / ready for pickup</b><small>Stock = tồn kệ Storage, ready for pickup = tồn kệ Pick</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src tn">TN1</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"><i class="bar p2 st en"></i></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P2" data-k="core"><td class="no">12</td><td class="name"><b>Transaction log tồn từng khâu</b><small>Nhập, cất, nhặt, đóng, hoàn, điều chỉnh – ai, lúc nào, bao nhiêu</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src tn">TN9</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"><i class="bar p2 st "></i></td><td class="g"><i class="bar p2 en"></i></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P2" data-k="core"><td class="no">13</td><td class="name"><b>Bổ sung hàng Storage → Pick</b><small>Cảnh báo khi kệ Pick sắp hết, gợi ý lấy bao nhiêu từ đâu, tạo việc chuyển kệ</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src d">Đ5</span> <span class="src t">T9</span> <span class="src tn">TN2</span></td><td class="team">BE · FE · Mobile</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"><i class="bar p2 st "></i></td><td class="g"><i class="bar p2 en"></i></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P2" data-k="core"><td class="no">14</td><td class="name"><b>Cập nhật tồn bằng file có duyệt</b><small>File tạo phiếu điều chỉnh chờ duyệt, lưu lý do (dùng lại luồng duyệt #468)</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src d">Đ9</span> <span class="src t">T11</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"><i class="bar p2 st en"></i></td><td class="g"></td><td class="g"></td><td class="g later"></td></tr><tr data-p="P2" data-k="core"><td class="no">15</td><td class="name"><b>Hàng hỏng, mất + báo cáo ngày</b><small>Phân loại hỏng / mất, tồn kệ Damage, báo cáo hằng ngày</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src tn">TN6</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p2 st en"></i></td><td class="g"></td><td class="g later"></td></tr><tr class="grp"><td colspan="18">Sắp kho theo tốc độ bán</td></tr><tr data-p="P2" data-k="core"><td class="no">16</td><td class="name"><b>Gợi ý vị trí cất theo độ bán chạy</b><small>Hàng bán chạy gần khu đóng gói; SKU mới cũng có gợi ý</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src d">Đ4</span> <span class="src t">T4</span></td><td class="team">BE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p2 st "></i></td><td class="g"><i class="bar p2 en"></i></td><td class="g later"></td></tr><tr data-p="P3" data-k="other"><td class="no">17</td><td class="name"><b>Bán chạy (ABC) + cảnh báo đặt sai chỗ</b><small>Danh sách hàng bán chạy, cảnh báo hàng nằm xa khu đóng gói</small></td><td><span class="pill p-new">Custom</span></td><td><span class="pri p3">P3</span></td><td class="srcs"><span class="src d">Đ4</span> <span class="src t">T10</span></td><td class="team">–</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"><i class="bar p3 st en dash"></i></td></tr><tr data-p="P3" data-k="other"><td class="no">18</td><td class="name"><b>Đề xuất nhập hàng theo tốc độ bán</b><small>Mỗi kho / seller một công thức – để kho tự làm</small></td><td><span class="pill p-new">Custom App</span></td><td><span class="pri p3">P3</span></td><td class="srcs"><span class="src tn">TN2</span></td><td class="team">–</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"><i class="bar p3 st en dash"></i></td></tr><tr class="grp"><td colspan="18">Đóng gói & bàn giao</td></tr><tr data-p="P2" data-k="core"><td class="no">19</td><td class="name"><b>Đóng gói nhanh đơn 1 SP</b><small>Đóng theo SKU, in waybill hàng loạt cho list toàn đơn 1 SP</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src d">Đ2</span> <span class="src t">T13</span></td><td class="team">BE · FE · Mobile</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p2 st "></i></td><td class="g"><i class="bar p2 en"></i></td><td class="g later"></td></tr><tr data-p="P2" data-k="core"><td class="no">20</td><td class="name"><b>Gợi ý rổ bàn giao theo ĐVVC</b><small>Đóng xong hiện ĐVVC / mã rổ, bỏ nhầm rổ báo ngay</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src d">Đ8</span> <span class="src t">T2</span></td><td class="team">BE · FE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"><i class="bar p2 st en"></i></td><td class="g later"></td></tr><tr class="grp"><td colspan="18">Nhập kho</td></tr><tr data-p="P3" data-k="other"><td class="no">21</td><td class="name"><b>Nhận hàng theo thùng</b><small>Quét mã thùng = cộng cả thùng</small></td><td><span class="pill p-mid">Cấu hình</span></td><td><span class="pri p3">P3</span></td><td class="srcs"><span class="src d">Đ6</span> <span class="src t">T12</span></td><td class="team">–</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"><i class="bar p3 st en dash"></i></td></tr><tr class="grp"><td colspan="18">Theo dõi</td></tr><tr data-p="P3" data-k="core"><td class="no">22</td><td class="name"><b>Theo dõi đơn kho + hiệu suất</b><small>Mốc từng khâu, thời gian xử lý, đơn chậm (yêu cầu GIP Indo)</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p3">P3</span></td><td class="srcs"><span class="src o">GIP Indo</span></td><td class="team">–</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"><i class="bar p3 st en dash"></i></td></tr><tr class="grp"><td colspan="18">Nền Custom App</td></tr><tr data-p="P3" data-k="other"><td class="no">23</td><td class="name"><b>Open API + webhook</b><small>Open API đọc, webhook, API ghi – để kho tự làm app</small></td><td><span class="pill p-mid">Nền</span></td><td><span class="pri p3">P3</span></td><td class="srcs"><span class="src o">Định hướng 02/11</span></td><td class="team">BE</td><td class="own"><span class="muted">dev …</span></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g later"><i class="bar p3 st en dash"></i></td></tr>
+    </table>
+    </div>
+    <div class="legend">
+      <span><i class="bar p0 st en"></i>P0 đang làm</span>
+      <span><i class="bar p1 st en"></i>P1 làm trước</span>
+      <span><i class="bar p2 st en"></i>P2 làm tiếp</span>
+      <span><i class="bar p3 st en"></i>P3 / để sau</span>
+      <span style="border-left:2px dashed var(--green);padding-left:8px">Mốc pilot GIP (cuối S6)</span>
+      <span>Nguồn: <span class="src d">Đ</span> báo cáo BA Đạt · <span class="src t">T</span> đề xuất anh Thắng · <span class="src tn">TN</span> take note anh Long</span>
+    </div>
+  </div>
+</section>
+
+<section id="take-note">
+  <div class="sec-h"><span class="n">02</span><h2>10 take note của anh → hạng mục</h2><p>Mọi take note đều có trong bảng</p></div>
+  <div class="tnmap"><div><b>TN1</b>Chia tồn stock / ready for pickup<span>→ #11 · P2</span></div><div><b>TN2</b>Đề xuất nhập + luân chuyển Lô → kệ<span>→ #13 · P2 · #18 Custom App</span></div><div><b>TN3</b>Gợi ý quãng đường, đường đi<span>→ #6, #8 · P1</span></div><div><b>TN4</b>Picking list đơn 1 / nhiều / mix<span>→ #4 · P1</span></div><div><b>TN5</b>Nhiều người cùng 1 picking list<span>→ #5 · P1</span></div><div><b>TN6</b>Hàng hỏng, mất → báo cáo ngày<span>→ #15 · P2</span></div><div><b>TN7</b>Set wave pickup tuỳ biến<span>→ #3 · P1</span></div><div><b>TN8</b>Location map<span>→ #2 · P1</span></div><div><b>TN9</b>Transaction log tồn từng khâu<span>→ #12 · P2</span></div><div><b>TN10</b>Skip pick → task kiểm → trừ tồn → log<span>→ #10 · P2</span></div></div>
+</section>
+
+<section id="chot">
+  <div class="sec-h"><span class="n">03</span><h2>Cần anh chốt</h2><p>Chốt xong thì cập nhật timeline</p></div>
+  <div class="dec" style="grid-template-columns:repeat(3,1fr)">
+    <div class="dcard"><div class="q">Take note 2</div><h4>Chữ "Lô" anh dùng theo nghĩa nào?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Nếu "Lô" là kệ Storage / pallet thì việc này là #13 Bổ sung hàng Storage → Pick. Ở FFM "lô" đang là từng dòng phiếu nhập (có hạn dùng), khác nghĩa.</div></div></div>
+    <div class="dcard"><div class="q">Custom App</div><h4>Làm nền Custom App (#23) ở đợt nào?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất: sau P1, song song P2 nếu có thêm 1 BE. Chưa có nền này thì chưa hướng dẫn kho tự làm app được.</div></div></div>
+    <div class="dcard"><div class="q">Nguồn lực</div><h4>Số dev thật và mốc go-live mong muốn?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Timeline đang giả định 2 BE · 1 FE · 1 Mobile. Có số thật thì anh Thắng điền cột Phụ trách và chỉnh sprint.</div></div></div>
+  </div>
+</section>
+
+<section id="ghi-chu">
+  <div class="sec-h"><span class="n">04</span><h2>Ghi chú</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <h4 style="margin:0 0 8px">Cách chia loại và ưu tiên</h4>
+      <ul class="clean">
+        <li>Lõi: kho nào cũng cần, làm sẵn trong FFM.</li>
+        <li>Cấu hình: lõi có sẵn, kho tự bật / tắt theo cách vận hành (vd Pick theo phiếu, nhận theo thùng).</li>
+        <li>Custom / Custom App: cách làm riêng từng kho, để sau hoặc kho tự làm. Khi có từ 2–3 kho cùng cần thì đưa vào lõi.</li>
+        <li>Wave rule, cách chia list phải dùng được cho cả đơn sàn lẫn đơn thường (kho nước ngoài phần lớn là đơn thường).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 style="margin:0 0 8px">Tài liệu chi tiết</h4>
+      <ul class="clean">
+        <li><a href="https://ffm-docs-html.pages.dev/ffm/wms/bao-cao-cong-tac-kho-gip">Báo cáo công tác kho GIP</a> – BA Đạt (Đ1–Đ10 ở mục 09)</li>
+        <li><a href="https://ffm-docs-html.pages.dev/ffm/wms/wms-hien-co-va-sap-toi">WMS hiện có và sắp tới</a> – 13 đề xuất của anh Thắng (T1–T13)</li>
+        <li><a href="https://ffm-docs-html.pages.dev/ffm/wms/quy-trinh-kho-gip-va-ffm">Quy trình kho GIP và FFM</a> – báo cáo dev anh Thắng</li>
+        <li><a href="https://ffm-docs-html.pages.dev/ffm/wms/function-list-wms-v2">Function list WMS v2</a> – chi tiết từng chức năng</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+document.querySelectorAll('.fbtn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.fbtn').forEach(x => x.classList.toggle('on', x === b));
+  const f = b.dataset.f;
+  document.querySelectorAll('table.plan tr[data-p]').forEach(tr => {
+    const show = f === 'all' || tr.dataset.p === f || tr.dataset.k === f;
+    tr.style.display = show ? '' : 'none';
+  });
+  document.querySelectorAll('table.plan tr.grp').forEach(g => {
+    let n = g.nextElementSibling, any = false;
+    while (n && !n.classList.contains('grp')) { if (n.style.display !== 'none') any = true; n = n.nextElementSibling; }
+    g.style.display = any ? '' : 'none';
+  });
+}));
+</script>
+</body>
+</html>

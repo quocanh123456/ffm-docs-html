@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>#7103 — ĐVVC thật và mã vận đơn của đơn FFM trên POS</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 1180px; margin: 24px auto; padding: 0 20px; color: #1f2328; line-height: 1.5; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  h2 { font-size: 18px; margin-top: 32px; border-bottom: 1px solid #d0d7de; padding-bottom: 4px; }
+  h3 { font-size: 15px; margin-top: 20px; }
+  .meta { color: #59636e; font-size: 13px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 16px; font-size: 13.5px; }
+  th, td { border: 1px solid #d0d7de; padding: 6px 8px; vertical-align: top; text-align: left; }
+  th { background: #f6f8fa; }
+  code { background: #eff1f3; padding: 1px 4px; border-radius: 4px; font-size: 12.5px; }
+  .ok { color: #1a7f37; font-weight: 600; }
+  .open { color: #9a6700; font-weight: 600; }
+  .warn { background: #fff8c5; border: 1px solid #d4a72c; padding: 8px 12px; border-radius: 6px; }
+  .box { background: #f6f8fa; border: 1px solid #d0d7de; padding: 8px 12px; border-radius: 6px; }
+  ol li, ul li { margin: 3px 0; }
+</style>
+</head>
+<body>
+<h1>#7103 — Hiển thị đúng mã vận đơn ĐVVC và ĐVVC thực tế của đơn FFM trên POS</h1>
+<div class="meta">
+  Cập nhật: 2026-10-19 (chiều) · Issue: <a href="https://pancakework.vn/issues/w4/c114/i7103">pancakework.vn/issues/w4/c114/i7103</a> ·
+  PR: <a href="https://github.com/pancake-vn/pos-api/pull/17708">pos-api#17708</a> (BE) ·
+  <a href="https://github.com/pancake-vn/pos-ssr/pull/16241">pos-ssr#16241</a> (FE) ·
+  <a href="https://github.com/pancake-vn/sea-fulfillment/pull/582">sea-fulfillment#582</a> (FFM)
+</div>
+
+<h2>1. Kết quả</h2>
+<table>
+  <tr><th>Yêu cầu</th><th>Kết quả</th></tr>
+  <tr><td>AC-1: cột Mã vận đơn của đơn FFM hiện tracking thật của ĐVVC</td><td class="ok">Đạt — danh sách, chi tiết, tag, Hành trình đơn, xuất Excel, in</td></tr>
+  <tr><td>AC-2: mã FFM không chiếm cột chính</td><td class="ok">Đạt — mã FFM chuyển sang Mã vận đơn phụ</td></tr>
+  <tr><td>AC-3: hiện ĐVVC thật, dạng <code>IFG → J&amp;T ✓</code> (comment 17/10)</td><td class="ok">Đạt — tag, chi tiết, Excel, biến in, bản in báo cáo</td></tr>
+  <tr><td>AC-4: lọc và thống kê theo ĐVVC thật</td><td class="ok">Đạt — lọc màn Đơn hàng và báo cáo bán hàng</td></tr>
+  <tr><td>App mobile</td><td class="open">Chưa làm (mục 4)</td></tr>
+</table>
+<div class="box">Dấu ✓ trên tag ĐVVC của đơn FFM chỉ hiện khi ĐVVC đã cấp mã vận đơn (anh SH xác nhận 19/10).</div>
+
+<h2>2. Trước → sau khi deploy (đơn FFM, ví dụ IFG giao qua J&amp;T)</h2>
+<table>
+  <tr><th>Màn hình / chức năng</th><th>Trước</th><th>Sau</th></tr>
+  <tr><td>Danh sách đơn — cột <b>Mã vận đơn</b></td><td>Mã FFM</td><td>Tracking J&amp;T; ĐVVC chưa cấp tracking thì trống</td></tr>
+  <tr><td>Danh sách đơn — cột <b>Mã vận đơn phụ</b></td><td>Tracking J&amp;T</td><td>Mã FFM</td></tr>
+  <tr><td>Tag ĐVVC (danh sách, chi tiết đơn)</td><td>"IFG ✓" — ✓ hiện ngay khi đơn đã đẩy sang FFM; bấm tag sao chép mã FFM</td><td>"IFG → J&amp;T ✓" — ✓ chỉ hiện khi J&amp;T đã cấp tracking; bấm tag sao chép tracking (chưa có thì báo "Chưa có mã vận đơn")</td></tr>
+  <tr><td>Chi tiết đơn — khung vận chuyển</td><td>Tag mã FFM đứng trước</td><td>Tag tracking J&amp;T trước, tag mã FFM sau (có khoảng cách)</td></tr>
+  <tr><td>Chi tiết đơn — khung "Hành trình đơn"</td><td>"IFG - &lt;mã FFM&gt;"</td><td>"IFG → J&amp;T - &lt;tracking&gt;"; chưa có tracking thì chỉ hiện tên</td></tr>
+  <tr><td>Xuất Excel đơn hàng</td><td>Mã vận đơn = tracking nếu có, chưa có thì mã FFM; Mã vận đơn phụ = tracking; cột ĐVVC = "IFG"</td><td>Mã vận đơn = tracking, chưa có thì trống; Mã vận đơn phụ = mã FFM; cột ĐVVC = "IFG → J&amp;T"</td></tr>
+  <tr><td>Xuất Excel bill, hoá đơn điện tử, đơn trả (đơn gốc + đơn đổi)</td><td>Mã vận đơn = mã FFM</td><td>Mã vận đơn = tracking (chưa có thì trống)</td></tr>
+  <tr><td>In đơn — biến <code>PARTNER_NAME</code>, <code>COURIER_AND_TRACKING_ID</code>, <code>EXTENDED_PARTNER_NAME</code></td><td>"IFG"; tên ĐVVC mở rộng trống</td><td>"IFG → J&amp;T"; tên ĐVVC mở rộng = tên đầy đủ của J&amp;T trong danh mục ĐVVC</td></tr>
+  <tr><td>In đơn — mẫu cũ (<code>TRACKING_NUMBER</code>, <code>PARTNER_ID</code>, mã vạch, QR, <code>EXTEND_CODE</code>)</td><td>Chưa có tracking thì in mã FFM</td><td>In tracking J&amp;T; chưa có thì để trống</td></tr>
+  <tr><td>Phiếu in danh sách sản phẩm</td><td>Tracking nếu có, chưa có thì mã FFM</td><td>Tracking, chưa có thì trống (phiếu này không in tên ĐVVC)</td></tr>
+  <tr><td>Bản in báo cáo</td><td>Mã FFM, tên "IFG"</td><td>Tracking J&amp;T, tên "IFG → J&amp;T"; chưa có tracking thì in chữ "Chưa có mã vận đơn"</td></tr>
+  <tr><td>Tin nhắn tự động gửi khách — biến <code>PARTNER_NAME</code></td><td>Tên FFM</td><td>Tên J&amp;T (khách tra cứu theo ĐVVC thật)</td></tr>
+  <tr><td>Lọc "Đơn vị vận chuyển" ở màn Đơn hàng (POS)</td><td>Lọc J&amp;T chỉ ra đơn gửi thẳng J&amp;T</td><td>Ra thêm đơn FFM giao qua J&amp;T; loại trừ J&amp;T thì loại cả các đơn đó; lọc IFG vẫn ra mọi đơn IFG. Điều kiện lọc ĐVVC ở server chỉ chạy khi request gửi <code>is_filter_multiple_partner</code> (có từ trước PR) — xem mục 4</td></tr>
+  <tr><td>Báo cáo bán hàng — lọc/tách theo ĐVVC (shop từng kết nối FFM)</td><td>Mọi đơn FFM gộp vào nhóm IFG</td><td>Đơn FFM đã có ĐVVC thật xếp vào nhóm J&amp;T; lọc J&amp;T đếm cả đơn đó</td></tr>
+  <tr><td>Nhân viên thuộc bộ phận giới hạn ĐVVC</td><td>Quyền theo <code>partner_id</code></td><td>Không đổi — quyền vẫn theo <code>partner_id</code>, không mở rộng theo ĐVVC thật</td></tr>
+  <tr><td>Open API (đối tác) — danh sách đơn và báo cáo</td><td>Lọc theo <code>partner_id</code></td><td>Không đổi</td></tr>
+  <tr><td>Đơn KHÔNG phải FFM</td><td>—</td><td>Không đổi ở mọi chỗ trên</td></tr>
+  <tr><td>Đơn FFM cũ (trước deploy)</td><td>—</td><td>Ngay sau deploy: cột mã vận đơn đã đổi theo tracking, nhưng tên chỉ "IFG" (chưa có ĐVVC thật). Sau khi chạy backfill: hiện "IFG → J&amp;T", lọc/báo cáo theo J&amp;T</td></tr>
+  <tr><td>Đơn FFM đã chọn ĐVVC nhưng chưa có mã vận đơn</td><td>"IFG"</td><td>"IFG → J&amp;T", chưa có mã, chưa có ✓ (cần bản FFM sea-fulfillment#582 chạy trên prod)</td></tr>
+</table>
+
+<h2>3. Phần sửa thêm sau review</h2>
+<ul>
+  <li><b>POS BE</b>: Open API, Pancake, Panchat vẫn lọc và báo cáo ĐVVC theo ĐVVC gốc của đơn như trước; tin nhắn gửi khách lấy tên ĐVVC thật; job backfill chuẩn hoá tham số <code>since</code> và được hoãn khi shop đang khoá migration; thêm test lọc ES, doc ES, tin nhắn, backfill, báo cáo.</li>
+  <li><b>POS FE</b>: đơn FFM dùng tracking ĐVVC ở khung Hành trình đơn, biến in, phiếu in sản phẩm, bản in báo cáo, Excel bill / hoá đơn điện tử / đơn trả; thêm test ghép tên ĐVVC.</li>
+  <li><b>FFM</b> (sea-fulfillment#582): đơn đã chọn ĐVVC nhưng chưa có mã vận đơn vẫn gửi ĐVVC sang POS (trước đây gửi <code>partner: null</code>). Chỉ dữ liệu gửi POS đổi; màn FFM không đổi.</li>
+</ul>
+
+<h2>4. Việc còn lại</h2>
+<table>
+  <tr><th>Người làm</th><th>Việc</th></tr>
+  <tr><td>Khoa</td><td>Báo cáo bán hàng nguồn <code>order_facts</code> khi lọc hoặc tách theo ĐVVC tra lại bảng <code>orders</code> cho từng dòng sản phẩm của đơn FFM. Sau khi chạy trên prod, đo thời gian báo cáo của 1 shop FFM lớn; chậm thì lưu thêm ĐVVC thật vào <code>order_facts</code>.</td></tr>
+  <tr><td>Khoa</td><td>Nhân viên thuộc bộ phận giới hạn ĐVVC thấy số đơn khác nhau giữa 2 màn. Ví dụ bộ phận chỉ được xem IFG: màn Đơn hàng lọc J&amp;T ra các đơn IFG giao qua J&amp;T; báo cáo lọc J&amp;T ra 0 đơn (báo cáo chỉ cho lọc theo ĐVVC gốc trong danh sách của bộ phận); báo cáo tách theo ĐVVC thì đơn đó vẫn nằm ở nhóm J&amp;T.</td></tr>
+  <tr><td>Khoa</td><td>Sửa mô tả PR FE: câu "Đơn chưa có carrier hiển thị như cũ" không đúng. Đơn chưa có ĐVVC thật chỉ giữ tên IFG; cột mã vận đơn, mã vận đơn phụ, dấu ✓ và việc bấm vào nhãn ĐVVC để sao chép mã vẫn đổi như đơn đã có ĐVVC thật. Bỏ câu "Repo không có test".</td></tr>
+  <tr><td>Khoa</td><td>Xác nhận màn Đơn hàng trên web luôn gửi <code>is_filter_multiple_partner</code> khi lọc ĐVVC. Server chỉ dựng điều kiện lọc ĐVVC khi có cờ này (hoặc request Open API); state mặc định của bộ lọc trên web là <code>false</code>. Nếu có lúc không gửi thì lọc theo ĐVVC (cả ĐVVC thật) không có tác dụng — hành vi này có từ trước PR.</td></tr>
+  <tr><td>Long, Khoa</td><td>App mobile chưa đổi hiển thị mã vận đơn và tên ĐVVC. Kiểm tra cả việc app có gửi tham số lọc nhiều ĐVVC (<code>is_filter_multiple_partner</code>) không — không gửi thì bộ lọc ĐVVC không khớp ĐVVC thật.</td></tr>
+</table>
+
+<h2>5. Thứ tự deploy</h2>
+<ol id="deploy">
+  <li>Deploy FFM (sea-fulfillment#582). Không migration, không đổi config.</li>
+  <li>Thêm field <code>courier_partner_id</code> vào mapping ES <code>orders</code> (mapping strict; thiếu bước này thì ES từ chối doc đơn FFM có ĐVVC thật). Lệnh ở mô tả PR pos-api#17708.</li>
+  <li>Deploy POS BE (pos-api#17708), rồi POS FE (pos-ssr#16241).</li>
+  <li>Backfill ĐVVC cho đơn cũ: <b>chỉ chạy cho shop có yêu cầu</b>, không chạy cho toàn bộ shop. <code>CourierBackfill.count_missing(shop_id)</code> để đếm → <code>CourierBackfill.enqueue(shop_id, since: ~D[...])</code> → kiểm tra log <code>ffm_backfill_courier_done_&lt;shop_id&gt;</code> và lọc thử trên màn Đơn hàng. Shop không chạy backfill: đơn mới và đơn có lượt đồng bộ từ FFM vẫn tự có ĐVVC thật; đơn cũ không đổi gì nữa thì tên vẫn chỉ "IFG" và không ra khi lọc theo ĐVVC thật.</li>
+</ol>
+<div class="warn"><b>Bước 2 bắt buộc trước bước 3.</b> Mapping <code>orders</code> là strict: POS BE lên mà chưa có field thì ES từ chối toàn bộ doc của đơn FFM có ĐVVC thật (kể cả các field khác như <code>status</code>), task index bị thử lại mỗi 5 giây không giới hạn và ghi log Panchat mỗi lần.</div>
+
+<h2>6. Đánh giá job backfill (CourierBackfill)</h2>
+<p>Job đọc lại từng đơn FFM còn thiếu key <code>third_party_infomation.ffm_courier_id</code> qua <code>GET /orders/:pos_id</code> của FFM, lô 100 đơn, 5 request song song, các shop chạy nối tiếp trong 1 chuỗi.</p>
+<table>
+  <tr><th>Điểm</th><th>Kết luận</th></tr>
+  <tr><td>Ghi đè giá trị mới hơn</td><td class="ok">An toàn — câu UPDATE chỉ ghi khi key vẫn còn thiếu; lượt đồng bộ FFM ghi trước thì backfill bỏ qua</td></tr>
+  <tr><td>Màn Đơn hàng (đọc ES)</td><td class="ok">Có cập nhật — ghi id ĐVVC thì gửi task cập nhật lại doc ES của đơn đó (đã có test); ghi <code>null</code> thì không cần vì doc cũ chưa có field này</td></tr>
+  <tr><td>Tác dụng phụ</td><td class="ok">Không đổi <code>updated_at</code>, không sinh lịch sử đơn, không gửi webhook</td></tr>
+  <tr><td>Shop nhiều tài khoản FFM</td><td class="ok">Thử lần lượt từng tài khoản, kể cả tài khoản đã ngắt</td></tr>
+  <tr><td>Đơn FFM chưa có ĐVVC</td><td>Ghi <code>null</code>, lần chạy sau bỏ qua. Vì vậy phải chạy sau khi FFM gửi được ĐVVC của đơn chưa có mã vận đơn; chạy trước thì các đơn đó chỉ tự đúng ở lượt đồng bộ kế tiếp (đơn đã huỷ sẽ không bao giờ đúng)</td></tr>
+  <tr><td>Log báo xong</td><td class="ok">Đã sửa: chỉ ghi cho shop có đơn được quét và shop cuối (trước đây <code>enqueue_all</code> ghi 1 log cho mỗi shop)</td></tr>
+  <tr><td>Message job không lưu bền</td><td class="open">RabbitMQ khởi động lại giữa chừng thì chuỗi dừng, không có log. Gọi lại <code>enqueue</code> an toàn vì chỉ quét đơn còn thiếu key</td></tr>
+  <tr><td>Gọi <code>enqueue</code> 2 lần</td><td class="open">Chạy 2 chuỗi song song, tải FFM gấp đôi; dữ liệu không sai. Chưa có khoá chống chạy trùng và chưa có cách dừng chuỗi ngoài xoá message</td></tr>
+  <tr><td>Shop đang khoá migration</td><td class="open">Job bị hoãn, mỗi 10 phút ghi 1 log; cả chuỗi dừng ở shop đó tới khi mở khoá</td></tr>
+  <tr><td>Khối lượng</td><td>Mỗi đơn 1 request; khoảng 16 request/giây nếu FFM trả trong 0,3 giây (100.000 đơn ~1,7 giờ). Không giãn cách giữa các lô. Không lọc trạng thái đơn, đơn đã huỷ/đã giao cũng được tra</td></tr>
+</table>
+<p>Các mục chữ màu nâu là chưa sửa: người chạy backfill theo dõi các điểm này trong lúc chạy. Nếu cần chạy định kỳ hoặc chạy cho toàn bộ shop nhiều lần, Khoa bổ sung khoá chống chạy trùng, cờ dừng chuỗi và bỏ qua shop đang khoá migration.</p>
+<div class="box"><b>Hoàn tác:</b> deploy lại bản trước của từng phần. Field ES thừa và key <code>ffm_courier_id</code> không ảnh hưởng bản cũ.</div>
+</body>
+</html>

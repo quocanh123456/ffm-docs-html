@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tạo và tự động phân công CSR Ticket khi đơn được Picked Up</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+  /* ── Phần thêm riêng của trang #465 (mẫu chưa có): tab dạng card, Card / Popover / Switch có chữ của antd, ô chọn nhiều courier, tooltip, modal xác nhận, khung mô phỏng sự kiện giao vận ── */
+  .hero p + p { margin-top: 8px; }
+  .side .appsw { display: flex; align-items: center; gap: 10px; padding: 4px 14px 14px; color: #fff; }
+  .side .appsw b { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 13px; flex: none; }
+  .side .appsw small { display: block; color: #c9d1dc; font-size: 11px; line-height: 1.3; }
+  .ph .sub { color: rgba(0,0,0,.88); font-weight: 400; font-size: 12.5px; }
+  .ctabs { display: flex; gap: 2px; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px; }
+  .ctabs a { padding: 6px 14px; border: 1px solid #f0f0f0; border-bottom: none; border-radius: 8px 8px 0 0; background: #fafafa; color: rgba(0,0,0,.88); }
+  .ctabs a.on { background: #fff; color: #1677ff; margin-bottom: -1px; border-bottom: 1px solid #fff; }
+  .ctabs a.off { color: #bfbfbf; cursor: not-allowed; }
+  .acard { background: #fff; border: 1px solid #f0f0f0; border-radius: 8px; }
+  .acard > .hd { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-weight: 600; }
+  .acard > .bd { padding: 12px 14px; }
+  .btn.sm { padding: 1px 9px; font-size: 12.5px; }
+  .btn[disabled] { color: #bfbfbf; border-color: #d9d9d9; background: #f5f5f5; cursor: not-allowed; }
+  .btn.dng { color: #ff4d4f; border-color: #ff4d4f; }
+  .tblwrap { overflow-x: auto; }
+  table.ant.bd th, table.ant.bd td { border: 1px solid #f0f0f0; vertical-align: top; }
+  table.ant td.c, table.ant th.c { text-align: center; }
+  .atag { display: inline-block; border: 1px solid; border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 20px; white-space: nowrap; cursor: help; }
+  .atag.p { cursor: default; }
+  .stag { display: inline-flex; align-items: center; gap: 4px; border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 20px; color: #fff; white-space: nowrap; }
+  .stag .x { cursor: pointer; opacity: .85; }
+  .mapl { display: flex; gap: 8px; align-items: stretch; }
+  .mapl + .mapl { margin-top: 12px; }
+  .mapl i { width: 3px; border-radius: 2px; flex: none; }
+  .mapl b { display: block; font-weight: 600; color: rgba(0,0,0,.88); }
+  .kws { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .kw { padding: 0 8px; background: #f5f5f5; border-radius: 10px; font-size: 12px; line-height: 20px; color: rgba(0,0,0,.65); }
+  .lk { cursor: pointer; color: #1677ff; }
+  .drag { color: #bfbfbf; cursor: help; letter-spacing: -2px; }
+  .qo { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; border: 1px solid #bfbfbf; color: rgba(0,0,0,.65); font-size: 10px; font-weight: 700; cursor: help; margin-left: 4px; }
+  .qi { display: inline-grid; place-items: center; flex: none; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #1677ff; background: var(--blue-bg); color: #1677ff; font-size: 10.5px; font-weight: 700; cursor: help; }
+  .pop { position: absolute; z-index: 7; width: 560px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 12px 16px 14px; visibility: hidden; }
+  .pop.show { visibility: visible; }
+  .pop h5 { margin: 0 0 10px; font-size: 14px; }
+  .hfld { display: flex; align-items: center; gap: 2px; margin: 0 0 12px; font-size: 13px; width: fit-content; }
+  .hfld .sw { margin-left: 8px; }
+  .sw.txt { width: 46px; }
+  .sw.txt::before { content: "No"; position: absolute; right: 7px; top: 0; font-size: 11px; line-height: 20px; color: #fff; }
+  .sw.txt.on::before { content: "Yes"; left: 7px; right: auto; }
+  .sw.txt.on::after { left: 28px; }
+  .ainput { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 8px; font-size: 13px; background: #fff; color: rgba(0,0,0,.88); }
+  .ainput.ph { color: #bfbfbf; }
+  .ainput.err, .tagin.err { border-color: #ff4d4f; }
+  .emsg { color: #ff4d4f; font-size: 12px; margin-top: 2px; }
+  .mcard { border: 1px solid #f0f0f0; border-radius: 8px; }
+  .mcard .mh { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; font-weight: 600; }
+  .mcard .mb { padding: 10px 12px; }
+  .mrow { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+  .mrow .p { width: 30%; flex: none; } .mrow .k { flex: 1; min-width: 0; }
+  .mrow .rm { cursor: pointer; color: rgba(0,0,0,.65); line-height: 30px; }
+  .tagin { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 30px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 2px 6px; background: #fff; cursor: text; }
+  .tagin .tg { display: inline-flex; gap: 4px; background: #f5f5f5; border: 1px solid #f0f0f0; border-radius: 4px; padding: 0 4px 0 8px; font-size: 12px; line-height: 20px; }
+  .tagin .tg .x { cursor: pointer; color: rgba(0,0,0,.65); }
+  .tagin input { border: none; outline: none; flex: 1; min-width: 120px; font-size: 13px; padding: 2px 0; }
+  .dashed { width: 100%; border: 1px dashed #d9d9d9; background: #fff; border-radius: 6px; padding: 5px; cursor: pointer; color: rgba(0,0,0,.88); font-size: 13px; }
+  .dashed:hover { border-color: #4096ff; color: #4096ff; }
+  .srow { display: grid; grid-template-columns: 6fr 16fr; gap: 20px; align-items: center; padding: 6px 8% 6px 0; margin-bottom: 8px; }
+  .srow .lb { display: flex; align-items: center; gap: 6px; }
+  .srow.dim .lb { color: rgba(0,0,0,.65); }
+  .msel { position: relative; }
+  .msel .box { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 32px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 3px 8px; background: #fff; cursor: pointer; }
+  .msel.open .box { border-color: #4096ff; }
+  .msel.lock .box { cursor: not-allowed; }
+  .msel .box input { border: none; outline: none; flex: 1; min-width: 80px; font-size: 13px; background: transparent; cursor: inherit; }
+  .msel .dd { list-style: none; margin: 0; position: absolute; top: calc(100% + 4px); left: 0; min-width: 220px; max-height: 250px; overflow-y: auto; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 4px; z-index: 8; visibility: hidden; }
+  .msel.open .dd { visibility: visible; }
+  .msel .dd li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+  .msel .dd li:hover { background: #f5f5f5; }
+  .msel .dd li.on { background: var(--blue-bg); }
+  .msel .dd li.on::after { content: "✓"; color: #1677ff; font-weight: 700; }
+  .tip { position: absolute; z-index: 9; max-width: 520px; background: var(--ink); color: #fff; border-radius: 6px; padding: 7px 10px; font-size: 12.5px; line-height: 1.5; visibility: hidden; pointer-events: none; }
+  .tip.show { visibility: visible; }
+  .cmask { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 10; visibility: hidden; }
+  .cmodal { position: absolute; left: 50%; top: 140px; transform: translateX(-50%); width: 400px; background: #fff; border-radius: 8px; padding: 20px 24px; box-shadow: 0 6px 16px rgba(0,0,0,.12); z-index: 11; visibility: hidden; }
+  .proto.confirm .cmask, .proto.confirm .cmodal { visibility: visible; }
+  .cmodal h5 { margin: 0 0 6px; font-size: 15px; display: flex; gap: 10px; align-items: center; }
+  .cmodal h5 i { width: 20px; height: 20px; border-radius: 50%; background: #f59e0b; color: #fff; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 800; }
+  .cmodal p { margin: 0 0 18px 30px; color: rgba(0,0,0,.88); }
+  .cmodal .act { display: flex; justify-content: flex-end; gap: 8px; }
+  .toast.multi { white-space: pre-line; max-width: 640px; width: max-content; }
+  .gq { color: var(--ink2); font-size: 13px; }
+  .simgrid { display: grid; grid-template-columns: 300px 1fr; gap: 22px; }
+  .ctl-l { font-size: 12.5px; color: var(--ink2); margin: 12px 0 4px; }
+  .ctl-l:first-of-type { margin-top: 6px; }
+  .tsel { border: 1px solid #d9d9d9; border-radius: 6px; padding: 4px 6px; font-size: 13px; background: #fff; width: 100%; }
+  .ctl { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 13px; }
+  .ctl label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .evs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 2px 12px; font-size: 13px; background: var(--slate-bg); border-radius: 8px; padding: 8px 12px; }
+  .kv span { color: var(--ink2); }
+  .tk { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 10px; font-size: 13px; background: #fff; }
+  .tk ul { margin: 4px 0 0; padding-left: 18px; color: var(--ink2); font-size: 12.5px; }
+  .blk { font-weight: 600; margin: 14px 0 6px; }
+  pre.log { min-height: 220px; max-height: 420px; overflow-y: auto; margin: 0; white-space: pre-wrap; }
+  .dec .wide2 { grid-column: span 2; }
+  .dec .wide3 { grid-column: span 3; }
+  .dcard p { margin: 0; color: var(--ink2); }
+  .dcard ul.clean li { margin: 3px 0; }
+  .devt { table-layout: fixed; } .devt th:first-child { width: 340px; } .devt td { overflow-wrap: anywhere; }
+  .opt2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 960px) { .dec .wide2, .dec .wide3 { grid-column: auto; } .opt2, .simgrid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>FFM · #465</div>
+  <nav class="nav">
+    <a href="#prototype">Prototype</a><a href="#quy-tac">Business rules</a><a href="#cau-hoi">Phương án &amp; câu hỏi</a>
+    <a href="#van-hanh">Lưu ý vận hành</a><a href="#ngoai-pham-vi">Ngoài phạm vi</a><a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · CSR · Đặc tả + prototype</div>
+  <h1>Tạo và tự động phân công CSR Ticket khi đơn được Picked Up</h1>
+  <p>Hiện tại CSR Ticket chỉ tự tạo khi đơn gặp sự cố (webhook khớp keyword của Ticket Type) hoặc khi đơn Out for Delivery (default OFD), lúc đó khả năng liên hệ khách và cứu đơn đã giảm. GIP muốn CSR chăm sóc đơn ngay từ khi courier lấy hàng.</p>
+  <p>Issue thêm cấu hình tạo CSR Ticket tại lần đầu đơn được ghi nhận <code>picked_up_at</code>, đi qua đúng các điều kiện shop / Service Type và cơ chế Assign Care hiện có, theo mô hình của default OFD. Mặc định tắt.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i465">ffm_dev #465</a></span>
+    <span class="chip">Requested by GIP</span>
+    <span class="chip">Chưa có PR</span>
+    <span class="chip">FE + BE, chưa code</span>
+    <span class="chip">Cập nhật 23/10/2026</span>
+  </div>
+</header>
+
+<div class="note n-info" style="margin-top:18px"><span class="ic">i</span><div><p>Mốc tạo Ticket = lần đầu đơn có <code>picked_up_at</code>, với hầu hết courier là lúc đơn lên <code>on_the_way</code>. Ví dụ SPX: <code>picked_up</code> 09:00 → chưa tạo · <code>on_the_way</code> 11:30 → tạo Ticket, Time Elapsed tính từ 11:30.</p></div></div>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">01</span><h2>Prototype — Ticket Types, Courier Setting</h2><p>Bấm thử: Create / Edit / Delete Ticket Type, chọn courier, bấm sự kiện giao vận</p></div>
+
+  <div class="card" style="margin-bottom:14px;padding:12px 16px">
+    <b>Gợi ý thử</b> <span class="gq">— mỗi dòng bắt đầu từ trang vừa tải (F5); ticket đầu tiên của trang luôn là <code>#1001</code></span>
+    <table class="t" style="margin-top:6px">
+      <tr><th style="width:36px">#</th><th style="width:43%">Thao tác</th><th>Kết quả mong đợi</th></tr>
+      <tr><td>1</td><td>Khung 3, courier SPX: bấm <code>picked_up</code>, rồi <code>on_the_way</code>. F5, đổi courier sang NJV, bấm <code>on_the_way</code>.</td><td>Sau <code>picked_up</code>: chưa có ticket, <code>picked_up_at</code> = <code>-</code>. Sau <code>on_the_way</code>: <code>#1001</code> · <code>Pickup Care</code> · New · <code>sub_status</code> <code>assigned</code> · Assigning Care CSR B. NJV: nút <code>picked_up</code> bị khoá, <code>on_the_way</code> cũng ra <code>#1001</code> · <code>Pickup Care</code> · CSR B.</td></tr>
+      <tr><td>2</td><td>SPX: bấm <code>on_the_way</code>, bấm lại <code>on_the_way</code> và <code>picked_up</code>, rồi <code>out_for_delivery</code>, rồi <code>delivered</code>.</td><td>Vẫn 1 ticket <code>#1001</code>; nhật ký: "picked_up_at đã có … → không kích hoạt lại". <code>out_for_delivery</code>: <code>#1001</code> đổi sang <code>OFD Care</code>, giữ ID, Ticket History thêm dòng đổi type. <code>delivered</code>: <code>#1001</code> Completed, <code>sub_status</code> <code>delivered</code>, Reason <code>Order was delivered</code>.</td></tr>
+      <tr><td>3</td><td>Chọn <code>Customer Request</code>, bấm <b>CSR tạo tay</b>, rồi <code>on_the_way</code>.</td><td><code>#1001</code> · <code>Customer Request</code> · New · CSR B. Sau <code>on_the_way</code> không có ticket mới, <code>#1001</code> giữ <code>Customer Request</code> và CSR B.</td></tr>
+      <tr><td>4</td><td>Ca âm, mỗi ca F5 rồi bấm <code>on_the_way</code>: (a) courier KEX; (b) SPX, tắt <code>Auto create CSR ticket</code> của shop; (c) SPX, Service Type <code>Service Type B</code>.</td><td>Cả 3 ca: không có ticket, <code>picked_up_at</code> vẫn được ghi. Nhật ký ghi lý do: (a) KEX không nằm trong ô picked up; (b) shop tắt <code>Auto create CSR ticket</code>; (c) <code>Service Type B</code> không nằm trong <code>Service types allowed to auto create tickets</code>.</td></tr>
+      <tr><td>5</td><td>Chọn <b>Ngoài Daily working hours</b>, bấm <code>on_the_way</code>. F5, tick <b>Giả lập lỗi khi tạo Ticket lấy hàng</b>, bấm <code>on_the_way</code>.</td><td>Ngoài giờ: <code>#1001</code> · <code>Pickup Care</code> · New · <code>sub_status</code> <code>no_assign</code> · Assigning Care —. Giả lập lỗi: không có ticket, nhật ký ghi lỗi; khối Đơn vẫn <code>partner_status</code> = <code>on_the_way</code>, có <code>picked_up_at</code>.</td></tr>
+      <tr><td>6</td><td>Không backfill: ở khung 2 bỏ SPX khỏi ô picked up, bấm ra ngoài ô; khung 3 với SPX bấm <code>on_the_way</code>. Thêm lại SPX, bấm ra ngoài ô; bấm <code>on_the_way</code>, <code>picked_up</code>.</td><td>Lần 1 lưu <code>picked_up_auto_create_partner_ids</code> = [NJV]; đơn có <code>picked_up_at</code> mà không có ticket. Lần 2 lưu [NJV, SPX]; bấm thêm sự kiện vẫn không có ticket.</td></tr>
+      <tr><td>7</td><td>Khung 2: thêm KEX vào ô picked up, bấm ra ngoài ô. Khung 3 đổi courier sang KEX, bấm <code>on_the_way</code>.</td><td>Lưu [SPX, NJV, KEX], toast <code>Update successfully</code>. KEX: <code>#1001</code> · <code>Pickup Care</code> · New · CSR B.</td></tr>
+      <tr><td>8</td><td>Khung 1: bấm Create, Submit khi bỏ trống tên; nhập <code>Pickup Care 2</code>, bật <code>Auto Create Ticket On Picked Up</code>, Submit. Tắt Picked Up, bật OFD.</td><td>Tên trống: dưới ô hiện <code>Please enter CSR Ticket Type</code>. Bật Picked Up: switch OFD, <code>Auto Create Ticket By Mapping</code>, <code>Mapping Delivery Keywords</code> ẩn; Submit → toast lỗi <code>is_default_picked_up: A default picked up ticket type already exists for this market — turn off the default on the old record first</code>, bảng vẫn 4 dòng. Bật OFD → switch Picked Up ẩn.</td></tr>
+      <tr><td>9</td><td>Khung 1, Edit <code>Pickup Care</code>: tắt Picked Up, Submit. Bấm <b>Add mapping status</b>, chọn SPX, gõ <code>pickup delay</code> + Enter, Submit. Create <code>Pickup Care 2</code> bật Picked Up, Submit. Khung 3 bấm <code>on_the_way</code>.</td><td>Lần Submit đầu: toast lỗi <code>partner_ids: can't be blank</code> / <code>mapping_statuses: can't be blank</code>. Sau khi thêm mapping: lưu, <code>Pickup Care</code> mất tag <code>Default Picked Up</code>. Dòng mới ID 21, P5, tag <code>Default Picked Up</code>. Khung 3: <code>#1001</code> · <code>Pickup Care 2</code>.</td></tr>
+      <tr><td>10</td><td>Câu hỏi 1, khung 1: Edit <code>OFD Care</code>, tắt OFD, bật Picked Up, Submit.</td><td>Toast lỗi <code>is_default_picked_up: A default picked up ticket type already exists…</code> và <code>is_default_picked_up: A ticket type cannot be both default OFD and default picked up</code>. Nhật ký: payload chỉ có <code>is_default_picked_up = true</code>, không gửi <code>is_default_ofd</code> (DB giữ giá trị cũ = true). <code>OFD Care</code> giữ nguyên.</td></tr>
+    </table>
+  </div>
+
+  <div class="gq" style="margin-bottom:6px"><b style="color:var(--ink)">Khung 1</b> · CSR Configuration › Ticket Types</div>
+  <div class="proto" id="proto-tt">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/csr/configuration</span></div>
+    <div class="app" style="min-height:580px">
+      <div class="side">
+        <div class="appsw"><b style="background:#9ca3af">S</b><div>Setting<small>Configuration · Partners · Users</small></div></div>
+        <a class="on">Setting</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>CSR Configuration</h3></div>
+        <div class="panel">
+          <div class="ctabs"><a class="on">Ticket Types</a><a class="off" title="Không mô phỏng trong prototype">Change Status Reasons</a><a class="off" title="Không mô phỏng trong prototype">Automation</a><a class="off" title="Không mô phỏng trong prototype">Claim</a></div>
+          <div class="acard">
+            <div class="hd">Ticket types<button class="btn pri sm" data-act="create">+ Create</button></div>
+            <div class="bd tblwrap">
+              <table class="ant bd">
+                <thead><tr><th style="width:36px"></th><th class="c" style="width:74px">Priority</th><th style="width:44px">ID</th><th style="width:140px">Name</th><th>Mapping Delivery Keywords</th><th class="c" style="width:150px">Auto-create Mode</th><th class="c" style="width:104px">Action</th></tr></thead>
+                <tbody id="tt-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pop" id="pop"></div>
+    <div class="cmask" data-act="no-delete"></div>
+    <div class="cmodal" id="cmodal"></div>
+    <div class="tip"></div>
+    <div class="toast" id="toast-tt"></div>
+  </div>
+  <p class="caption">Ticket Types bám <code>components/csr/TicketTypeTable.js</code> (tab đầu của <code>CsrConfigurationTabs</code>). Viền tím nét đứt là phần mới: switch <code>Auto Create Ticket On Picked Up</code> trong form và tag <code>Default Picked Up</code>. Cột kéo thả đổi priority có trên app, prototype không mô phỏng kéo thả.</p>
+
+  <div class="gq" style="margin:18px 0 6px"><b style="color:var(--ink)">Khung 2</b> · Setting › Courier</div>
+  <div class="proto" id="proto-courier">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/setting/courier</span></div>
+    <div class="app">
+      <div class="side">
+        <div class="appsw"><b style="background:#9ca3af">S</b><div>Setting<small>Configuration · Partners · Users</small></div></div>
+        <a class="on">Setting</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>Courier Setting</h3></div>
+        <div class="panel" id="courier-rows"></div>
+      </div>
+    </div>
+    <div class="tip"></div>
+    <div class="toast" id="toast-courier"></div>
+  </div>
+  <p class="caption">Courier Setting bám <code>pages/admin/setting/courier.js</code>: ô chọn nhiều courier chỉ lưu khi rời ô (<code>SelectCourier changeOnBlur</code>). Viền tím nét đứt là hàng mới, ngay dưới ô OFD. Chỉ 2 ô OFD và picked up bấm được; bảng tài khoản courier bên dưới màn không đổi nên prototype không vẽ. Cấu hình áp dụng theo thị trường (app + country); prototype là một thị trường mẫu, bật sẵn cấu hình để thử nhanh (trên app mặc định tắt). Danh sách courier gộp từ nhiều market để thử đủ hai loại courier.</p>
+
+  <div class="card" style="margin-top:18px">
+    <b>Khung 3 · Mô phỏng sự kiện giao vận → CSR Ticket (logic BE dự kiến)</b> <span class="gq">— app không có khung này; khung đọc cấu hình đang có ở khung 1 và khung 2</span>
+    <div class="simgrid" style="margin-top:12px">
+      <div>
+        <div class="blk" style="margin-top:0">Đơn mẫu</div>
+        <div class="ctl-l">Courier của đơn (đổi courier = đơn mới)</div>
+        <select class="tsel" id="sim-courier"></select>
+        <div class="gq" id="sim-courier-note" style="font-size:12.5px;margin-top:4px"></div>
+        <div class="ctl-l">Service Type của đơn</div>
+        <select class="tsel" id="sim-service"><option value="Service Type A">Service Type A</option><option value="Service Type B">Service Type B</option><option value="">(không có Service Type)</option></select>
+        <div class="ctl-l">Shop của đơn (màn Shop)</div>
+        <div class="ctl"><span class="sw on" data-sim="shopAutoCreate"></span>Auto create CSR ticket</div>
+        <div class="blk">CSR Configuration</div>
+        <div class="ctl-l">Service types allowed to auto create tickets</div>
+        <div class="ctl"><label><input type="checkbox" data-ast="Service Type A" checked>Service Type A</label><label><input type="checkbox" data-ast="Service Type B">Service Type B</label></div>
+        <div class="ctl"><span class="sw" data-sim="withoutServiceType"></span>Create tickets for orders without a service type</div>
+        <div class="ctl"><span class="sw on" data-sim="autoCloseReturned"></span>Auto close ticket when order is returned</div>
+        <div class="ctl-l">Assign Care</div>
+        <div class="ctl" style="flex-direction:column;align-items:flex-start;gap:4px"><label><input type="radio" name="wh" value="in" checked>Trong Daily working hours</label><label><input type="radio" name="wh" value="out" id="sim-out-of-hours">Ngoài Daily working hours</label></div>
+        <div class="ctl"><span class="sw on" data-sim="csrOnline"></span>Có CSR online phù hợp</div>
+        <div class="ctl" style="margin-top:12px"><label><input type="checkbox" id="sim-error">Giả lập lỗi khi tạo Ticket lấy hàng</label></div>
+      </div>
+      <div>
+        <div class="blk" style="margin-top:0">Sự kiện giao vận</div>
+        <div class="evs">
+          <span id="ev-picked-wrap"><button class="btn" data-ev="picked_up">picked_up</button></span>
+          <button class="btn" data-ev="on_the_way">on_the_way</button>
+          <button class="btn" data-ev="out_for_delivery">out_for_delivery</button>
+          <button class="btn" data-ev="keyword" id="ev-keyword"></button>
+          <button class="btn" data-ev="delivered">delivered</button>
+          <button class="btn" data-ev="returned">returned</button>
+          <button class="btn dng" data-ev="cancel">Huỷ đơn</button>
+        </div>
+        <div class="evs" style="margin-top:10px;align-items:center">
+          <select class="tsel" id="sim-manual-type" style="width:200px"></select>
+          <button class="btn" data-ev="manual">CSR tạo tay</button>
+          <button class="btn" data-ev="reset" style="border-style:dashed">Đơn mới</button>
+        </div>
+        <div class="blk">Đơn</div>
+        <div class="kv" id="sim-order"></div>
+        <div class="blk" id="sim-ticket-title"></div>
+        <div id="sim-tickets"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;padding:14px 16px">
+    <b>Nhật ký thao tác</b> <span class="gq">— gộp cho cả 3 khung; mới nhất ở trên</span>
+    <pre class="log" id="log"></pre>
+  </div>
+  <p class="caption">Logic là logic dự kiến (chưa có code). Phần có sẵn chép theo code <code>origin/develop</code>: <code>onSubmitForm</code> / <code>TicketTypeForm</code> của <code>TicketTypeTable.js</code>; <code>create_ticket/1</code>, <code>upsert_ticket_from_type/2</code>, <code>create_default_ofd_ticket/1</code>, <code>sync_tickets_on_order_status_change/3</code> của <code>lib/app/ticket_action.ex</code>. Ba khung dùng chung cấu hình: sửa ở khung 1, 2 thì khung 3 chạy theo. Dữ liệu mẫu, không gọi API.</p>
+</section>
+
+<section id="quy-tac">
+  <div class="sec-h"><span class="n">02</span><h2>Business rules</h2></div>
+  <div class="card" style="padding:8px 12px">
+    <table class="t">
+      <tr><th style="width:190px">Nhóm</th><th>Quy tắc</th></tr>
+      <tr><td><b>Mốc kích hoạt</b></td><td>Lần đầu đơn được ghi nhận <code>picked_up_at</code> (cũng là mốc tính SLA và Time Elapsed của CSR Ticket). Không dùng trực tiếp event <code>picked_up</code>: NJV, J&amp;T TH, J&amp;T ID không gửi event này, và event có thể bị gửi lặp. Courier gửi riêng <code>picked_up</code> (SPX, KEX, Flash, POS Malaysia, J&amp;T PH, J&amp;T MY AFG) vẫn tạo Ticket lúc đơn lên <code>on_the_way</code>.</td></tr>
+      <tr><td><b>Cấu hình Ticket Type</b></td><td>Switch <code>Auto Create Ticket On Picked Up</code> đặt ngay dưới <code>Auto Create Ticket On Out For Delivery</code>. Bật thì form ẩn <code>Auto Create Ticket By Mapping</code> và <code>Mapping Delivery Keywords</code>. Danh sách hiện tag <code>Default Picked Up</code>.</td></tr>
+      <tr><td><b>OFD và Picked Up</b></td><td>Hai switch phục vụ hai mục đích khác nhau, một Ticket Type không bật cùng lúc được: switch này đang bật thì switch kia ẩn đi. Khi lưu chỉ gửi cờ đang hiện trên form, không gửi kèm cờ kia = <code>false</code>. BE từ chối record có cả hai cờ. Mỗi thị trường (app + country) có tối đa một Ticket Type bật OFD và tối đa một Ticket Type bật Picked Up; bật cho type thứ hai thì báo lỗi, phải tắt ở type cũ trước.</td></tr>
+      <tr><td><b>Cấu hình courier</b></td><td>Setting &gt; Courier thêm ô chọn nhiều <code>Auto create ticket when order is picked up with courier(s)</code> ngay dưới ô OFD, kèm tooltip. Chỉ đơn của courier được chọn mới sinh Ticket lấy hàng.</td></tr>
+      <tr><td><b>Điều kiện tạo</b></td><td>Đủ cả: (1) có Ticket Type bật switch; (2) courier của đơn nằm trong danh sách; (3) shop bật <code>Auto create CSR ticket</code> (cờ <code>auto_create_ticket</code>, dùng chung với luồng hiện tại); (4) Service Type thỏa CSR Configuration (<code>Service types allowed to auto create tickets</code>, đơn không có Service Type thì xét <code>Create tickets for orders without a service type</code>); (5) đơn chưa có ticket đang mở; (6) đơn không ở <code>cancel</code> / <code>delivered</code>.</td></tr>
+      <tr><td><b>Phân công</b></td><td>Ticket mới đi qua Assign Care hiện tại: trong <code>Daily working hours</code> và có CSR phù hợp thì gán ngay; ngoài giờ hoặc chưa có CSR thì giữ <code>no_assign</code>, gán ở lượt gán tự động tiếp theo. Không có thuật toán phân công mới.</td></tr>
+      <tr><td><b>Đơn đã có ticket mở</b></td><td>Không tạo ticket mới, không đổi Ticket Type, không phân công lại. Khác default OFD: default OFD đổi Ticket Type của ticket đang mở sang type OFD.</td></tr>
+      <tr><td><b>Sau khi tạo</b></td><td>Giữ logic hiện tại: Out for Delivery (courier đã cấu hình OFD) → đổi sang type default OFD; webhook khớp keyword → đổi sang type đó; <code>delivered</code> → <code>completed</code>, lý do <code>Order was delivered</code>; <code>returned</code> → đóng nếu bật <code>Auto close ticket when order is returned</code>, chưa bật thì giữ mở; <code>cancel</code> → <code>canceled</code>, lý do <code>Order was canceled</code>. Đổi type giữ nguyên ID và ghi Ticket History.</td></tr>
+      <tr><td><b>Gửi lặp</b></td><td>Mỗi đơn kích hoạt tối đa một lần. Courier gửi lại <code>picked_up</code> / <code>on_the_way</code> không kích hoạt lại, kể cả khi ticket trước đó đã đóng. Ticket <code>completed</code> / <code>canceled</code> không tính là ticket đang mở.</td></tr>
+      <tr><td><b>Bật / tắt, backfill</b></td><td>Mặc định tắt. Bật / tắt chỉ ảnh hưởng đơn được ghi <code>picked_up_at</code> sau thời điểm đổi. Không backfill: đơn đã có <code>picked_up_at</code> trước khi bật không được tạo Ticket, kể cả khi nhận thêm sự kiện giao vận.</td></tr>
+      <tr><td><b>Lỗi</b></td><td>Lỗi tạo hoặc phân công Ticket được ghi log và không làm thất bại việc cập nhật trạng thái giao vận của đơn.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="cau-hoi">
+  <div class="sec-h"><span class="n">03</span><h2>Phương án &amp; câu hỏi còn mở</h2></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Đã chốt (20/10/2026)</div><h4>OFD, Picked Up và tên tag</h4>
+      <div class="choice"><span class="ck">✓</span><div>Một Ticket Type không bật cùng lúc OFD và Picked Up: hai switch phục vụ hai mục đích khác nhau. Bật switch này thì switch kia ẩn đi; khi lưu chỉ gửi cờ đang bật. Mỗi thị trường có tối đa một Ticket Type bật OFD và tối đa một Ticket Type bật Picked Up.</div></div>
+      <div class="choice"><span class="ck">✓</span><div>Tag trong danh sách là <code>Default Picked Up</code>.</div></div>
+    </div>
+    <div class="dcard wide2"><div class="q">Câu hỏi 1</div><h4>Sửa Ticket Type đang bật OFD sang Picked Up (và ngược lại)</h4>
+      <p>Edit <code>OFD Care</code>, tắt OFD, bật Picked Up rồi Submit: switch OFD đang ẩn nên payload không có <code>is_default_ofd</code>, DB giữ <code>is_default_ofd = true</code>, record thành có cả hai cờ và BE trả lỗi. Thử ở khung 1 để xem.</p>
+      <div class="choice open"><span class="ck">?</span><div><b>Phương án A — FE gửi kèm cờ kia = <code>false</code> chỉ khi record đang bật cờ đó</b> (Đề xuất)
+        <ul class="clean"><li>Ưu: tạo mới và sửa thường vẫn chỉ gửi một cờ; BE giữ kiểm tra chặt, không tự đổi dữ liệu.</li><li>Nhược: thêm một nhánh nhỏ trong <code>onSubmitForm</code>.</li></ul></div></div>
+      <div class="alt">Phương án khác:
+        <div class="opt2" style="margin-top:6px">
+          <div><b>Phương án B — BE: cờ này được bật thì changeset tự đặt cờ kia = <code>false</code></b><ul class="clean"><li>Ưu: FE luôn gửi một cờ.</li><li>Nhược: BE tự sửa dữ liệu, payload sai (gửi cả hai cờ <code>true</code>) cũng không bị báo lỗi.</li></ul></div>
+          <div><b>Phương án C — giữ nguyên, CSR lưu hai lần</b><ul class="clean"><li>Ưu: không thêm code.</li><li>Nhược: CSR thấy lỗi "cannot be both" dù trên form đã tắt OFD; phải tắt OFD, Submit, mở lại rồi mới bật Picked Up được.</li></ul></div>
+        </div>
+      </div>
+    </div>
+    <div class="dcard wide3"><div class="q">Câu hỏi 2</div><h4>Tooltip ô OFD hiện tại ghi tên cờ shop cũ</h4>
+      <p>Tooltip ô OFD ở <code>pages/admin/setting/courier.js</code> ghi "The shop does not have 'Disable auto create ticket' turned on", trong khi màn Shop đã đổi sang <code>Auto create CSR ticket</code> (cờ <code>auto_create_ticket</code>). Ô picked up mới nằm ngay dưới, dùng nhãn đúng.</p>
+      <div class="opt2">
+        <div class="choice open"><span class="ck">?</span><div><b>Phương án A — sửa luôn câu đó trong PR này</b> (Đề xuất)
+          <ul class="clean"><li>Ưu: hai tooltip cạnh nhau không gọi cùng một cờ bằng hai tên. PR đã sửa file này.</li><li>Nhược: thêm một thay đổi ngoài issue, cần ghi lý do trong PR description.</li></ul></div></div>
+        <div class="alt">Phương án khác: <b>Phương án B — để PR riêng</b>
+          <ul class="clean"><li>Ưu: PR đúng phạm vi issue.</li><li>Nhược: tới khi PR riêng merge, hai tooltip cạnh nhau mô tả cùng cờ bằng hai tên.</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px;padding:12px 16px">
+    <b>Câu hỏi 3. Câu chữ dự kiến — cần BA duyệt</b>
+    <table class="t" style="margin-top:6px">
+      <tr><th style="width:200px">Chỗ</th><th>Câu chữ</th></tr>
+      <tr><td>Tag trong danh sách</td><td><code>Default Picked Up</code> (đã chốt). Tooltip: "This tag is assigned by default to tickets created when an order is picked up (only for couriers configured to auto-create tickets)."</td></tr>
+      <tr><td>Tooltip switch</td><td>"Automatically create a ticket when an order is picked up by the courier"</td></tr>
+      <tr><td>Tooltip ô courier</td><td>Xem tooltip ô mới ở khung 2 của prototype (viết theo mẫu tooltip OFD, đổi điều kiện shop và cách xử lý ticket đang mở).</td></tr>
+      <tr><td>Lỗi trùng</td><td>"A default picked up ticket type already exists for this market — turn off the default on the old record first" (theo mẫu message của OFD).</td></tr>
+      <tr><td>Lỗi BE khi nhận cả hai cờ</td><td>"A ticket type cannot be both default OFD and default picked up"</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="van-hanh">
+  <div class="sec-h"><span class="n">04</span><h2>Lưu ý vận hành (nên báo khách)</h2></div>
+  <div class="note n-warn"><span class="ic">!</span><div>
+    <ul class="clean">
+      <li>Bật cho courier nào thì gần như mọi đơn của courier đó (thuộc shop đang bật tự tạo ticket) đều sinh Ticket, nên số Ticket và tải phân công CSR tăng mạnh. Nên bật thử cho một courier trước.</li>
+      <li>Đơn giao thành công sẽ tự <code>completed</code> Ticket, nên số Ticket created / completed trên CSR Report tăng đáng kể so với trước khi bật.</li>
+      <li>Với courier có gửi riêng <code>picked_up</code>, Ticket được tạo lúc đơn lên <code>on_the_way</code>, không phải đúng lúc <code>picked_up</code>.</li>
+    </ul>
+  </div></div>
+</section>
+
+<section id="ngoai-pham-vi">
+  <div class="sec-h"><span class="n">05</span><h2>Ngoài phạm vi</h2></div>
+  <div class="note n-info"><span class="ic">i</span><div>
+    <ul class="clean">
+      <li>Không backfill Ticket cho đơn đã được lấy hàng trước khi bật cấu hình.</li>
+      <li>Không thay đổi logic default OFD, tạo Ticket theo keyword, tự hoàn tất / tự huỷ Ticket.</li>
+      <li>Không xây dựng thuật toán phân công mới.</li>
+      <li>Không thêm công tắc riêng theo shop cho Ticket lấy hàng.</li>
+      <li>Không thay đổi cách ghi <code>picked_up_at</code>, SLA và Time Elapsed.</li>
+    </ul>
+  </div></div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">06</span><h2>Cho dev</h2><p>Dự kiến, chưa có code</p></div>
+  <div class="status">
+    <div class="card" style="padding:8px 10px">
+      <table class="t devt">
+        <tr><th>BE (<code>sea-fulfillment</code>) · Chỗ sửa</th><th>Sửa gì</th></tr>
+        <tr><td><code>csr_ticket_types</code></td><td>thêm cờ (tên gợi ý <code>is_default_picked_up</code>) và partial unique index <code>[:app_id, :country_code]</code> với <code>WHERE is_default_picked_up = true AND is_removed = false</code>, làm giống <code>is_default_ofd</code> (<code>csr_ticket_types_default_ofd_index</code>). Changeset thêm <code>unique_constraint</code> với message tương tự OFD, và chặn record có cả <code>is_default_ofd</code> lẫn <code>is_default_picked_up</code> bằng <code>true</code>. Type bật cờ này không cần <code>partner_ids</code> / <code>mapping_statuses</code> và set <code>auto_create_ticket = false</code>, giống <code>validate_required_partner_and_mapping</code> của OFD. Migration theo CLAUDE.md §9 / §11 (unique index có <code>app_id</code> + <code>country_code</code>, timestamp thật).</td></tr>
+        <tr><td><code>FFMSetting</code> <code>app_type "FFM"</code>, <code>type "courier"</code></td><td>thêm key (tên gợi ý <code>picked_up_auto_create_partner_ids</code>) cạnh <code>ofd_auto_create_partner_ids</code>.</td></tr>
+        <tr><td>Trigger</td><td>gắn tại <code>Tools.update_order_partner_from_webhook/3</code>, đúng chỗ đang apply SLA khi <code>picked_up_at</code> vừa được set (<code>Ecto.Changeset.get_change(cs, :picked_up_at)</code>), thêm điều kiện <code>order_partner.picked_up_at</code> cũ là <code>nil</code>. Cả 11 partner action có auto-ticket (NJV, J&amp;T TH, J&amp;T ID, J&amp;T PH, J&amp;T MY AFG, SPX, KEX, Flash, POS Malaysia, GPX, SSC) đều đi qua hàm này. <code>lib/app/tools.ex</code> là module dùng chung nên PR description phải nêu lý do (CLAUDE.md §14.1).</td></tr>
+        <tr><td>Hai trường hợp <code>picked_up_at</code> không ghi lúc <code>on_the_way</code></td><td>(a) đơn đã có <code>first_delivery_at</code> trước khi lên <code>on_the_way</code> thì <code>picked_up_at</code> = <code>inserted_at</code> của <code>order_partner</code>; (b) <code>gpx_action.ex</code> tự put <code>picked_up_at</code> lấy từ payload GPX khi nhập kho lần đầu. Điều kiện "<code>picked_up_at</code> cũ là <code>nil</code>" giữ cho mỗi đơn chỉ kích hoạt một lần trong cả hai trường hợp.</td></tr>
+        <tr><td>Thêm <code>TicketAction.create_default_picked_up_ticket/1</code> cạnh <code>create_default_ofd_ticket/1</code></td><td>đọc whitelist courier → lấy Ticket Type có cờ → qua gate <code>auto_ticket_enabled_for_shop?</code> + <code>auto_ticket_service_type_allowed?</code> → gọi <code>create_ticket/1</code>. <code>create_ticket/1</code> đã có lock theo đơn, chặn đơn <code>cancel</code> / <code>delivered</code>, chặn khi có ticket mở (<code>validate_no_open_ticket</code>), enqueue <code>es:index_ticket</code>, auto assign care và reindex order. Kết quả <code>{:error, ...}</code> do đơn đã có ticket mở là bỏ qua bình thường, không log lỗi.</td></tr>
+        <tr><td>Không đi qua <code>upsert_ticket_from_type/2</code></td><td>nhánh đổi type của <code>do_upsert_ticket_from_type/2</code> vi phạm quy tắc "đơn đã có ticket mở thì không đổi Ticket Type". Vì không qua upsert, phải tự <code>enqueue_broadcast(ticket, "ticket:created")</code> sau khi tạo thành công — <code>create_ticket/1</code> không tự broadcast.</td></tr>
+        <tr><td>Bọc <code>rescue</code> + <code>ShLog.ffm_log</code> giống <code>create_default_ofd_ticket/1</code></td><td>log chỉ kèm ID đơn (§13).</td></tr>
+      </table>
+    </div>
+    <div class="card" style="padding:8px 10px">
+      <table class="t devt">
+        <tr><th>FE (<code>sea-fulfillment-web</code>) · Chỗ sửa</th><th>Sửa gì</th></tr>
+        <tr><td><code>components/csr/TicketTypeTable.js</code></td><td>switch mới trong <code>TicketTypeForm</code>, ẩn mapping khi bật (<code>Form.useWatch</code> như <code>is_default_ofd</code>), ẩn switch OFD khi switch Picked Up đang bật và ngược lại, set giá trị khi mở form Edit, gửi <code>partner_ids</code> / <code>mapping_statuses</code> rỗng và <code>auto_create_ticket: false</code> trong <code>onSubmitForm</code> như OFD. <code>onSubmitForm</code> giữ <code>...values</code>, không thêm <code>is_default_ofd</code> / <code>is_default_picked_up</code>: antd không đưa field đang ẩn vào <code>values</code> nên payload chỉ có cờ đang hiện. Thêm tag <code>Default Picked Up</code> ở cột <code>Auto-create Mode</code>.</td></tr>
+        <tr><td><code>pages/admin/setting/courier.js</code></td><td>thêm 1 <code>Row</code> với <code>SelectCourier mode="multiple" changeOnBlur</code> + tooltip ngay dưới ô OFD, upsert key mới qua <code>doUpsertSetting</code>.</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong biến, mỗi thao tác cập nhật rồi vẽ lại bảng Ticket Types, form, ô courier, khung mô phỏng.
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const now = () => new Date().toTimeString().slice(0, 8);
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  // ── Dữ liệu mẫu ──
+  // Courier gộp từ nhiều market để thử đủ hai loại; sendsPickedUp theo issue #465. Màu là màu mẫu (app lấy partner.common_settings.color).
+  const couriers = [
+    { id: 1, name: 'SPX', color: '#fa8c16', sendsPickedUp: true },
+    { id: 2, name: 'KEX', color: '#faad14', sendsPickedUp: true },
+    { id: 3, name: 'Flash', color: '#fa541c', sendsPickedUp: true },
+    { id: 4, name: 'POS Malaysia', color: '#f5222d', sendsPickedUp: true },
+    { id: 5, name: 'J&T PH', color: '#eb2f96', sendsPickedUp: true },
+    { id: 6, name: 'J&T MY AFG', color: '#eb2f96', sendsPickedUp: true },
+    { id: 7, name: 'NJV', color: '#2f54eb', sendsPickedUp: false },
+    { id: 8, name: 'J&T TH', color: '#eb2f96', sendsPickedUp: false },
+    { id: 9, name: 'J&T ID', color: '#eb2f96', sendsPickedUp: false },
+  ];
+  const courierById = (id) => couriers.find((item) => item.id === id);
+  const courierNames = (ids) => ids.map((id) => courierById(id).name).join(', ');
+
+  const initialTicketTypes = [
+    {
+      id: 11,
+      priority: 1,
+      name: 'Failed Delivery',
+      mapping_statuses: [
+        { partner: 1, keywords: ['customer not home', 'refused to receive'] },
+        { partner: 7, keywords: ['unable to contact'] },
+      ],
+      auto_create_ticket: true,
+      is_default_ofd: false,
+      is_default_picked_up: false,
+    },
+    { id: 12, priority: 2, name: 'OFD Care', mapping_statuses: [], auto_create_ticket: false, is_default_ofd: true, is_default_picked_up: false },
+    { id: 13, priority: 3, name: 'Pickup Care', mapping_statuses: [], auto_create_ticket: false, is_default_ofd: false, is_default_picked_up: true },
+    { id: 14, priority: 4, name: 'Customer Request', mapping_statuses: [{ partner: 3, keywords: ['customer request'] }], auto_create_ticket: false, is_default_ofd: false, is_default_picked_up: false },
+  ];
+
+  // giống utils/csr.js ticketStatus
+  const ticketStatus = [
+    { key: 'new', value: 'New', color: '#0F62FE' },
+    { key: 'processing', value: 'Processing', color: '#FA8C16' },
+    { key: 'follow_up', value: 'Follow Up', color: '#003eb3' },
+    { key: 'completed', value: 'Completed', color: '#389E0D' },
+    { key: 'canceled', value: 'Canceled', color: '#F5222D' },
+  ];
+  // giống @closed_statuses trong lib/app/ticket_action.ex
+  const CLOSED_STATUSES = ['completed', 'canceled'];
+  const isOpen = (ticket) => !CLOSED_STATUSES.includes(ticket.status);
+
+  // Màu preset của antd Tag (color="blue" / "green" / "purple") mà TicketTypeTable.js dùng
+  const TAG = {
+    blue: 'color:#0958d9;background:#e6f4ff;border-color:#91caff',
+    green: 'color:#389e0d;background:#f6ffed;border-color:#b7eb8f',
+    purple: 'color:#531dab;background:#f9f0ff;border-color:#d3adf7',
+  };
+
+  // Tooltip: chữ có sẵn chép từ TicketTypeTable.js và pages/admin/setting/courier.js (origin/develop); chữ của phần mới là câu chữ dự kiến (mục 03, câu hỏi 3).
+  const TIPS = {
+    drag: 'Drag to reorder',
+    'tag-ofd': 'This tag is assigned by default to tickets created when an order is out_for_delivery (only for couriers configured to auto-create tickets).',
+    'tag-pu': 'This tag is assigned by default to tickets created when an order is picked up (only for couriers configured to auto-create tickets).',
+    'tag-map': 'This tag is assigned to tickets that have a mapping configuration matching the courier, when the reason or status from the courier matches the configured mapping.',
+    'form-ofd': 'Automatically create a ticket when an order is marked Out for Delivery',
+    'form-pu': 'Automatically create a ticket when an order is picked up by the courier',
+    precheck: 'For the selected couriers, the system estimates the customer fees of the order before sending it to the courier (also when a Waybill Number is entered manually or imported). Sending is blocked if the courier has no Customer Reconciliation Setting.',
+    warehouse: "When sending orders to the selected couriers, show a 'Select Warehouse' field in the send to courier form.",
+    'manual-return': "For the selected couriers, when the courier reports an order as returned, the order is updated to 'Returned' automatically, unless the shop has 'Return manually' turned on. For other couriers, the order is only updated to 'Returning' and must be updated to 'Returned' manually.",
+    ofd:
+      'When an order of the selected couriers changes to Out for Delivery, a CSR ticket is created automatically only if all of these are true:' +
+      "<br>- A CSR Ticket Type has 'Auto Create Ticket On Out For Delivery' turned on (this type is used for the ticket)." +
+      "<br>- The order has at least one service type selected in 'Service types allowed to auto create tickets' (CSR Configuration). An order without any service type needs 'Create tickets for orders without a service type' turned on instead." +
+      "<br>- The shop does not have 'Disable auto create ticket' turned on." +
+      '<br>If the order already has an open ticket of another type, that ticket is changed to this type instead of creating a new one.',
+    'picked-up':
+      'When an order of the selected couriers is picked up (the first time the system records the pick up time), a CSR ticket is created automatically only if all of these are true:' +
+      "<br>- A CSR Ticket Type has 'Auto Create Ticket On Picked Up' turned on (this type is used for the ticket)." +
+      "<br>- The order has at least one service type selected in 'Service types allowed to auto create tickets' (CSR Configuration). An order without any service type needs 'Create tickets for orders without a service type' turned on instead." +
+      "<br>- The shop has 'Auto create CSR ticket' turned on." +
+      '<br>If the order already has an open ticket, no new ticket is created and the open ticket is kept as is. For couriers that send a separate picked up status, the ticket is created when the order changes to on the way.',
+    waybill: 'Orders not from a marketplace cannot be changed to the selected statuses if they have no Waybill Number (or return Waybill Number).',
+    'auto-status': 'After an order is sent to a courier successfully, its status is changed to the selected status (only if the current status is before or the same as the selected status). Leave empty to keep the current status.',
+  };
+
+  // ── Trạng thái ──
+  let ticketTypes = clone(initialTicketTypes);
+  let typeSeq = 20;
+  let courierSetting = { ofd_auto_create_partner_ids: [1, 3, 7], picked_up_auto_create_partner_ids: [1, 7] };
+  let pop = null; // { item, anchor, form, errors }
+  let confirmItem = null;
+  let msel = { key: null, draft: [], changed: false, q: '' };
+  const newOrder = (courierId) => ({ courierId, partner_status: null, picked_up_at: null, first_delivery_at: null, status: null, inserted_at: now() });
+  const sim = {
+    courierId: 1,
+    shopAutoCreate: true,
+    serviceType: 'Service Type A',
+    allowedServiceTypes: ['Service Type A'],
+    withoutServiceType: false,
+    autoCloseReturned: true,
+    inWorkingHours: true,
+    csrOnline: true,
+    simulateError: false,
+    manualTypeId: 14,
+    order: newOrder(1),
+    tickets: [],
+  };
+  let ticketSeq = 1000;
+  let logs = [];
+
+  const log = (msg, details = []) => {
+    logs.unshift([`${now()} ${msg}`, ...details.map((d) => `           ↳ ${d}`)].join('\n'));
+    logs = logs.slice(0, 40);
+    $('log').textContent = logs.join('\n');
+  };
+  const toast = (id, text, bad) => {
+    const el = $(id);
+    el.textContent = text;
+    el.className = 'toast show' + (bad ? ' bad' : '') + (text.includes('\n') ? ' multi' : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => (el.className = 'toast'), 3200);
+  };
+
+  // ── Khung 1: Ticket Types, giống components/csr/TicketTypeTable.js (+ phần mới viền tím) ──
+
+  // giống utils/csr.js renderMappingStatus + KeywordPills
+  const mappingCell = (values) =>
+    !values || !values.length
+      ? '-'
+      : values
+          .map((m) => {
+            const c = courierById(m.partner);
+            return `<div class="mapl"><i style="background:${c ? c.color : '#d9d9d9'}"></i><div><b>${c ? esc(c.name) : '-'}</b>${
+              m.keywords && m.keywords.length ? `<div class="kws">${m.keywords.map((k) => `<span class="kw">${esc(k)}</span>`).join('')}</div>` : ''
+            }</div></div>`;
+          })
+          .join('');
+
+  const modeCell = (r) =>
+    [
+      r.is_default_ofd ? `<span class="atag" style="${TAG.blue}" data-tip="tag-ofd">Default OFD</span>` : '',
+      // Dự kiến: tag mới cho cờ is_default_picked_up
+      r.is_default_picked_up ? `<span class="atag changed" style="${TAG.purple}" data-tip="tag-pu" data-tag-picked-up="${esc(r.name)}">Default Picked Up</span>` : '',
+      r.auto_create_ticket ? `<span class="atag" style="${TAG.green}" data-tip="tag-map">By Mapping</span>` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+  function renderTypes() {
+    const rows = [...ticketTypes].sort((a, b) => a.priority - b.priority);
+    $('tt-rows').innerHTML = rows
+      .map(
+        (r) => `<tr data-row="${r.id}">
+        <td class="c">${rows.length > 1 ? '<span class="drag" data-tip="drag">⋮⋮</span>' : ''}</td>
+        <td class="c"><span class="atag p" style="${TAG.blue}">P${r.priority}</span></td>
+        <td>${r.id}</td>
+        <td data-name>${esc(r.name)}</td>
+        <td>${mappingCell(r.mapping_statuses)}</td>
+        <td class="c">${modeCell(r)}</td>
+        <td class="c"><a class="lk" data-edit="${r.id}">Edit</a>&nbsp;&nbsp;<a class="lk" style="color:red" data-del="${r.id}">Delete</a></td>
+      </tr>`
+      )
+      .join('');
+  }
+
+  // Dự kiến: unique_constraint của CsrTicketType + validate_required_partner_and_mapping, thêm cờ picked up.
+  // Xét trên record sau khi gộp payload (như get_field trong changeset): key không gửi thì giữ giá trị cũ trong DB.
+  const validateTicketType = (record, item, list) => {
+    const others = list.filter((other) => other.id !== item?.id);
+    const errors = [];
+    if (others.some((other) => other.name === record.name)) errors.push('name: Ticket type exists for this name');
+    if (record.is_default_ofd && others.some((other) => other.is_default_ofd))
+      errors.push('is_default_ofd: A default OFD ticket type already exists for this market — turn off the default on the old record first');
+    if (record.is_default_picked_up && others.some((other) => other.is_default_picked_up))
+      errors.push('is_default_picked_up: A default picked up ticket type already exists for this market — turn off the default on the old record first');
+    if (record.is_default_ofd && record.is_default_picked_up) errors.push('is_default_picked_up: A ticket type cannot be both default OFD and default picked up');
+    if (!record.is_default_ofd && !record.is_default_picked_up && !record.mapping_statuses.length) errors.push("partner_ids: can't be blank", "mapping_statuses: can't be blank");
+    // giống validate_mapping_statuses/1 của csr_ticket_type.ex: mỗi keyword tối thiểu 3 ký tự sau khi trim
+    if (record.mapping_statuses.some((m) => !m.keywords.length || m.keywords.some((k) => k.trim().length < 3)))
+      errors.push('mapping_statuses: each entry must be a map with key "keywords" — a non-empty list of strings (each >= 3 chars after trim)');
+    return errors;
+  };
+
+  // giống onSubmitForm của TicketTypeTable.js, mở rộng cho is_default_picked_up
+  const onSubmitForm = (values, item) => {
+    if (values.is_removed) {
+      ticketTypes = ticketTypes.filter((record) => record.id !== item.id);
+      toast('toast-tt', 'Ticket type upserted successfully');
+      log(`Delete "${item.name}" → Yes, Delete It: xoá (is_removed = true)`);
+      return true;
+    }
+
+    const isDefaultOfd = !!values.is_default_ofd;
+    const isDefaultPickedUp = !!values.is_default_picked_up;
+    const skipMapping = isDefaultOfd || isDefaultPickedUp;
+
+    // Switch đang ẩn không có trong values → payload chỉ mang cờ đang hiện
+    const params = {
+      ...values,
+      mapping_statuses: skipMapping ? [] : values.mapping_statuses || [],
+      partner_ids: skipMapping ? [] : (values.mapping_statuses || []).map((mapping) => mapping.partner),
+      auto_create_ticket: skipMapping ? false : !!values.auto_create_ticket,
+    };
+    const flagKeys = ['is_default_ofd', 'is_default_picked_up'];
+    const payloadFlags = [
+      `payload gửi: ${flagKeys.filter((key) => key in params).map((key) => `${key} = ${params[key]}`).join(', ')}`,
+      ...flagKeys.filter((key) => !(key in params)).map((key) => `không gửi ${key}${item?.id ? ` (DB giữ giá trị cũ = ${!!item[key]})` : ''}`),
+    ];
+
+    const record = { is_default_ofd: false, is_default_picked_up: false, ...item, ...params };
+    const errors = validateTicketType(record, item, ticketTypes);
+    if (errors.length) {
+      toast('toast-tt', errors.join('\n'), true);
+      log(`Submit "${params.name}" → BE trả lỗi, KHÔNG lưu`, [...payloadFlags, ...errors]);
+      return false;
+    }
+
+    if (item?.id) {
+      ticketTypes = ticketTypes.map((other) => (other.id === item.id ? record : other));
+    } else {
+      typeSeq += 1;
+      ticketTypes = [...ticketTypes, { ...record, id: typeSeq, priority: Math.max(0, ...ticketTypes.map((other) => other.priority)) + 1 }];
+    }
+    toast('toast-tt', 'Ticket type upserted successfully');
+    log(`Submit "${params.name}" → lưu${item?.id ? '' : ` (ID ${typeSeq})`}`, [
+      ...payloadFlags,
+      skipMapping ? 'gửi partner_ids / mapping_statuses rỗng, auto_create_ticket = false' : `auto_create_ticket = ${params.auto_create_ticket}, partner_ids = [${params.partner_ids.join(', ')}]`,
+    ]);
+    return true;
+  };
+
+  // Form của Popover, giống TicketTypeForm: switch Picked Up ẩn khi OFD bật và ngược lại (Form.useWatch); bật một trong hai thì ẩn mapping.
+  const hsw = (key, label, tip, isNew) =>
+    `<div class="hfld${isNew ? ' changed' : ''}" data-hfld="${key}">${label}${tip ? `<span class="qo" data-tip="${tip}">?</span>` : ''}&nbsp;:<span class="sw txt${pop.form[key] ? ' on' : ''}" data-sw="${key}"></span></div>`;
+
+  function mappingBlock() {
+    const f = pop.form;
+    const e = pop.errors;
+    const rows = f.mapping_statuses
+      .map(
+        (m, i) => `<div class="mrow">
+          <div class="p"><select class="ainput${m.partner ? '' : ' ph'}${e['p' + i] ? ' err' : ''}" data-mp="${i}"><option value="">Select partner</option>${couriers
+            .map((c) => `<option value="${c.id}"${m.partner === c.id ? ' selected' : ''}>${esc(c.name)}</option>`)
+            .join('')}</select>${e['p' + i] ? '<div class="emsg">Please select partner</div>' : ''}</div>
+          <div class="k"><div class="tagin${e['k' + i] ? ' err' : ''}" data-tagbox="${i}">${m.keywords
+            .map((k, j) => `<span class="tg">${esc(k)}<span class="x" data-kx="${i}:${j}">×</span></span>`)
+            .join('')}<input data-kw="${i}" placeholder="${m.keywords.length ? '' : 'Enter delivery keywords and press Enter'}"></div>${
+          e['k' + i] ? '<div class="emsg">Please enter delivery keywords</div>' : ''
+        }</div>
+          ${f.mapping_statuses.length > 1 ? `<span class="rm" data-mrm="${i}" title="Remove">⊖</span>` : ''}
+        </div>`
+      )
+      .join('');
+    return `${hsw('auto_create_ticket', 'Auto Create Ticket By Mapping')}<div class="mcard"><div class="mh">Mapping Delivery Keywords</div><div class="mb">${rows}<button class="dashed" data-act="addmap">+ Add mapping status</button></div></div>`;
+  }
+
+  function renderPop() {
+    const el = $('pop');
+    if (!pop) {
+      el.classList.remove('show');
+      el.innerHTML = '';
+      return;
+    }
+    const f = pop.form;
+    el.innerHTML = `<h5>${pop.item ? 'Edit Ticket Type' : 'Create Ticket Type'}</h5>
+      <div class="fld${pop.errors.name ? ' err' : ''}" id="f-name"><label><em>*</em> CSR Ticket Type</label><input id="in-name" placeholder="Enter CSR Ticket Type" value="${esc(f.name)}"><div class="msg">Please enter CSR Ticket Type</div></div>
+      ${!f.is_default_picked_up ? hsw('is_default_ofd', 'Auto Create Ticket On Out For Delivery', 'form-ofd') : ''}
+      ${!f.is_default_ofd ? hsw('is_default_picked_up', 'Auto Create Ticket On Picked Up', 'form-pu', true) : ''}
+      ${!f.is_default_ofd && !f.is_default_picked_up ? mappingBlock() : ''}
+      <div style="text-align:right;margin-top:16px"><button class="btn pri" data-act="submit">Submit</button></div>`;
+    el.classList.add('show');
+    placePop();
+  }
+
+  // Popover placement="bottom": dưới nút; chạm đáy khung thì lật lên trên (như antd tự lật).
+  function placePop() {
+    const root = $('proto-tt');
+    const el = $('pop');
+    const anchor = root.querySelector(pop.anchor);
+    if (!anchor) return;
+    const r = root.getBoundingClientRect();
+    const a = anchor.getBoundingClientRect();
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const left = Math.max(12, Math.min(a.left + a.width / 2 - r.left - w / 2, r.width - w - 12));
+    let top = a.bottom - r.top + 8;
+    if (top + h > r.height - 8) top = Math.max(8, a.top - r.top - h - 8);
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+  }
+
+  function openPop(item, anchor) {
+    // giống onOpenChange của TicketTypeActionCell: Edit thì setFieldsValue theo record (thêm is_default_picked_up), Create thì form rỗng
+    const form = item
+      ? {
+          name: item.name,
+          mapping_statuses: clone(item.mapping_statuses),
+          auto_create_ticket: item.auto_create_ticket,
+          is_default_ofd: item.is_default_ofd,
+          is_default_picked_up: item.is_default_picked_up,
+        }
+      : { name: '', mapping_statuses: [], auto_create_ticket: false, is_default_ofd: false, is_default_picked_up: false };
+    pop = { item, anchor, form, errors: {} };
+    renderPop();
+    setTimeout(() => $('in-name')?.focus({ preventScroll: true }), 30);
+  }
+  const closePop = () => {
+    pop = null;
+    renderPop();
+  };
+
+  // Giá trị antd đưa vào onFinish: chỉ field đang hiện trên form
+  function formValues() {
+    const f = pop.form;
+    const values = { name: f.name };
+    if (!f.is_default_picked_up) values.is_default_ofd = f.is_default_ofd;
+    if (!f.is_default_ofd) values.is_default_picked_up = f.is_default_picked_up;
+    if (!f.is_default_ofd && !f.is_default_picked_up) {
+      values.auto_create_ticket = f.auto_create_ticket;
+      values.mapping_statuses = f.mapping_statuses.map((m) => ({ partner: m.partner, keywords: [...m.keywords] }));
+    }
+    return values;
+  }
+
+  // rules của Form.Item: name, partner, keywords bắt buộc (chỉ xét field đang hiện)
+  function validateForm() {
+    const f = pop.form;
+    const errors = {};
+    if (!f.name) errors.name = true;
+    if (!f.is_default_ofd && !f.is_default_picked_up)
+      f.mapping_statuses.forEach((m, i) => {
+        if (!m.partner) errors['p' + i] = true;
+        if (!m.keywords.length) errors['k' + i] = true;
+      });
+    return errors;
+  }
+
+  function renderConfirm() {
+    $('proto-tt').classList.toggle('confirm', !!confirmItem);
+    $('cmodal').innerHTML = confirmItem
+      ? `<h5><i>!</i>Are you sure you want to delete this configuration?</h5><p>This action cannot be undone</p><div class="act"><button class="btn" data-act="no-delete">No, Keep It</button><button class="btn pri" data-act="yes-delete">Yes, Delete It</button></div>`
+      : '';
+  }
+
+  // ── Khung 2: Courier Setting, giống pages/admin/setting/courier.js ──
+  const COURIER_ROWS = [
+    { label: 'Precheck customer fee before send to courier(s)', tip: 'precheck' },
+    { label: 'Show select warehouse when send to courier(s)', tip: 'warehouse' },
+    { label: 'Use manually return setting from shop with courier(s)', tip: 'manual-return' },
+    { label: 'Auto create ticket when order change status to out for delivery with courier(s)', tip: 'ofd', key: 'ofd_auto_create_partner_ids' },
+    { label: 'Auto create ticket when order is picked up with courier(s)', tip: 'picked-up', key: 'picked_up_auto_create_partner_ids', isNew: true },
+    { label: 'Require Waybill Number for non-marketplace orders when changing to status', tip: 'waybill', placeholder: 'Select status(es)' },
+    { label: 'Auto update order status after sending to courier successfully to status', tip: 'auto-status', placeholder: 'Select status' },
+  ];
+
+  // giống components/SelectCourier.js mode="multiple" changeOnBlur: sửa trên bản nháp, chỉ gọi onChange khi rời ô
+  function mselHtml(row) {
+    if (!row.key)
+      return `<div class="msel lock" title="Không mô phỏng trong prototype"><div class="box"><input disabled placeholder="${row.placeholder || 'Select Courier(s)'}"></div></div>`;
+    const isOpen = msel.key === row.key;
+    const ids = isOpen ? msel.draft : courierSetting[row.key];
+    const tags = ids
+      .map((id) => {
+        const c = courierById(id);
+        return `<span class="stag" style="background:${c.color}">${esc(c.name)}<span class="x" data-mx="${row.key}:${id}">×</span></span>`;
+      })
+      .join('');
+    const q = isOpen ? msel.q.toLowerCase() : '';
+    const opts = couriers
+      .filter((c) => !q || c.name.toLowerCase().includes(q))
+      .map((c) => `<li data-mo="${row.key}:${c.id}" class="${ids.includes(c.id) ? 'on' : ''}"><span class="stag" style="background:${c.color}">${esc(c.name)}</span></li>`)
+      .join('');
+    return `<div class="msel${isOpen ? ' open' : ''}" data-msel="${row.key}"><div class="box">${tags}<input data-mq="${row.key}" value="${isOpen ? esc(msel.q) : ''}" placeholder="${
+      ids.length ? '' : 'Select Courier(s)'
+    }"></div><ul class="dd">${opts || '<li>No data</li>'}</ul></div>`;
+  }
+
+  function renderCourier() {
+    $('courier-rows').innerHTML = COURIER_ROWS.map(
+      (row) => `<div class="srow${row.key ? '' : ' dim'}${row.isNew ? ' changed' : ''}" ${row.key ? `data-srow="${row.key}"` : ''}>
+        <div class="lb">${row.label}<span class="qi" data-tip="${row.tip}">?</span></div>
+        <div>${mselHtml(row)}</div></div>`
+    ).join('');
+  }
+
+  // giống doUpsertSetting: upsert key vào FFMSetting type "courier", toast theo message BE (update record có sẵn → "Update successfully")
+  const doUpsertSetting = (key, values) => {
+    courierSetting = { ...courierSetting, [key]: values };
+    toast('toast-courier', 'Update successfully');
+    log(`Rời ô → lưu ${key} = [${courierNames(values)}]`);
+  };
+
+  function openMsel(key) {
+    if (msel.key === key) return;
+    commitMsel();
+    msel = { key, draft: [...courierSetting[key]], changed: false, q: '' };
+    renderCourier();
+    focusMsel();
+  }
+  function commitMsel() {
+    if (!msel.key) return;
+    const { key, draft, changed } = msel;
+    msel = { key: null, draft: [], changed: false, q: '' };
+    if (changed) doUpsertSetting(key, draft);
+    renderCourier();
+  }
+  function focusMsel() {
+    const inp = $('courier-rows').querySelector(`[data-mq="${msel.key}"]`);
+    if (inp) {
+      inp.focus({ preventScroll: true });
+      inp.setSelectionRange(inp.value.length, inp.value.length);
+    }
+  }
+
+  // ── Tooltip dùng chung cho 2 khung (giống antd Tooltip: hiện khi rê chuột) ──
+  function showTip(target) {
+    const root = target.closest('.proto');
+    const tip = root.querySelector('.tip');
+    tip.innerHTML = TIPS[target.dataset.tip];
+    tip.classList.add('show');
+    const r = root.getBoundingClientRect();
+    const a = target.getBoundingClientRect();
+    const left = Math.max(8, Math.min(a.left - r.left - 12, r.width - tip.offsetWidth - 8));
+    let top = a.bottom - r.top + 6;
+    if (top + tip.offsetHeight > r.height - 4) top = a.top - r.top - tip.offsetHeight - 6;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+  const hideTips = () => document.querySelectorAll('.proto .tip').forEach((t) => t.classList.remove('show'));
+  document.addEventListener('mouseover', (e) => {
+    const t = e.target.closest('.proto [data-tip]');
+    if (t) showTip(t);
+    else hideTips();
+  });
+
+  // ── Khung 3: mô phỏng sự kiện giao vận → Ticket (logic BE dự kiến) ──
+  const typeName = (id) => ticketTypes.find((item) => item.id === id)?.name || `(Ticket Type #${id} đã xoá)`;
+  const simCourier = () => courierById(sim.courierId);
+
+  // giống auto_ticket_service_type_allowed?/1
+  const serviceTypeAllowed = () => (sim.serviceType ? sim.allowedServiceTypes.includes(sim.serviceType) : sim.withoutServiceType);
+  const serviceTypeReason = () =>
+    sim.serviceType
+      ? `Service Type "${sim.serviceType}" không nằm trong Service types allowed to auto create tickets`
+      : 'đơn không có Service Type và Create tickets for orders without a service type đang tắt';
+
+  const run = (label, fn) => {
+    const ctx = { order: { ...sim.order }, tickets: sim.tickets.map((ticket) => ({ ...ticket, history: [...ticket.history] })), msgs: [] };
+    fn(ctx);
+    sim.order = ctx.order;
+    sim.tickets = ctx.tickets;
+    renderSim();
+    log(`${label} → ${ctx.msgs[0] || 'không đổi gì'}`, ctx.msgs.slice(1));
+  };
+
+  const resetOrder = (reason) => {
+    sim.order = newOrder(sim.courierId);
+    sim.tickets = [];
+    renderSim();
+    log(`${reason} → courier ${simCourier().name}, chưa có ticket, chưa có picked_up_at`);
+  };
+
+  // giống TicketAction.create_ticket/1: validate_order_status (chặn cancel / delivered), validate_no_open_ticket, rồi enqueue_auto_assign_care
+  const createTicket = (ctx, type, source, { manual = false } = {}) => {
+    if (['cancel', 'delivered'].includes(ctx.order.status)) {
+      ctx.msgs.push(`create_ticket trả lỗi "Cannot create ticket for order with status: ${ctx.order.status}"`);
+      return null;
+    }
+    const open = ctx.tickets.find(isOpen);
+    if (open) {
+      const error = `This order already has an open ticket: ${open.display_id}`;
+      ctx.msgs.push(
+        manual
+          ? `create_ticket trả lỗi "${error}"`
+          : `đơn đã có ticket đang mở ${open.display_id} → không tạo mới, giữ nguyên Ticket Type / status / người phụ trách (lỗi này bỏ qua, không log)`
+      );
+      return null;
+    }
+
+    ticketSeq += 1;
+    const at = now();
+    const ticket = {
+      id: ticketSeq,
+      display_id: `#${ticketSeq}`,
+      typeId: type.id,
+      status: 'new',
+      sub_status: 'no_assign',
+      assigning_care: null,
+      reason: null,
+      history: [`${at} Tạo ticket (${source}), Ticket Type "${type.name}", status new`],
+    };
+    // enqueue_auto_assign_care → Assign Care hiện tại
+    if (sim.inWorkingHours && sim.csrOnline) {
+      ticket.sub_status = 'assigned';
+      ticket.assigning_care = 'CSR B';
+      ticket.history.push(`${at} Auto assign care → CSR B`);
+      ctx.msgs.push(`tạo ${ticket.display_id} "${type.name}", status new → Assign Care gán ngay cho CSR B`);
+    } else {
+      ctx.msgs.push(
+        `tạo ${ticket.display_id} "${type.name}", status new → ${sim.inWorkingHours ? 'chưa có CSR online phù hợp' : 'ngoài Daily working hours'}: giữ no_assign, gán ở lượt gán tự động tiếp theo`
+      );
+    }
+    ctx.tickets = [...ctx.tickets, ticket];
+    return ticket;
+  };
+
+  // Dự kiến TicketAction.create_default_picked_up_ticket/1 — không qua upsert_ticket_from_type/2
+  const createDefaultPickedUpTicket = (ctx) => {
+    const whitelist = courierSetting.picked_up_auto_create_partner_ids || [];
+    if (!whitelist.includes(ctx.order.courierId)) {
+      ctx.msgs.push(`${simCourier().name} không nằm trong "Auto create ticket when order is picked up with courier(s)" → không tạo Ticket`);
+      return;
+    }
+    const type = ticketTypes.find((item) => item.is_default_picked_up);
+    if (!type) {
+      ctx.msgs.push('không có Ticket Type bật Auto Create Ticket On Picked Up → không tạo Ticket');
+      return;
+    }
+    if (!sim.shopAutoCreate) {
+      ctx.msgs.push('shop tắt Auto create CSR ticket → không tạo Ticket');
+      return;
+    }
+    if (!serviceTypeAllowed()) {
+      ctx.msgs.push(`${serviceTypeReason()} → không tạo Ticket`);
+      return;
+    }
+    if (sim.simulateError) {
+      ctx.msgs.push('LỖI khi tạo Ticket → rescue + ShLog.ffm_log (chỉ kèm ID đơn); partner_status của đơn vẫn được lưu');
+      return;
+    }
+    const ticket = createTicket(ctx, type, 'auto create on picked up');
+    if (ticket) ctx.msgs.push('enqueue_broadcast(ticket, "ticket:created")');
+  };
+
+  // giống upsert_ticket_from_type/2 + do_upsert_ticket_from_type/2 (dùng cho default OFD và keyword)
+  const upsertTicketFromType = (ctx, type, source) => {
+    if (!sim.shopAutoCreate || !serviceTypeAllowed()) {
+      ctx.msgs.push(`${source}: ${!sim.shopAutoCreate ? 'shop tắt Auto create CSR ticket' : serviceTypeReason()} → không đổi gì`);
+      return;
+    }
+    const openTickets = ctx.tickets.filter(isOpen);
+    const same = openTickets.find((ticket) => ticket.typeId === type.id);
+    if (same) {
+      ctx.msgs.push(`${source}: ticket đang mở ${same.display_id} đã là "${type.name}" → giữ nguyên`);
+      return;
+    }
+    if (!openTickets.length) {
+      createTicket(ctx, type, source);
+      return;
+    }
+    // change_ticket_type/2: validate_order_status trước khi đổi type
+    if (['cancel', 'delivered'].includes(ctx.order.status)) {
+      ctx.msgs.push(`${source}: đơn đang ${ctx.order.status} → không đổi Ticket Type`);
+      return;
+    }
+    const kept = openTickets[openTickets.length - 1];
+    const from = typeName(kept.typeId);
+    kept.typeId = type.id;
+    kept.history.push(`${now()} Ticket Type: "${from}" → "${type.name}" (${source})`);
+    ctx.msgs.push(`${source}: ${kept.display_id} đổi Ticket Type "${from}" → "${type.name}", giữ nguyên ID`);
+  };
+
+  // giống create_default_ofd_ticket/1
+  const createDefaultOfdTicket = (ctx) => {
+    const whitelist = courierSetting.ofd_auto_create_partner_ids || [];
+    if (!whitelist.includes(ctx.order.courierId)) {
+      ctx.msgs.push(`${simCourier().name} không nằm trong ô OFD ở Setting > Courier → luồng default OFD không chạy`);
+      return;
+    }
+    const type = ticketTypes.find((item) => item.is_default_ofd);
+    if (!type) {
+      ctx.msgs.push('không có Ticket Type bật Auto Create Ticket On Out For Delivery → luồng default OFD không chạy');
+      return;
+    }
+    upsertTicketFromType(ctx, type, 'default OFD');
+  };
+
+  // giống sync_tickets_on_order_status_change/3: delivered_close_params / returned_close_params / canceled_close_params.
+  // care_params_by_impact: ticket chưa có lý do Xử lý / Theo dõi tiếp (mọi ticket trong mô phỏng) thì gỡ care khi đóng.
+  const syncOnOrderStatus = (ctx, status) => {
+    ctx.order.status = status;
+    const openTickets = ctx.tickets.filter(isOpen);
+    if (!openTickets.length) {
+      ctx.msgs.push(`order status = ${status}, không có ticket đang mở`);
+      return;
+    }
+    const close = (ticket, nextStatus, subStatus, reason) => {
+      ticket.status = nextStatus;
+      ticket.sub_status = subStatus;
+      ticket.reason = reason;
+      ticket.assigning_care = null;
+      ticket.history.push(`${now()} ${nextStatus} — ${reason}`);
+      ctx.msgs.push(`${ticket.display_id} → ${nextStatus}, sub_status ${subStatus || '—'}, lý do "${reason}", gỡ care (CSR chưa Xử lý / Theo dõi tiếp)`);
+    };
+    openTickets.forEach((ticket) => {
+      if (status === 'delivered') close(ticket, 'completed', 'delivered', 'Order was delivered');
+      else if (status === 'cancel') close(ticket, 'canceled', null, 'Order was canceled');
+      else if (sim.autoCloseReturned) close(ticket, 'completed', 'returned', 'lý do theo cấu hình Auto close ticket when order is returned');
+      else ctx.msgs.push(`${ticket.display_id} giữ mở (chưa bật Auto close ticket when order is returned)`);
+    });
+  };
+
+  // giống phần ghi picked_up_at / first_delivery_at của Tools.update_order_partner_from_webhook/3
+  const onWebhook = (partnerStatus) =>
+    run(`${simCourier().name} gửi ${partnerStatus}`, (ctx) => {
+      const order = ctx.order;
+      const hadPickedUp = !!order.picked_up_at;
+      order.partner_status = partnerStatus;
+      if (partnerStatus === 'on_the_way' && !order.picked_up_at) order.picked_up_at = order.first_delivery_at ? order.inserted_at : now();
+      if (partnerStatus === 'out_for_delivery' && !order.first_delivery_at) order.first_delivery_at = now();
+      ctx.msgs.push(`partner_status = ${partnerStatus}`);
+
+      if (!hadPickedUp && order.picked_up_at) {
+        ctx.msgs.push(`ghi picked_up_at lần đầu = ${order.picked_up_at} → xét tạo Ticket lấy hàng`);
+        createDefaultPickedUpTicket(ctx);
+      } else if (partnerStatus === 'picked_up' && !hadPickedUp) {
+        ctx.msgs.push('picked_up không ghi picked_up_at → chưa tạo Ticket');
+      } else if (['picked_up', 'on_the_way'].includes(partnerStatus)) {
+        ctx.msgs.push(`picked_up_at đã có (${order.picked_up_at}) → không kích hoạt lại`);
+      }
+
+      if (partnerStatus === 'out_for_delivery') createDefaultOfdTicket(ctx);
+      if (['delivered', 'returned'].includes(partnerStatus)) syncOnOrderStatus(ctx, partnerStatus);
+    });
+
+  // Ticket Type By Mapping có keyword cho courier của đơn, priority nhỏ nhất
+  const keywordTypeOf = () =>
+    ticketTypes.filter((item) => item.auto_create_ticket && (item.mapping_statuses || []).some((m) => m.partner === sim.courierId)).sort((a, b) => a.priority - b.priority)[0];
+
+  function renderSim() {
+    const c = simCourier();
+    $('sim-courier-note').textContent = c.sendsPickedUp ? 'Courier này gửi riêng picked_up.' : 'Courier này không gửi picked_up; sự kiện lấy hàng ghi nhận là on_the_way.';
+    const pickedBtn = document.querySelector('[data-ev="picked_up"]');
+    pickedBtn.disabled = !c.sendsPickedUp;
+    $('ev-picked-wrap').title = c.sendsPickedUp ? '' : `${c.name} không gửi picked_up`;
+    const kt = keywordTypeOf();
+    const kwBtn = $('ev-keyword');
+    kwBtn.disabled = !kt;
+    kwBtn.textContent = kt ? `Webhook khớp keyword của "${kt.name}"` : 'Không có Ticket Type By Mapping cho courier này';
+
+    const sel = $('sim-manual-type');
+    if (!ticketTypes.some((t) => t.id === sim.manualTypeId)) sim.manualTypeId = ticketTypes[0]?.id;
+    sel.innerHTML = ticketTypes.map((t) => `<option value="${t.id}"${t.id === sim.manualTypeId ? ' selected' : ''}>${esc(t.name)}</option>`).join('');
+    document.querySelector('[data-ev="manual"]').disabled = !ticketTypes.length;
+
+    const o = sim.order;
+    $('sim-order').innerHTML = `<span>Courier</span><b>${esc(c.name)}</b>
+      <span>partner_status</span><div>${o.partner_status ? `<code>${o.partner_status}</code>` : '-'}</div>
+      <span>picked_up_at</span><div data-picked>${o.picked_up_at || '-'}</div>
+      <span>first_delivery_at</span><div>${o.first_delivery_at || '-'}</div>
+      <span>Order status</span><div>${o.status ? `<code>${o.status}</code>` : '<span class="gq">— (mô phỏng chỉ ghi cancel / delivered / returned)</span>'}</div>`;
+
+    $('sim-ticket-title').textContent = `CSR Ticket của đơn (${sim.tickets.length})`;
+    $('sim-tickets').innerHTML = sim.tickets.length
+      ? sim.tickets
+          .map((t) => {
+            const st = ticketStatus.find((s) => s.key === t.status);
+            return `<div class="tk" data-ticket="${t.display_id}" data-status="${t.status}" data-type="${esc(typeName(t.typeId))}" data-sub="${t.sub_status || ''}" data-care="${t.assigning_care || ''}">
+              <div style="display:flex;justify-content:space-between;align-items:center"><b>${t.display_id}</b><span class="stag" style="background:${st.color}">${st.value}</span></div>
+              <div>Ticket Type: <b>${esc(typeName(t.typeId))}</b></div>
+              <div>sub_status: <code>${t.sub_status || '—'}</code> · Assigning Care: ${t.assigning_care || '—'}</div>
+              ${t.reason ? `<div data-reason>Reason: <code>${esc(t.reason)}</code></div>` : ''}
+              <div>Time Elapsed tính từ picked_up_at: ${o.picked_up_at || '--'}</div>
+              <div style="font-weight:600;margin-top:4px">Ticket History</div>
+              <ul>${t.history.map((line) => `<li>${esc(line)}</li>`).join('')}</ul></div>`;
+          })
+          .join('')
+      : '<span class="gq">Chưa có ticket.</span>';
+  }
+
+  function renderSimControls() {
+    $('sim-courier').innerHTML = couriers.map((c) => `<option value="${c.id}"${c.id === sim.courierId ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+    document.querySelectorAll('[data-sim]').forEach((el) => el.classList.toggle('on', !!sim[el.dataset.sim]));
+  }
+
+  // ── Sự kiện ──
+  const ttRoot = $('proto-tt');
+  ttRoot.addEventListener('click', (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'create') {
+      if (pop && !pop.item) closePop();
+      else openPop(null, '[data-act="create"]');
+      return;
+    }
+    const edit = e.target.closest('[data-edit]');
+    if (edit) {
+      const item = ticketTypes.find((t) => t.id === Number(edit.dataset.edit));
+      if (pop && pop.item?.id === item.id) closePop();
+      else openPop(item, `[data-edit="${item.id}"]`);
+      return;
+    }
+    const del = e.target.closest('[data-del]');
+    if (del) {
+      closePop();
+      confirmItem = ticketTypes.find((t) => t.id === Number(del.dataset.del));
+      renderConfirm();
+      return;
+    }
+    if (act === 'no-delete') {
+      log(`Delete "${confirmItem.name}" → No, Keep It: không xoá`);
+      confirmItem = null;
+      renderConfirm();
+      return;
+    }
+    if (act === 'yes-delete') {
+      onSubmitForm({ is_removed: true }, confirmItem);
+      confirmItem = null;
+      renderConfirm();
+      renderTypes();
+      renderSim();
+      return;
+    }
+    if (!pop) return;
+    const sw = e.target.closest('[data-sw]');
+    if (sw) {
+      pop.form[sw.dataset.sw] = !pop.form[sw.dataset.sw];
+      renderPop();
+      return;
+    }
+    if (act === 'addmap') {
+      pop.form.mapping_statuses.push({ partner: null, keywords: [] });
+      renderPop();
+      return;
+    }
+    const rm = e.target.closest('[data-mrm]');
+    if (rm) {
+      pop.form.mapping_statuses.splice(Number(rm.dataset.mrm), 1);
+      pop.errors = {};
+      renderPop();
+      return;
+    }
+    const kx = e.target.closest('[data-kx]');
+    if (kx) {
+      const [i, j] = kx.dataset.kx.split(':').map(Number);
+      pop.form.mapping_statuses[i].keywords.splice(j, 1);
+      renderPop();
+      return;
+    }
+    const box = e.target.closest('[data-tagbox]');
+    if (box) {
+      box.querySelector('input').focus({ preventScroll: true });
+      return;
+    }
+    if (act === 'submit') {
+      pop.errors = validateForm();
+      if (Object.keys(pop.errors).length) {
+        renderPop();
+        log(`Submit "${pop.form.name}" → form báo thiếu trường bắt buộc, chưa gọi BE`);
+        return;
+      }
+      if (onSubmitForm(formValues(), pop.item)) {
+        closePop();
+        renderTypes();
+        renderSim();
+      }
+    }
+  });
+  ttRoot.addEventListener('input', (e) => {
+    if (!pop) return;
+    if (e.target.id === 'in-name') {
+      pop.form.name = e.target.value;
+      if (pop.errors.name && e.target.value) {
+        delete pop.errors.name;
+        $('f-name').classList.remove('err');
+      }
+    }
+  });
+  ttRoot.addEventListener('change', (e) => {
+    const mp = e.target.closest('[data-mp]');
+    if (!mp || !pop) return;
+    pop.form.mapping_statuses[Number(mp.dataset.mp)].partner = mp.value ? Number(mp.value) : null;
+    delete pop.errors['p' + mp.dataset.mp];
+    renderPop();
+  });
+  // Ô keywords mode="tags": Enter hoặc dấu phẩy (tokenSeparators) thêm tag, Backspace ở ô trống xoá tag cuối
+  ttRoot.addEventListener('keydown', (e) => {
+    const kw = e.target.closest('[data-kw]');
+    if (!kw || !pop) return;
+    const i = Number(kw.dataset.kw);
+    const m = pop.form.mapping_statuses[i];
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const value = kw.value.trim();
+      if (value && !m.keywords.includes(value)) m.keywords.push(value);
+      delete pop.errors['k' + i];
+    } else if (e.key === 'Backspace' && !kw.value && m.keywords.length) {
+      m.keywords.pop();
+    } else return;
+    renderPop();
+    $('pop').querySelector(`[data-kw="${i}"]`)?.focus({ preventScroll: true });
+  });
+
+  const courierRoot = $('proto-courier');
+  courierRoot.addEventListener('click', (e) => {
+    const mx = e.target.closest('[data-mx]');
+    if (mx) {
+      const [key, id] = mx.dataset.mx.split(':');
+      openMsel(key);
+      msel.draft = msel.draft.filter((v) => v !== Number(id));
+      msel.changed = true;
+      renderCourier();
+      focusMsel();
+      return;
+    }
+    const mo = e.target.closest('[data-mo]');
+    if (mo) {
+      const [key, id] = mo.dataset.mo.split(':');
+      const value = Number(id);
+      msel.draft = msel.draft.includes(value) ? msel.draft.filter((v) => v !== value) : [...msel.draft, value];
+      msel.changed = true;
+      msel.q = '';
+      renderCourier();
+      focusMsel();
+      return;
+    }
+    const box = e.target.closest('[data-msel]');
+    if (box) openMsel(box.dataset.msel);
+  });
+  courierRoot.addEventListener('input', (e) => {
+    const q = e.target.closest('[data-mq]');
+    if (!q || msel.key !== q.dataset.mq) return;
+    msel.q = q.value;
+    renderCourier();
+    focusMsel();
+  });
+
+  // Bấm ra ngoài thì đóng Popover (trigger="click"). Phần tử vừa bị vẽ lại không còn trong trang thì bỏ qua.
+  document.addEventListener('click', (e) => {
+    if (!e.target.isConnected) return;
+    if (pop && !$('pop').contains(e.target) && !e.target.closest('[data-act="create"], [data-edit]')) closePop();
+  });
+  // Rời ô courier thì lưu (changeOnBlur): blur xảy ra lúc nhấn chuột, trước click của nút bên ngoài. Nhấn sang ô courier khác thì để openMsel lưu ô cũ.
+  document.addEventListener('mousedown', (e) => {
+    if (msel.key && !e.target.closest('[data-msel]')) commitMsel();
+  }, true);
+
+  // Khung 3
+  $('sim-courier').addEventListener('change', (e) => {
+    sim.courierId = Number(e.target.value);
+    resetOrder('Đổi courier → đơn mới');
+  });
+  $('sim-service').addEventListener('change', (e) => {
+    sim.serviceType = e.target.value || null;
+    log(`Service Type của đơn → ${sim.serviceType || '(không có Service Type)'}`);
+  });
+  document.querySelectorAll('[data-sim]').forEach((el) =>
+    el.addEventListener('click', () => {
+      const key = el.dataset.sim;
+      sim[key] = !sim[key];
+      renderSimControls();
+      log(`${el.parentElement.textContent.trim()} → ${sim[key] ? 'bật' : 'tắt'}`);
+    })
+  );
+  document.querySelectorAll('[data-ast]').forEach((el) =>
+    el.addEventListener('change', () => {
+      sim.allowedServiceTypes = [...document.querySelectorAll('[data-ast]:checked')].map((x) => x.dataset.ast);
+      log(`Service types allowed to auto create tickets → [${sim.allowedServiceTypes.join(', ')}]`);
+    })
+  );
+  document.querySelectorAll('input[name="wh"]').forEach((el) =>
+    el.addEventListener('change', () => {
+      sim.inWorkingHours = el.value === 'in';
+      log(`Assign Care → ${sim.inWorkingHours ? 'trong' : 'ngoài'} Daily working hours`);
+    })
+  );
+  $('sim-error').addEventListener('change', (e) => {
+    sim.simulateError = e.target.checked;
+    log(`Giả lập lỗi khi tạo Ticket lấy hàng → ${sim.simulateError ? 'bật' : 'tắt'}`);
+  });
+  $('sim-manual-type').addEventListener('change', (e) => (sim.manualTypeId = Number(e.target.value)));
+  document.querySelector('.evs').parentElement.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-ev]');
+    if (!btn || btn.disabled) return;
+    const ev = btn.dataset.ev;
+    if (['picked_up', 'on_the_way', 'out_for_delivery', 'delivered', 'returned'].includes(ev)) onWebhook(ev);
+    if (ev === 'cancel') run('Huỷ đơn (order status cancel)', (ctx) => syncOnOrderStatus(ctx, 'cancel'));
+    if (ev === 'keyword') {
+      const kt = keywordTypeOf();
+      const keyword = kt.mapping_statuses.find((m) => m.partner === sim.courierId).keywords[0];
+      run(`Webhook ${simCourier().name} khớp keyword "${keyword}"`, (ctx) => upsertTicketFromType(ctx, kt, `keyword "${keyword}"`));
+    }
+    if (ev === 'manual') {
+      const type = ticketTypes.find((item) => item.id === sim.manualTypeId);
+      run(`CSR tạo tay ticket "${type.name}"`, (ctx) => createTicket(ctx, type, 'CSR tạo tay', { manual: true }));
+    }
+    if (ev === 'reset') resetOrder('Đơn mới');
+  });
+
+  renderTypes();
+  renderCourier();
+  renderSimControls();
+  renderSim();
+  log(
+    `Mở trang → 4 Ticket Type mẫu; Setting › Courier: ofd_auto_create_partner_ids = [${courierNames(courierSetting.ofd_auto_create_partner_ids)}], picked_up_auto_create_partner_ids = [${courierNames(
+      courierSetting.picked_up_auto_create_partner_ids
+    )}]; đơn mẫu SPX chưa có ticket`
+  );
+})();
+</script>
+</body>
+</html>

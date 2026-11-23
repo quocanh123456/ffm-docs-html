@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#467 Delivery Status Groups và filter Delivery Status — FFM</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+  /* ── Phần thêm riêng của trang #467 (mẫu chưa có): Advanced filter (nút + chip + Cascader), tag màu antd, modal, multi-select, bộ chọn cột, 403 ── */
+  .ph .ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; font-size: 12.5px; color: rgba(0,0,0,.65); }
+  .ph .ctl .btn { padding: 2px 10px; font-size: 12.5px; }
+  .ph .ctl .sep { width: 1px; height: 18px; background: #f0f0f0; margin: 0 4px; }
+  .ph .ctl label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .side .sgrp { padding: 12px 16px 4px; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.45); }
+  .side a[hidden] { display: none; }
+  .fbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; position: relative; }
+  .fbtn { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+  .fbtn sup { position: absolute; top: -8px; right: -8px; min-width: 18px; height: 18px; border-radius: 9px; background: #ff4d4f; color: #fff; font-size: 11px; line-height: 18px; text-align: center; padding: 0 5px; }
+  .btn.danger { color: #ff4d4f; border-color: #ff4d4f; padding: 5px 9px; }
+  .btn.dng { background: #ff4d4f; border-color: #ff4d4f; color: #fff; }
+  .btn.ico { padding: 3px 7px; line-height: 1; display: inline-flex; align-items: center; }
+  .btn.cols { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; margin-bottom: 10px; }
+  .ftag { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #d9d9d9; background: #fafafa; border-radius: 4px; padding: 0 2px 0 8px; font-size: 12px; line-height: 22px; }
+  .ftag.ex { color: var(--red); background: var(--red-bg); border-color: #fecaca; }
+  .ftag .x { cursor: pointer; color: rgba(0,0,0,.65); padding: 0 4px; }
+  .tg { display: inline-block; border: 1px solid; border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 20px; white-space: nowrap; }
+  .tgs { display: flex; flex-wrap: wrap; gap: 4px; }
+  .casc { position: absolute; top: 36px; left: 0; display: flex; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); z-index: 8; visibility: hidden; }
+  .casc.show { visibility: visible; }
+  .casc ul { list-style: none; margin: 0; padding: 4px; min-width: 180px; max-height: 280px; overflow-y: auto; border-left: 1px solid #f0f0f0; }
+  .casc ul:first-child { border-left: none; }
+  .casc li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 12px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+  .casc li:hover { background: #f5f5f5; }
+  .casc li.on { background: var(--blue-bg); font-weight: 600; }
+  .casc li.par::after { content: "›"; color: rgba(0,0,0,.65); }
+  .casc li.off { color: #bfbfbf; cursor: not-allowed; }
+  .casc li.ctl { cursor: default; }
+  .casc li.off:hover, .casc li.ctl:hover { background: none; }
+  .casc li.new { color: var(--violet); }
+  .casc label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .pop { position: absolute; top: 36px; right: 0; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; z-index: 8; visibility: hidden; }
+  .pop.show { visibility: visible; }
+  .pop b { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .pop label { display: flex; align-items: center; gap: 6px; padding: 3px 0; cursor: pointer; white-space: nowrap; }
+  .tabs.cntr a { cursor: default; }
+  .cnt { font-size: 12.5px; color: rgba(0,0,0,.65); margin-top: 8px; }
+  .explain { color: var(--ink3); font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 12px; }
+  .cardh { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 2px 10px; font-weight: 600; font-size: 14px; }
+  .alert { display: flex; gap: 8px; align-items: flex-start; background: var(--blue-bg); border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px; }
+  .alert i { flex: none; width: 16px; height: 16px; border-radius: 50%; background: #1677ff; color: #fff; font: 700 11px/16px sans-serif; text-align: center; font-style: normal; margin-top: 2px; }
+  .muted { color: #bfbfbf; }
+  .r403 { text-align: center; padding: 70px 0; color: var(--ink2); }
+  .r403 b { display: block; font-size: 40px; line-height: 1.2; color: rgba(0,0,0,.88); }
+  .flab { color: var(--ink2); font-size: 12.5px; margin: 12px 0 4px; }
+  .flab:first-of-type { margin-top: 0; }
+  .inp { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; font-size: 13px; }
+  .mwrap { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 7; display: flex; justify-content: center; align-items: flex-start; padding-top: 52px; visibility: hidden; }
+  .mwrap.show { visibility: visible; }
+  .mdl { background: #fff; border-radius: 8px; width: 480px; padding: 18px 20px; box-shadow: 0 6px 16px rgba(0,0,0,.12); font-size: 13px; }
+  .mdl h4 { margin: 0 0 14px; font-size: 15px; }
+  .mdl .foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .mdl .xtra { color: var(--ink3); font-size: 12px; margin-top: 4px; }
+  .mdl .row2 { display: flex; gap: 8px; align-items: center; }
+  .mdl .row2 select { flex: 1; }
+  .mdl.cf h4 { display: flex; gap: 8px; align-items: center; }
+  .mdl.cf h4 i { width: 20px; height: 20px; border-radius: 50%; background: #faad14; color: #fff; font: 700 12px/20px sans-serif; text-align: center; font-style: normal; }
+  .mdl.cf p { margin: 0 0 0 28px; color: var(--ink2); }
+  .msel { display: flex; flex-wrap: wrap; gap: 4px; min-height: 32px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 4px 6px; cursor: pointer; align-items: center; background: #fff; }
+  .msel.focus { border-color: #1677ff; }
+  .msel .ph0 { color: #bfbfbf; padding-left: 4px; }
+  .msel .x { cursor: pointer; margin-left: 4px; }
+  .mdd { border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 4px; max-height: 200px; overflow-y: auto; margin-top: 4px; background: #fff; }
+  .mdd .og { color: var(--ink3); font-size: 12px; padding: 6px 10px 2px; }
+  .mdd .op { display: flex; justify-content: space-between; gap: 10px; padding: 4px 10px 4px 20px; border-radius: 4px; cursor: pointer; }
+  .mdd .op.top { padding-left: 10px; }
+  .mdd .op:hover { background: #f5f5f5; }
+  .mdd .op.sel { background: var(--blue-bg); font-weight: 600; }
+  .mdd .op.sel::after { content: "✓"; color: #1677ff; }
+  .mdd .op.off { color: #bfbfbf; cursor: not-allowed; }
+  .mdd .op.off:hover { background: none; }
+  pre.log { min-height: 240px; margin: 0; white-space: pre-wrap; }
+  table.t td .tg { vertical-align: 1px; }
+  #proto .app { min-height: 640px; }
+  #m-subs { position: relative; }
+  .mdl .mdd { position: absolute; left: 0; right: 0; top: 100%; z-index: 2; }
+  .tabs.cntr { flex-wrap: wrap; gap: 4px 16px; }
+  .tabs.cntr a { white-space: nowrap; }
+  #prototype .grid2 > .card { min-width: 0; }
+  pre.log { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>FFM · #467</div>
+  <nav class="nav">
+    <a href="#hien-trang">Hiện trạng</a><a href="#luong">Luồng dữ liệu</a><a href="#prototype">Prototype</a><a href="#quy-tac">Business rules</a>
+    <a href="#quyet-dinh">Đã quyết định</a><a href="#ngoai-pham-vi">Ngoài phạm vi</a><a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Order · Đặc tả + prototype</div>
+  <h1>Delivery Status Groups và filter Delivery Status</h1>
+  <p>Mỗi thị trường tự gom 26 <code>sub_status</code> của đơn (cùng mục <code>No sub status</code>) thành các nhóm Delivery Status có tên, màu, xếp theo thứ tự tạo, tại Setting › Order Configuration › Delivery Status Groups. Màn Order và CSR Ticket thêm cột nhóm của đơn; filter Delivery Status trên Order, CSR Ticket và Order Data Statistics chọn được cả nhóm hoặc từng <code>sub_status</code>. Nhóm chỉ được suy ra lúc hiển thị và lọc, không lưu lên đơn; thị trường chưa cấu hình dùng cách gom nhóm hiện có.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i467">ffm_dev #467</a></span>
+    <span class="chip">PR BE <a href="https://github.com/pancake-vn/sea-fulfillment/pull/587">sea-fulfillment#587</a></span>
+    <span class="chip">PR FE <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/535">sea-fulfillment-web#535</a></span>
+    <span class="chip">Requested by GIP</span>
+    <span class="chip">Cập nhật 22/10/2026</span>
+    <span class="chip">Code: BE 461edb09 · FE 490fb52f</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>27 mục</b><span>26 <code>sub_status</code> + <code>No sub status</code> để gom nhóm</span></div>
+  <div class="kpi"><b>3 màn</b><span>Order · CSR Ticket · Order Data Statistics dùng chung filter</span></div>
+  <div class="kpi"><b>0</b><span>migration, reindex hay đổi mapping ES</span></div>
+  <div class="kpi"><b>BE → FE</b><span>chạy <code>Manage.sync_permission_catalog()</code> ở giữa</span></div>
+</div>
+
+<section id="hien-trang">
+  <div class="sec-h"><span class="n">01</span><h2>Hiện trạng</h2><p>Cách gom nhóm đang viết cứng trên FE; filter chỉ chọn được từng <code>sub_status</code></p></div>
+  <div class="status">
+    <div class="row"><div><h4>Cách gom nhóm <code>sub_status</code></h4><span class="pill p-mid">Đổi thành cấu hình</span></div><p>Đang viết cứng trên FE (<code>allOrderSubStatusGroups</code> trong <code>utils/tools.js</code>): Stock Check, Packing, In Transit, Returning, Delivered, Returned. #467 cho mỗi thị trường tự cấu hình; bộ viết cứng thành bộ mặc định cho thị trường chưa lưu cấu hình.</p></div>
+    <div class="row"><div><h4>Trang Delivery Status Groups</h4><span class="pill p-new">Mới</span></div><p>Setting › Order Configuration, sau SLA Setting. Lưu FFMSetting type <code>delivery_status_group</code>, mỗi thị trường 1 bản ghi. Quyền mới <code>order.delivery_status_config</code>, mặc định cấp cho <code>COUNTRY_ADMIN</code>, <code>CS_MANAGER</code>.</p></div>
+    <div class="row"><div><h4>Cột màn Order</h4><span class="pill p-mid">Gộp + thêm cột</span></div><p>Có sẵn 2 cột: <code>delivery_status</code> (chỉ tra 19 <code>sub_status</code> pha ĐVVC) và <code>sub_status</code> (thêm ở #309). Gộp thành 1 cột Sub Status tra đủ 26 <code>sub_status</code>; thêm cột Delivery Group, mặc định tắt.</p></div>
+    <div class="row"><div><h4>Cột màn CSR Ticket</h4><span class="pill p-mid">Đổi tên + thêm cột</span></div><p>Cột Delivery Status đổi tên Order Sub Status, tra đủ 26 <code>sub_status</code> (trước chỉ tra pha ĐVVC); thêm cột Order Delivery Group, mặc định tắt.</p></div>
+    <div class="row"><div><h4>Filter theo <code>sub_status</code></h4><span class="pill p-mid">Gộp 1 field</span></div><p>Order và Order Data Statistics dùng field Sub Status (<code>order_sub_status_all</code>); CSR Ticket dùng field Delivery Status chỉ có pha ĐVVC. Cả hai ghi key <code>order_sub_status</code> và chỉ chọn được từng mục. #467 dùng 1 field Delivery Status trên cả 3 màn, chọn được cả nhóm.</p></div>
+    <div class="row"><div><h4>Đơn chưa có <code>sub_status</code></h4><span class="pill p-new">Lọc được</span></div><p>Trước đây không lọc được. BE thêm giá trị <code>no_sub_status</code> cho key <code>order_sub_status</code> trên ES đơn và ES ticket.</p></div>
+    <div class="row"><div><h4>Dữ liệu đơn</h4><span class="pill p-info">Giữ nguyên</span></div><p>Không lưu nhóm lên đơn, không migration, không reindex. Nhóm của đơn tính lúc hiển thị từ <code>sub_status</code> hiện tại và cấu hình đang hiệu lực.</p></div>
+  </div>
+</section>
+
+<section id="luong">
+  <div class="sec-h"><span class="n">02</span><h2>Luồng dữ liệu</h2><p>Từ lúc lưu cấu hình tới lúc lọc đơn theo nhóm</p></div>
+  <div class="card">
+    <div class="seq">
+      <span></span>
+      <div class="hd" style="background:#64748b">FE: trang cấu hình, màn danh sách</div><div class="hd" style="background:var(--ffm)">FFM BE</div><div class="hd" style="background:var(--blue)">ES đơn / ES ticket</div>
+      <span class="no">1</span><div class="msg" style="--from:2;--to:4">Tạo / sửa / xoá nhóm → <code>POST /api/ffm_settings/delivery_status</code>, gửi cả bộ <code>settings.groups</code></div><span></span>
+      <span class="no">2</span><div class="msg rev" style="--from:2;--to:4">Kiểm tra tên, màu, key rồi lưu → reducer cập nhật <code>ffmSettings</code>, người lưu thấy ngay</div><span></span>
+      <span class="no">3</span><div class="msg" style="--from:2;--to:4">User khác tải lại trang → <code>GET /api/ffm_settings</code> (seller không nhận type này)</div><span></span>
+      <span class="no">4</span><div class="msg" style="--from:2;--to:4">Chọn All Delivered → <code>order_sub_status: ["delivered", "delivered_cod"]</code></div><span></span>
+      <span class="no">5</span><span></span><div class="msg" style="--from:3;--to:5"><code>terms sub_status</code>; có <code>no_sub_status</code> thì OR với <code>must_not exists</code></div>
+      <span class="no">!</span><div class="msg rev err" style="--from:2;--to:4">FE lên trước BE: lưu cấu hình không có route; lọc nhóm chứa No sub status bỏ sót đơn chưa có <code>sub_status</code></div><span></span>
+    </div>
+    <p class="caption">Nhóm của đơn không lưu ở đâu cả: cột Delivery Group và chip tính ở FE từ <code>sub_status</code> và cấu hình; BE chỉ nhận danh sách <code>sub_status</code>. List, counter màn Order, Order Data Statistics, export đơn và export ticket dùng chung nhánh lọc ở bước 5.</p>
+  </div>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">03</span><h2>Prototype — 4 màn</h2><p>Bấm thử: tạo / sửa / xoá nhóm, Add Filter, Exclude filter, gỡ chip, bật cột, đổi thị trường / người xem / quyền</p></div>
+
+  <div class="card" style="margin-bottom:14px;padding:12px 16px">
+    <b>Gợi ý thử</b> <span style="color:var(--ink2);font-size:13px">— kết quả theo 19 đơn mẫu; mỗi dòng bắt đầu từ trang vừa tải (F5), Philippines</span>
+    <table class="t" style="margin-top:6px">
+      <tr><th style="width:36px">#</th><th style="width:44%">Thao tác</th><th>Kết quả mong đợi</th></tr>
+      <tr><td>1</td><td>Menu <b>Delivery Status Groups</b>, bấm sửa nhóm Delivery risk, mở ô Sub Statuses</td><td>Bảng có 6 nhóm + Ungrouped; Ungrouped liệt kê No sub status, Matched, Mismatched, To Pack, Packing, On Hold, Packed; Need follow-up ghi "No items". Trong ô Sub Statuses, Picked Up mờ kèm "· in Handed over", không chọn được.</td></tr>
+      <tr><td>2</td><td>Bấm <b>+</b>, Save với tên trống, rồi tên <code>delivered</code>, rồi <code>Ungrouped</code></td><td>"Please enter group name", rồi "Group name already exists" ở cả 2 tên; không gửi request nào.</td></tr>
+      <tr><td>3</td><td><b>+</b>, tên <code>Warehouse</code>, chọn Matched, Mismatched, To Pack, Packing, On Hold, Packed, Save; sang Order bật cột Delivery Group</td><td>Warehouse nằm cuối, ngay trên Ungrouped; Ungrouped chỉ còn No sub status; bản ghi có 7 nhóm, không có <code>id</code> / <code>position</code>. Đơn 1002–1006, 1019 hiện Warehouse.</td></tr>
+      <tr><td>4</td><td>Xoá nhóm Delivery risk; sang Order bật cột Delivery Group</td><td>Hỏi "5 items will move to Ungrouped."; Delete xong đơn 1011, 1012 hiện Ungrouped.</td></tr>
+      <tr><td>5</td><td>Order › Add Filter › Delivery Status › In delivery › All In delivery (4); thêm Delivered › All Delivered (2); bấm x chip Delivered</td><td>Chip "In delivery", còn 1009, 1010 (tab All 2). Thêm Delivered: 2 chip, còn 1009, 1010, 1013, 1014. Gỡ chip: về 1009, 1010. Nhóm Need follow-up mờ, không bấm được.</td></tr>
+      <tr><td>6</td><td>Order › Delivery Status › Ungrouped › All Ungrouped (7), rồi tick Exclude filter</td><td>1001–1006, 1018, 1019 (1017 mang giá trị lạ <code>lost_parcel</code> nên không ra). Exclude: 1007–1017, chip đỏ "Exclude Delivery Status".</td></tr>
+      <tr><td>7</td><td>Order › Saved Filter › Delivered orders; sang Delivery Status Groups sửa nhóm Delivered, bỏ Delivered (COD); quay lại Order</td><td>Chip "Delivered" tách thành 2 chip "Delivered" và "Delivered (COD)"; danh sách giữ nguyên 1013, 1014.</td></tr>
+      <tr><td>8</td><td>Order: Người xem = User khác, bật cột Delivery Group; sang trang cấu hình tạo Warehouse như dòng 3; quay lại Order, rồi bấm Reload</td><td>Trước Reload đơn 1002 vẫn Ungrouped; sau Reload hiện Warehouse.</td></tr>
+      <tr><td>9</td><td>Đổi Thailand; mở Delivery Status Groups, CSR Ticket, Data Statistics (AI)</td><td>Trang cấu hình hiện "This market has no saved configuration yet…" và 6 nhóm mặc định, Ungrouped chỉ có No sub status. CSR Ticket: cột Order Sub Status, cây filter theo bộ mặc định. Data Statistics: không có dòng Exclude filter, ô Sub status chia 6 nhóm, không có No sub status.</td></tr>
+      <tr><td>10</td><td>Ca âm: mở Order › Delivery Status, bấm Exclude filter khi chưa chọn mục nào; bỏ tick quyền khi đang ở trang cấu hình</td><td>Checkbox khoá, báo "You must select at least one option, before selecting exclude filtering". Bỏ quyền: mục Delivery Status Groups biến mất khỏi menu, trang báo 403.</td></tr>
+    </table>
+  </div>
+
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span id="url">fulfillment.pancake.vn/admin/order</span></div>
+    <div class="app">
+      <div class="side" id="side">
+        <div class="brand"><b>F</b>FFM</div>
+        <a data-go="order">Order</a><a data-go="ticket">CSR Ticket</a>
+        <div class="sgrp">Statistic</div><a data-go="stat">Data Statistics (AI)</a>
+        <div class="sgrp">Setting › Order Configuration</div><a data-go="setting" id="nav-setting"><span class="changed">Delivery Status Groups</span></a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3 id="title">Order</h3><div class="ctl" id="ctl"></div></div>
+        <div id="screen"></div>
+      </div>
+    </div>
+    <div class="mwrap" id="mwrap"></div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="grid2" style="margin-top:14px">
+    <div class="card" style="padding:14px 16px">
+      <b>Bản ghi đang lưu</b> <span style="color:var(--ink2);font-size:13px">— FFMSetting của thị trường đang chọn (người lưu)</span>
+      <pre class="log" id="rec"></pre>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <b>Nhật ký thao tác</b> <span style="color:var(--ink2);font-size:13px">— mới nhất ở trên</span>
+      <pre class="log" id="log"></pre>
+    </div>
+  </div>
+  <p class="caption">Viền tím nét đứt và chữ tím là chỗ mới so với hiện tại. Logic chép từ code đã viết, giữ nguyên tên hàm: <code>utils/delivery-status-group.js</code>, trang <code>pages/admin/setting/delivery-status-group.js</code>, <code>ModalUpsertDeliveryStatusGroup</code>, <code>orderSubStatusChildren</code> của <code>AdvanceFilterV1</code>, nhánh <code>"order_sub_status"</code> của <code>es_v2/order.ex</code>. Nhãn và màu <code>sub_status</code> chép từ <code>utils/tools.js</code>. Field cấp 1 của Advanced filter lấy đúng theo từng màn; chỉ Delivery Status và Saved Filter bấm được. Bảng chỉ giữ vài cột, bộ chọn cột rút gọn còn 2 cột liên quan. Philippines có 1 cấu hình ví dụ theo các giai đoạn GIP nêu trong issue; việc xếp <code>sub_status</code> vào nhóm chỉ để minh hoạ. Dữ liệu mẫu, không gọi API.</p>
+</section>
+
+<section id="quy-tac">
+  <div class="sec-h"><span class="n">04</span><h2>Business rules</h2><p>Hành vi đã code ở 2 PR</p></div>
+  <div class="card" style="padding:8px 12px">
+    <table class="t">
+      <tr><th style="width:190px">Nhóm</th><th>Quy tắc</th></tr>
+      <tr><td><b>Nơi cấu hình</b></td><td>Setting › Order Configuration › <b>Delivery Status Groups</b>, đứng sau SLA Setting, đường dẫn <code>/admin/setting/delivery-status-group</code>.</td></tr>
+      <tr><td><b>Quyền</b></td><td>Quyền <code>order.delivery_status_config</code> ("Delivery Status Groups", nhóm Order Configuration trong Role Permission), mặc định cấp cho <code>COUNTRY_ADMIN</code>, <code>CS_MANAGER</code>. Không có quyền: không thấy mục trong menu, mở thẳng đường dẫn thì báo 403, API lưu trả "Not enough permission".</td></tr>
+      <tr><td><b>Phạm vi</b></td><td>Mỗi thị trường (app + country) 1 bản ghi FFMSetting type <code>delivery_status_group</code>, áp cho mọi đơn của thị trường. Không cấu hình theo shop.</td></tr>
+      <tr><td><b>Nhóm</b></td><td><b>Tên</b> bắt buộc, không trùng nhóm khác trong thị trường, tính cả Ungrouped; so sau khi bỏ khoảng trắng đầu cuối, không phân biệt hoa thường. <b>Màu</b> chọn từ bảng màu của antd Tag. <b>Mục</b> chọn từ 27 mục (<code>No sub status</code> + 26 <code>sub_status</code> chia Stock Check / Packing / Courier); nhóm được phép rỗng.</td></tr>
+      <tr><td><b>Thứ tự nhóm</b></td><td>Theo thứ tự tạo: nhóm mới thêm vào cuối, ngay trước Ungrouped. Không có kéo đổi thứ tự.</td></tr>
+      <tr><td><b>Mỗi mục 1 nhóm</b></td><td>Mục đã thuộc nhóm khác hiện mờ kèm "· in &lt;tên nhóm&gt;", không chọn được; muốn chuyển thì gỡ ở nhóm cũ trước.</td></tr>
+      <tr><td><b>Ungrouped</b></td><td>Luôn có, luôn đứng cuối, màu xám, không sửa / xoá được (cột Action ghi "System"). Tự chứa mọi mục chưa thuộc nhóm nào, tính lúc đọc, kể cả <code>sub_status</code> được bổ sung sau này. Không có cảnh báo riêng.</td></tr>
+      <tr><td><b>Xoá nhóm</b></td><td>Hỏi xác nhận, nêu số mục sẽ chuyển về Ungrouped. Xoá xong các mục của nhóm về Ungrouped.</td></tr>
+      <tr><td><b>Lưu</b></td><td>Mỗi thao tác tạo, sửa, xoá lưu ngay cả bộ nhóm qua <code>POST /api/ffm_settings/delivery_status</code>; mỗi nhóm chỉ lưu <code>name</code>, <code>color</code>, <code>sub_statuses</code>. Người lưu thấy filter và cột đổi ngay; người dùng khác thấy sau khi tải lại trang.</td></tr>
+      <tr><td><b>BE kiểm tra khi lưu</b></td><td>Tên bắt buộc, không trùng (không phân biệt hoa thường), khác "Ungrouped"; màu bắt buộc; mỗi key là 1 trong 26 <code>sub_status</code> hoặc <code>no_sub_status</code> và chỉ nằm ở 1 nhóm; mỗi thị trường 1 bản ghi. Sai thì trả <code>success: false</code> kèm câu báo lỗi, không ghi gì.</td></tr>
+      <tr><td><b>Bộ mặc định</b></td><td>Thị trường chưa có bản ghi dùng bộ đang viết cứng (<code>allOrderSubStatusGroups</code>): Stock Check, Packing, In Transit, Returning, Delivered, Returned; <code>No sub status</code> ở Ungrouped. Màu lấy từ hằng <code>DEFAULT_GROUP_COLORS</code>, chọn theo màu status đơn tương ứng. Trang cấu hình hiện bộ này kèm thông báo "no saved configuration yet"; lần lưu đầu tạo bản ghi riêng, lưu đúng tên nhóm đang hiển thị (theo ngôn ngữ người lưu), sau đó tên là dữ liệu, không dịch nữa.</td></tr>
+      <tr><td><b>Đọc cấu hình</b></td><td><code>getDeliveryStatusGroups</code> trả cấu hình đang hiệu lực: bản ghi có id lớn nhất, không có thì bộ mặc định, cộng Ungrouped tự tính. Bỏ qua key lạ; key trùng giữa 2 nhóm thì nhóm đứng trước giữ. Filter, cột, chip và ô Sub status của indicator đều đọc qua hàm này.</td></tr>
+      <tr><td><b>Cột màn Order</b></td><td>Gộp thành 1 cột <b>Sub Status</b>: giữ cột <code>delivery_status</code> ở vị trí cũ, đổi tên, tra đủ 26 <code>sub_status</code>; giá trị khác (kể cả rỗng) hiện text cập nhật mới nhất từ ĐVVC, không có thì <code>-</code>. Bỏ cột <code>sub_status</code> cũ; danh sách cột đã lưu còn key này tự đổi sang <code>delivery_status</code>. Thêm cột <b>Delivery Group</b>, mặc định tắt, không có ở portal seller.</td></tr>
+      <tr><td><b>Cột màn CSR Ticket</b></td><td>Cột Delivery Status đổi tên <b>Order Sub Status</b>, hiển thị như cột Sub Status màn Order. Thêm cột <b>Order Delivery Group</b>, mặc định tắt; ticket chưa có đơn hiện <code>-</code>.</td></tr>
+      <tr><td><b>Bật cột mới</b></td><td>User tự bật trong bộ chọn cột. Cột hiện sát trước các cột Status ghim bên phải (hành vi chung của bộ chọn cột, giống cột Return Rate, Ticket); muốn đặt chỗ khác thì user tự kéo.</td></tr>
+      <tr><td><b>Delivery Group</b></td><td>Tag tên nhóm, màu theo nhóm. Đơn có <code>sub_status</code> → nhóm chứa nó. Chưa có <code>sub_status</code> → nhóm chứa <code>No sub status</code>. <code>sub_status</code> chưa phân nhóm hoặc ngoài 26 giá trị → Ungrouped.</td></tr>
+      <tr><td><b>Filter</b></td><td>1 field <b>Delivery Status</b> trên Order, CSR Ticket, Order Data Statistics (trang Data Statistics (AI), trong modal Add indicator); bỏ field Sub Status (<code>order_sub_status_all</code>). Cấp 2: Exclude filter, các nhóm theo thứ tự, Ungrouped cuối. Cấp 3: dòng đầu "All &lt;nhóm&gt; (số mục)" chọn cả nhóm, các dòng sau chọn từng mục. Nhóm rỗng mờ, không chọn được. Order Data Statistics không có Exclude filter, giống hiện tại.</td></tr>
+      <tr><td><b>Giá trị gửi BE</b></td><td>FE đổi nhóm thành danh sách <code>sub_status</code>, gửi qua key <code>order_sub_status</code> có sẵn (kèm <code>no_sub_status</code> nếu nhóm có mục đó) và cờ <code>is_exclude_order_sub_status</code>; ví dụ nhóm Delivered: <code>order_sub_status: ["delivered", "delivered_cod"]</code>. Chọn thêm thì gộp vào danh sách đang lọc. Counter màn Order dùng cùng điều kiện.</td></tr>
+      <tr><td><b>Chip</b></td><td>Nhóm có đủ mục trong danh sách đang lọc → 1 chip tên nhóm, bấm x gỡ cả nhóm; mục lẻ còn lại → 1 chip mỗi mục. Exclude → chip đỏ "Exclude Delivery Status". Gỡ chip cuối thì bỏ luôn Exclude filter.</td></tr>
+      <tr><td><b>Filter đã lưu</b></td><td>Filter và báo cáo đã lưu giữ danh sách <code>sub_status</code> lúc lưu. Đổi cấu hình không đổi danh sách và kết quả lọc, chỉ đổi cách chip gom nhóm.</td></tr>
+      <tr><td><b>Indicator thống kê</b></td><td>Ô Sub status trong indicator của Order Data Statistics (<code>DerivedReportModal</code>) chia tiêu đề nhóm theo cấu hình đang hiệu lực, vẫn chọn từng <code>sub_status</code>.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="quyet-dinh">
+  <div class="sec-h"><span class="n">05</span><h2>Đã quyết định</h2><p>Chốt 20–21/10/2026, khi đối chiếu issue với code và khi review bản đã code</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Cột màn Order</div><h4>Đổi tên cột Delivery Status thì xử lý cột Sub Status cũ ra sao?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Gộp 1 cột Sub Status: giữ cột <code>delivery_status</code> ở vị trí cũ, tra đủ 26 <code>sub_status</code>, bỏ cột <code>sub_status</code> (#309).</div></div>
+      <div class="alt"><s>Đổi tên theo issue, giữ cả 2 cột</s> (ra 2 cột trùng tên)</div></div>
+    <div class="dcard"><div class="q">Chip</div><h4>Chọn cả nhóm thì chip hiện thế nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Tách theo nhóm: nhóm đủ mục → 1 chip tên nhóm, mục lẻ → 1 chip mỗi mục. Chọn In Transit + Delivered ra 2 chip.</div></div>
+      <div class="alt"><s>1 chip mỗi <code>sub_status</code> như hiện tại</s> (ra 14 chip)</div></div>
+    <div class="dcard"><div class="q">Chọn cả nhóm</div><h4>Chọn cả nhóm bằng cách nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Dòng lá "All &lt;nhóm&gt; (số mục)" đầu danh sách mục. Cascader của <code>AdvanceFilterV1</code> đặt <code>changeOnSelect={false}</code> nên không chọn được cấp nhóm.</div></div>
+      <div class="alt"><s>Nút "Select all" trên dòng nhóm</s> (1 dòng 2 hành vi, bấm lệch là áp nhầm cả nhóm, không đi được bằng bàn phím)</div></div>
+    <div class="dcard"><div class="q">Indicator</div><h4>Ô Sub status của indicator có theo cấu hình?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Chia tiêu đề nhóm theo cấu hình, vẫn chọn từng <code>sub_status</code>; mọi màn hiển thị nhóm giống nhau.</div></div></div>
+    <div class="dcard"><div class="q">Lưu</div><h4>Lưu lúc nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Lưu ngay từng thao tác tạo, sửa, xoá, gửi cả bộ nhóm. Không mất thay đổi khi rời trang, không cần cảnh báo "chưa lưu".</div></div></div>
+    <div class="dcard"><div class="q">Cột mới</div><h4>Cột Delivery Group bật sẵn hay không?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Mặc định tắt cả Delivery Group lẫn Order Delivery Group; bật thì cột hiện sát trước các cột Status ghim bên phải, user tự kéo. Không phải chèn key mới vào danh sách cột user đã lưu.</div></div></div>
+    <div class="dcard"><div class="q">Màu mặc định</div><h4>Bộ mặc định dùng màu gì?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Theo màu status đơn tương ứng: Stock Check <code>blue</code>, Packing <code>purple</code>, In Transit <code>orange</code>, Returning <code>volcano</code>, Delivered <code>green</code>, Returned <code>red</code>.</div></div></div>
+    <div class="dcard"><div class="q">Tên nhóm</div><h4>Tên bộ mặc định đang dịch theo ngôn ngữ, lưu tên nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Lần lưu đầu lưu đúng tên đang hiển thị (theo ngôn ngữ người lưu). Sau đó tên nhóm là dữ liệu, không dịch.</div></div></div>
+    <div class="dcard"><div class="q">Seller</div><h4>Portal seller có cột Delivery Group?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Không. BE không trả cấu hình <code>delivery_status_group</code> cho seller, nên seller chỉ thấy được bộ mặc định.</div></div></div>
+    <div class="dcard"><div class="q">Dữ liệu lưu</div><h4>Có lưu <code>id</code> / <code>position</code> cho nhóm?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Không. Thứ tự là thứ tự tạo; giao diện tự đánh khoá theo vị trí lúc đọc.</div></div>
+      <div class="alt"><s>Lưu <code>id</code> + <code>position</code>, kéo đổi thứ tự</s> (chưa có nhu cầu, làm thêm chỉ phình code)</div></div>
+    <div class="dcard"><div class="q">Ungrouped</div><h4>Có cảnh báo "còn mục chưa phân nhóm"?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Không. Bộ mặc định luôn để <code>No sub status</code> ở Ungrouped nên cảnh báo sẽ hiện thường trực; dòng Ungrouped đã liệt kê đủ.</div></div>
+      <div class="alt"><s>Cảnh báo trên trang cấu hình</s></div></div>
+  </div>
+</section>
+
+<section id="ngoai-pham-vi">
+  <div class="sec-h"><span class="n">06</span><h2>Ngoài phạm vi</h2><p>Và các giới hạn đã biết</p></div>
+  <div class="grid2">
+    <div class="note n-info"><span class="ic">i</span><div>
+      <ul class="clean">
+        <li>Không lưu Delivery Group lên đơn, không backfill, không reindex.</li>
+        <li>Không đưa Delivery Group vào export đơn, export ticket, báo cáo CSR hoặc MCP; export giữ tên cột Delivery Status / Sub Status hiện có.</li>
+        <li>Không cấu hình theo shop, không đổi cách hệ thống ghi <code>sub_status</code>.</li>
+        <li>Không kéo đổi thứ tự nhóm, không cảnh báo mục chưa phân nhóm.</li>
+        <li>Không làm nhóm L3 dựa trên ticket CSR (đơn rủi ro giao hàng đã có ticket đang xử lý); tách issue riêng.</li>
+      </ul>
+    </div></div>
+    <div class="note n-warn"><span class="ic">!</span><div>
+      <p><b>Giới hạn đã biết</b></p>
+      <ul class="clean">
+        <li>Đơn giao xong hoặc hoàn trước khi hệ thống ghi <code>sub_status</code> pha ĐVVC (khoảng giữa 07/2026) vẫn mang <code>sub_status</code> pha kho, nên hiện và được lọc theo nhóm kho (đơn 1019 trong prototype).</li>
+        <li>Các lý do giao thất bại (không liên lạc được, từ chối nhận, sai địa chỉ) phần lớn cùng <code>sub_status</code> <code>undeliverable</code>, nên không tách được bằng nhóm.</li>
+        <li>Đơn mang <code>sub_status</code> ngoài 26 giá trị FE biết hiện Ungrouped ở cột, nhưng không ra khi lọc Ungrouped vì FE chỉ gửi được các key đã biết (đơn 1017).</li>
+      </ul>
+    </div></div>
+  </div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">07</span><h2>Cho dev</h2><p>File đã sửa ở 2 PR, thứ tự deploy, rủi ro</p></div>
+  <div class="status">
+    <div class="card" style="padding:8px 10px">
+      <table class="t">
+        <tr><th>BE · <a href="https://github.com/pancake-vn/sea-fulfillment/pull/587">#587</a></th><th>Sửa gì</th><th style="text-align:right">dòng</th></tr>
+        <tr><td><code>lib/sea_fulfillment_web/model/ffm_setting.ex</code></td><td>Thêm type <code>delivery_status_group</code> vào <code>validate_inclusion</code>; không thuộc <code>is_allow_multiple_type?</code> nên mỗi app + country chỉ 1 bản ghi</td><td class="num">+1 −1</td></tr>
+        <tr><td><code>lib/sea_fulfillment_web/controllers/ffm_setting_controller.ex</code></td><td>Scope <code>delivery_status</code> (chỉ nhận type <code>delivery_status_group</code>); <code>upsert_delivery_status/2</code> → <code>upsert_scoped</code>; <code>normalize_delivery_status_groups/1</code> + <code>delivery_status_group_key?/1</code> kiểm tra như mục "BE kiểm tra khi lưu", bỏ field lạ trong nhóm. Cập nhật gộp <code>settings</code> nông nên <code>groups</code> được thay nguyên mảng</td><td class="num">+61 −1</td></tr>
+        <tr><td><code>lib/sea_fulfillment_web/router.ex</code></td><td><code>POST /api/ffm_settings/delivery_status</code>; đọc dùng <code>GET /api/ffm_settings</code> có sẵn</td><td class="num">+1</td></tr>
+        <tr><td><code>lib/app/permission_catalog.ex</code></td><td>Quyền <code>order.delivery_status_config</code> (<code>default_groups: @cs_manager</code>) gắn route <code>upsert_delivery_status</code>; <code>@app_by_key</code> xếp vào app <code>setting</code></td><td class="num">+10</td></tr>
+        <tr><td><code>lib/services/es_v2/order.ex</code></td><td>Nhánh <code>"order_sub_status"</code>: tách <code>no_sub_status</code> thành <code>must_not exists sub_status</code>, OR với <code>terms</code>; <code>is_exclude_order_sub_status</code> bọc cả điều kiện. Không có <code>no_sub_status</code> thì giữ query cũ</td><td class="num">+12 −2</td></tr>
+        <tr><td><code>lib/services/es_v2/ticket.ex</code></td><td>Như trên, trên <code>order_info.sub_status</code></td><td class="num">+11 −1</td></tr>
+        <tr><td>Test (4 file)</td><td><code>ffm_setting_controller_test.exs</code> (tạo, sửa, chặn bản ghi thứ 2, dữ liệu sai, gửi nhầm scope, quyền COUNTRY_ADMIN / CS_MANAGER / SALE_MANAGER), <code>es_v2/order_test.exs</code>, <code>es_v2/ticket_test.exs</code>, <code>app_access_action_test.exs</code></td><td class="num">+172</td></tr>
+      </table>
+    </div>
+    <div class="card" style="padding:8px 10px">
+      <table class="t">
+        <tr><th>FE · <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/535">#535</a></th><th>Sửa gì</th><th style="text-align:right">dòng</th></tr>
+        <tr><td><code>utils/delivery-status-group.js</code> (mới)</td><td><code>getDeliveryStatusGroups</code>, <code>getDeliveryGroup</code>, <code>buildSubStatusChips</code>, <code>getSubStatusItems</code> / <code>getSubStatusItemMap</code>, <code>getDefaultDeliveryStatusGroups</code>; hằng <code>NO_SUB_STATUS</code>, <code>UNGROUPED_ID</code>, <code>DELIVERY_GROUP_COLORS</code>, <code>DEFAULT_GROUP_COLORS</code></td><td class="num">+69</td></tr>
+        <tr><td><code>pages/admin/setting/delivery-status-group.js</code>, <code>components/setting/ModalUpsertDeliveryStatusGroup.js</code> (mới)</td><td>Trang + modal; lưu qua <code>upsertSetting(params, 'delivery_status')</code>, reducer cập nhật <code>ffmSettings</code> nên người lưu thấy ngay</td><td class="num">+191</td></tr>
+        <tr><td><code>utils/menu/settings.js</code>, 6 file <code>static/translations/*/constant.json</code></td><td>Mục menu sau <code>sla-setting</code>, <code>can('order.delivery_status_config')</code>; key <code>navigation.deliveryStatusGroups</code> (để tiếng Anh ở cả 6 locale)</td><td class="num">+12</td></tr>
+        <tr><td><code>components/OrderDeliveryStatusCell.js</code> (mới)</td><td><code>OrderSubStatusCell</code>, <code>OrderDeliveryGroupCell</code></td><td class="num">+17</td></tr>
+        <tr><td><code>pages/admin/order/index.js</code></td><td><code>plainOptions</code> thêm <code>delivery_group</code>, bỏ <code>sub_status</code>, đổi key cũ trong localStorage, ẩn cột với seller; field filter đổi sang <code>order_sub_status</code></td><td class="num">+26 −45</td></tr>
+        <tr><td><code>pages/admin/csr/ticket.js</code></td><td><code>ticketColumnKeys</code> thêm <code>delivery_group</code>; 2 cột Order Sub Status / Order Delivery Group</td><td class="num">+18 −12</td></tr>
+        <tr><td><code>components/AdvanceFilterV1.js</code></td><td><code>orderSubStatusChildren</code> dựng cây từ cấu hình, lá "All" mang <code>keys</code>; case <code>order_sub_status</code> gửi <code>leaf.keys</code>; bỏ field <code>order_sub_status_all</code>; <code>apply</code> đọc <code>[]</code> khi <code>labelFilter[key]</code> đã mất (490fb52f)</td><td class="num">+34 −57</td></tr>
+        <tr><td><code>components/AdvanceFilterResult.js</code></td><td>Chip theo <code>buildSubStatusChips</code>, bỏ <code>filterLabels</code></td><td class="num">+28 −9</td></tr>
+        <tr><td><code>components/order-statistic/DerivedReportModal.js</code>, <code>utils/order-statistic.js</code></td><td><code>subStatusOptions</code> chia nhóm theo cấu hình; <code>STAT_ADVANCE_FILTER_OPTIONS</code> đổi sang <code>order_sub_status</code></td><td class="num">+13 −10</td></tr>
+        <tr><td>Test (7 file)</td><td>Mới: <code>test/unit/delivery-status-group.test.js</code>, <code>DeliveryStatusGroupPage</code>, <code>DeliveryStatusFilter</code>, <code>OrderColumns</code>. Sửa: <code>CsrTicketColumns</code>, <code>CsrTicketExportMenu</code>, <code>test/unit/menu/settings.test.js</code></td><td class="num">+629 −5</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Merge BE #587<small>không migration</small></div>
+      <div class="s"><b>2</b><br>Deploy BE</div>
+      <div class="s you"><b>3</b><br>Chạy <code>Manage.sync_permission_catalog()</code><small>trên prod, sau deploy BE</small></div>
+      <div class="s"><b>4</b><br>Merge + deploy FE #535</div>
+      <div class="s you"><b>5</b><br>Kiểm tra<small>AC1–AC8 trên issue</small></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="note n-red"><span class="ic">!</span><div><p><b>Rủi ro</b></p><ul class="clean">
+      <li>FE lên trước BE: <code>POST /api/ffm_settings/delivery_status</code> chưa có route nên lưu cấu hình báo lỗi; chọn nhóm chứa No sub status thì BE cũ coi <code>no_sub_status</code> là 1 giá trị trong <code>terms</code>, bỏ sót đơn chưa có <code>sub_status</code>.</li>
+      <li>Giữa lúc deploy BE và lúc chạy sync: route mới chưa có trong bảng <code>permissions</code>, plug <code>Authorize</code> cho mọi vai nội bộ gọi được API lưu.</li>
+    </ul></div></div>
+    <div class="note n-info"><span class="ic">↺</span><div><p><b>Hoàn tác</b></p><ul class="clean">
+      <li>Revert FE trước: các màn về cách gom nhóm viết cứng và field Sub Status cũ. Bản ghi <code>delivery_status_group</code> đã lưu nằm lại trong <code>ffm_settings</code>, không màn nào khác đọc.</li>
+      <li>Sau đó mới revert BE. Không có dữ liệu đơn cần dọn.</li>
+    </ul></div></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong biến, mỗi thao tác cập nhật rồi vẽ lại màn đang mở, Cascader, chip, bảng, bản ghi và nhật ký.
+(() => {
+  const root = document.getElementById('proto');
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const clone = (v) => JSON.parse(JSON.stringify(v));
+
+  // ── Màu Tag antd 5: preset = [chữ màu-7, nền màu-1, viền màu-3] của @ant-design/colors; success / error / warning theo token colorSuccess* / colorError* / colorWarning* ──
+  const TAG_COLORS = {
+    magenta: ['#c41d7f', '#fff0f6', '#ffadd2'], red: ['#cf1322', '#fff1f0', '#ffa39e'], volcano: ['#d4380d', '#fff2e8', '#ffbb96'],
+    orange: ['#d46b08', '#fff7e6', '#ffd591'], gold: ['#d48806', '#fffbe6', '#ffe58f'], lime: ['#7cb305', '#fcffe6', '#eaff8f'],
+    green: ['#389e0d', '#f6ffed', '#b7eb8f'], cyan: ['#08979c', '#e6fffb', '#87e8de'], blue: ['#0958d9', '#e6f4ff', '#91caff'],
+    geekblue: ['#1d39c4', '#f0f5ff', '#adc6ff'], purple: ['#531dab', '#f9f0ff', '#d3adf7'],
+    success: ['#52c41a', '#f6ffed', '#b7eb8f'], error: ['#ff4d4f', '#fff2f0', '#ffccc7'], warning: ['#faad14', '#fffbe6', '#ffe58f'],
+    default: ['rgba(0,0,0,.88)', '#fafafa', '#d9d9d9'],
+  };
+  // <Tag color>: tên preset → nền nhạt + viền; mã hex → nền đặc chữ trắng
+  const tag = (color, text, extra = '') => {
+    if (color && color[0] === '#') return `<span class="tg" style="background:${color};color:#fff;border-color:transparent">${esc(text)}${extra}</span>`;
+    const [c, bg, bd] = TAG_COLORS[color] || TAG_COLORS.default;
+    return `<span class="tg" style="color:${c};background:${bg};border-color:${bd}">${esc(text)}${extra}</span>`;
+  };
+
+  // ── Sub status, giống utils/tools.js (orderStockSubStatus, packingOrderStatus, orderSubStatus); nhãn từ static/translations/en/constant.json ──
+  const orderStockSubStatus = () => [
+    { key: 'matched', text: 'Matched', color: 'blue' },
+    { key: 'mismatched', text: 'Mismatched', color: 'error' },
+  ];
+  const packingOrderStatus = () => [
+    { key: 'to_pack', text: 'To Pack', color: 'blue' },
+    { key: 'packing', text: 'Packing', color: 'orange' },
+    { key: 'on_hold', text: 'On Hold', color: 'warning' },
+    { key: 'packed', text: 'Packed', color: 'success' },
+    { key: 'handed_over', text: 'Handed Over', color: 'gold' },
+  ];
+  const orderSubStatus = () => [
+    { key: 'picked_up', text: 'Picked Up', bgColor: '#13c2c2' },
+    { key: 'processing_on_the_way', text: 'Processing Transit', bgColor: '#08979c' },
+    { key: 'on_the_way', text: 'On The Way', bgColor: '#1677ff' },
+    { key: 'out_for_delivery', text: 'Out For Delivery', bgColor: '#fa8c16' },
+    { key: 'delay_delivery', text: 'Delivery Delayed', bgColor: '#d48806' },
+    { key: 'undeliverable', text: 'Undeliverable', bgColor: '#f5222d' },
+    { key: 'inform_recipient', text: 'Informed Recipient', bgColor: '#722ed1' },
+    { key: 'contact_delivery_company', text: 'Contact Courier', bgColor: '#9254de' },
+    { key: 'waiting_on_the_way', text: 'Waiting Transit', bgColor: '#597ef7' },
+    { key: 'waiting_for_return', text: 'Waiting For Return', bgColor: '#ffa940' },
+    { key: 'import_returning_warehouse', text: 'In Return Warehouse', bgColor: '#d46b08' },
+    { key: 'waiting_returning_transit', text: 'Waiting Return Transit', bgColor: '#fa8c16' },
+    { key: 'returning', text: 'Returning', bgColor: '#fa541c' },
+    { key: 'return_fail', text: 'Return Failed', bgColor: '#cf1322' },
+    { key: 'returning_fail', text: 'Returning Failed', bgColor: '#d4380d' },
+    { key: 'delivered', text: 'Delivered', bgColor: '#52c41a' },
+    { key: 'delivered_cod', text: 'Delivered (COD)', bgColor: '#389e0d' },
+    { key: 'returned', text: 'Returned', bgColor: '#a8071a' },
+    { key: 'returned_cod', text: 'Returned (COD)', bgColor: '#820014' },
+  ];
+  // Màu không đồng nhất giữa các nguồn: pha kho dùng `color` (tên antd), pha ĐVVC dùng `bgColor` (hex).
+  const allOrderSubStatus = () => [...orderStockSubStatus(), ...packingOrderStatus(), ...orderSubStatus()];
+  // giống allOrderSubStatusGroups() = 2 nhóm kho + orderSubStatusGroups()
+  const allOrderSubStatusGroups = () => [
+    { value: 'stock_group', label: 'Stock Check', keys: orderStockSubStatus().map((s) => s.key) },
+    { value: 'packing_group', label: 'Packing', keys: packingOrderStatus().map((s) => s.key) },
+    { value: 'delivering', label: 'In Transit', keys: ['picked_up', 'processing_on_the_way', 'on_the_way', 'out_for_delivery', 'delay_delivery', 'undeliverable', 'inform_recipient', 'contact_delivery_company', 'waiting_on_the_way', 'waiting_for_return', 'import_returning_warehouse', 'waiting_returning_transit'] },
+    { value: 'returning_group', label: 'Returning', keys: ['returning', 'return_fail', 'returning_fail'] },
+    { value: 'delivered_group', label: 'Delivered', keys: ['delivered', 'delivered_cod'] },
+    { value: 'returned_group', label: 'Returned', keys: ['returned', 'returned_cod'] },
+  ];
+  // giống orderStatus() trong utils/tools.js, chỉ giữ các status có trong đơn mẫu
+  const ORDER_STATUS = [
+    { key: 'new', text: 'New', bgColor: '#08979c' }, { key: 'confirmed', text: 'Confirmed', bgColor: '#003eb3' },
+    { key: 'wait_print', text: 'Wait Print', bgColor: '#da5c9d' }, { key: 'packing', text: 'Packing', bgColor: '#722ed1' },
+    { key: 'pending', text: 'Waiting for pick up', bgColor: '#eb2f96' }, { key: 'shipped', text: 'Shipped', bgColor: '#fa8c16' },
+    { key: 'delivered', text: 'Delivered', bgColor: '#52c41a' }, { key: 'returning', text: 'Returning', bgColor: '#fa541c' },
+    { key: 'returned', text: 'Returned', bgColor: '#a8071a' },
+  ];
+  const statusTag = (key) => { const s = ORDER_STATUS.find((x) => x.key === key); return tag(s.bgColor, s.text); };
+
+  // ── giống utils/delivery-status-group.js ──
+  const DELIVERY_STATUS_GROUP_TYPE = 'delivery_status_group';
+  const NO_SUB_STATUS = 'no_sub_status';
+  const UNGROUPED_ID = 'ungrouped';
+  const UNGROUPED_NAME = 'Ungrouped';
+  const DELIVERY_GROUP_COLORS = ['magenta', 'red', 'volcano', 'orange', 'gold', 'lime', 'green', 'cyan', 'blue', 'geekblue', 'purple'];
+  const DEFAULT_GROUP_COLORS = { stock_group: 'blue', packing_group: 'purple', delivering: 'orange', returning_group: 'volcano', delivered_group: 'green', returned_group: 'red' };
+  const getSubStatusItems = () => [
+    { key: NO_SUB_STATUS, text: 'No sub status', color: 'default' },
+    ...allOrderSubStatus().map((s) => ({ key: s.key, text: s.text, color: s.color || s.bgColor })),
+  ];
+  const getSubStatusItemMap = () => new Map(getSubStatusItems().map((item) => [item.key, item]));
+  const getDefaultDeliveryStatusGroups = () => allOrderSubStatusGroups().map((group) => ({ name: group.label, color: DEFAULT_GROUP_COLORS[group.value] || 'default', sub_statuses: group.keys }));
+  // Bản ghi mới nhất, chưa có thì bộ mặc định; bỏ key lạ, key ở 2 nhóm thì nhóm đứng trước giữ.
+  // `id` đánh theo vị trí, chỉ làm khoá cho giao diện; Ungrouped = các mục còn lại, luôn đứng cuối.
+  const getDeliveryStatusGroups = (ffmSettings) => {
+    const record = (ffmSettings || []).filter((s) => s?.type === DELIVERY_STATUS_GROUP_TYPE && !s.is_removed).sort((a, b) => b.id - a.id)[0] || null;
+    const source = record ? record.settings?.groups || [] : getDefaultDeliveryStatusGroups();
+    const known = getSubStatusItems().map((item) => item.key);
+    const taken = new Set();
+    const groups = source.map((group, index) => {
+      const keys = (group.sub_statuses || []).filter((key) => known.includes(key) && !taken.has(key));
+      keys.forEach((key) => taken.add(key));
+      return { id: String(index), name: group.name, color: group.color || 'default', sub_statuses: keys };
+    });
+    const ungrouped = { id: UNGROUPED_ID, name: UNGROUPED_NAME, color: 'default', sub_statuses: known.filter((key) => !taken.has(key)) };
+    return { record, groups: [...groups, ungrouped] };
+  };
+  // Rỗng → nhóm chứa No sub status; giá trị lạ → Ungrouped.
+  const getDeliveryGroup = (groups, subStatus) => {
+    const key = subStatus || NO_SUB_STATUS;
+    return groups.find((group) => group.sub_statuses.includes(key)) || groups[groups.length - 1];
+  };
+  // Nhóm có đủ mục trong danh sách đang lọc → 1 chip tên nhóm; mục lẻ còn lại → 1 chip mỗi mục.
+  const buildSubStatusChips = (values, groups) => {
+    const left = new Set(values);
+    const chips = [];
+    groups.forEach((group) => {
+      if (group.sub_statuses.length && group.sub_statuses.every((key) => left.has(key))) {
+        chips.push({ key: `group:${group.id}`, group, values: group.sub_statuses });
+        group.sub_statuses.forEach((key) => left.delete(key));
+      }
+    });
+    values.filter((key) => left.has(key)).forEach((key) => chips.push({ key, values: [key] }));
+    return chips;
+  };
+  const ITEM_MAP = getSubStatusItemMap();
+  const itemTag = (key) => { const item = ITEM_MAP.get(key); return item ? tag(item.color, item.text) : tag('default', key); };
+
+  // ── BE: giống lib/services/es_v2/order.ex, nhánh "order_sub_status" ──
+  // no_sub_status → must_not exists sub_status (nil không được index), OR với terms các giá trị còn lại; exclude bọc cả điều kiện trong must_not
+  function matchSubStatus(subStatus, f) {
+    const values = f.order_sub_status || [];
+    if (!values.length) return true;
+    const statuses = values.filter((v) => v !== NO_SUB_STATUS);
+    const hit = (values.includes(NO_SUB_STATUS) && !subStatus) || (!!subStatus && statuses.includes(subStatus));
+    return f.is_exclude_order_sub_status ? !hit : hit;
+  }
+
+  // ── Dữ liệu mẫu ──
+  // Bản ghi FFMSetting mẫu của Philippines, đúng shape BE lưu: mỗi nhóm chỉ có name / color / sub_statuses.
+  const PH_RECORD = {
+    id: 12, type: DELIVERY_STATUS_GROUP_TYPE,
+    settings: { groups: [
+      { name: 'Handed over', color: 'gold', sub_statuses: ['handed_over', 'picked_up'] },
+      { name: 'In delivery', color: 'blue', sub_statuses: ['processing_on_the_way', 'on_the_way', 'out_for_delivery', 'waiting_on_the_way'] },
+      { name: 'Delivery risk', color: 'red', sub_statuses: ['delay_delivery', 'undeliverable', 'inform_recipient', 'contact_delivery_company', 'waiting_for_return'] },
+      { name: 'Delivered', color: 'green', sub_statuses: ['delivered', 'delivered_cod'] },
+      { name: 'Returned', color: 'volcano', sub_statuses: ['import_returning_warehouse', 'waiting_returning_transit', 'returning', 'return_fail', 'returning_fail', 'returned', 'returned_cod'] },
+      { name: 'Need follow-up', color: 'magenta', sub_statuses: [] },
+    ] },
+  };
+  const MARKETS = { 63: 'Philippines', 66: 'Thailand' };
+  const COURIERS = ['J&T Express', 'Ninja Van', 'LBC'];
+  // `partner.updates[0].status` = text cập nhật mới nhất từ ĐVVC, cột Sub Status hiện khi sub_status không tra được
+  const ORDERS = [
+    { id: '1001', status: 'new', sub_status: null },
+    { id: '1002', status: 'confirmed', sub_status: 'matched' },
+    { id: '1003', status: 'confirmed', sub_status: 'mismatched' },
+    { id: '1004', status: 'wait_print', sub_status: 'to_pack' },
+    { id: '1005', status: 'packing', sub_status: 'packing' },
+    { id: '1006', status: 'pending', sub_status: 'packed' },
+    { id: '1007', status: 'pending', sub_status: 'handed_over' },
+    { id: '1008', status: 'shipped', sub_status: 'picked_up', update: 'Parcel picked up' },
+    { id: '1009', status: 'shipped', sub_status: 'on_the_way' },
+    { id: '1010', status: 'shipped', sub_status: 'out_for_delivery' },
+    { id: '1011', status: 'shipped', sub_status: 'undeliverable', update: 'Customer unreachable' },
+    { id: '1012', status: 'shipped', sub_status: 'delay_delivery' },
+    { id: '1013', status: 'delivered', sub_status: 'delivered' },
+    { id: '1014', status: 'delivered', sub_status: 'delivered_cod' },
+    { id: '1015', status: 'returning', sub_status: 'returning' },
+    { id: '1016', status: 'returned', sub_status: 'returned' },
+    { id: '1017', status: 'shipped', sub_status: 'lost_parcel', update: 'Parcel under investigation' }, // giá trị giả định ngoài 26 sub_status
+    { id: '1018', status: 'delivered', sub_status: null, update: 'Successfully delivered to recipient' }, // đơn cũ chưa có sub_status
+    { id: '1019', status: 'delivered', sub_status: 'packed' }, // giao xong trước khi BE ghi sub_status pha ĐVVC
+  ].map((o, i) => ({ ...o, courier: COURIERS[i % 3], partner: { updates: o.update ? [{ status: o.update }] : [] } }));
+  const TICKETS = [['501', '1003'], ['502', '1008'], ['503', '1010'], ['504', '1011'], ['505', '1012'], ['506', '1013'], ['507', '1015'], ['508', '1017']]
+    .map(([id, orderId]) => ({ id, order: ORDERS.find((o) => o.id === orderId) }));
+  const SAVED_FILTER = { name: 'Delivered orders', order_sub_status: ['delivered', 'delivered_cod'] };
+
+  // Field cấp 1 của Advanced filter: thứ tự của buildFilterOptionsList, lọc theo `options` của từng màn (order/index.js, csr/ticket.js, STAT_ADVANCE_FILTER_OPTIONS)
+  const ROOT = {
+    order: ['Saved Filter', 'POS Shop', 'Order source', 'Service Type', 'Courier', 'Waybill Number', 'Tag', 'Product', 'Variation', 'Warehouse', 'Duplicated Phone', 'Duplicated IP', 'Express Order', 'Exchange / Return Order', 'Courier Reconciliation Status', 'Customer Reconciliation Status', 'Assigning Sale', 'Assigning Care', 'Total Quantity', 'Delivery Address', 'Combo', 'Ticket Status', 'Delivery Status', 'COD'],
+    ticket: ['POS Shop', 'Service Type', 'Courier', 'Waybill Number', 'Tag', 'Product', 'Variation', 'Warehouse', 'Assigning Care', 'CSR Ticket Type', 'Sub Status', 'Order Status', 'Delivery Status', 'Change Status Reason', 'SLA Tracking Status'],
+    stat: ['Saved Filter', 'POS Shop', 'Order source', 'Service Type', 'Courier', 'Waybill Number', 'Tag', 'Product', 'Variation', 'Warehouse', 'Duplicated Phone', 'Duplicated IP', 'Courier Reconciliation Status', 'Customer Reconciliation Status', 'Assigning Sale', 'Assigning Care', 'Total Quantity', 'Pending Reason', 'Cancel Reason', 'Delivery Address', 'Combo', 'Created By', 'Delivery Status', 'COD'],
+  };
+  // giống components/AdvanceFilterV1/ExcludeFilterCheckbox.js (ẩn ở /admin/statistic/*)
+  const EXCLUDE_TOOLTIP = 'When selecting exclusion filtering, the options you choose will be excluded from the filter results.';
+  const SHOULD_SELECT_OPTION = 'You must select at least one option, before selecting exclude filtering';
+  const SCREENS = {
+    order: { title: 'Order', url: 'fulfillment.pancake.vn/admin/order' },
+    ticket: { title: 'CSR Ticket', url: 'fulfillment.pancake.vn/admin/csr/ticket' },
+    stat: { title: 'Data Statistics (AI)', url: 'fulfillment.pancake.vn/admin/statistic/order-data' },
+    setting: { title: 'Delivery Status Groups', url: 'fulfillment.pancake.vn/admin/setting/delivery-status-group' },
+  };
+  const COLUMN_LABELS = { order: { delivery_status: 'Sub Status', delivery_group: 'Delivery Group' }, ticket: { delivery_status: 'Order Sub Status', delivery_group: 'Order Delivery Group' } };
+
+  // ── Trạng thái ──
+  let settings = { 63: [clone(PH_RECORD)], 66: [] };   // ffmSettings của người lưu
+  let snapshot = clone(settings);                        // ffmSettings user khác nạp lúc mở trang
+  let nextId = 100;
+  let market = '63', viewer = 'me', perm = true, screen = 'order';
+  let filters = { order: {}, ticket: {}, stat: {} };
+  let cols = { order: { delivery_status: true, delivery_group: false }, ticket: { delivery_status: true, delivery_group: false } };
+  let open = false, path = [], popOpen = false;
+  let indSel = [], indOpen = false;
+  let modal = null, confirmBox = null;
+  let logs = [];
+
+  const log = (line) => { logs.unshift(line); logs = logs.slice(0, 16); $('log').textContent = logs.join('\n'); };
+  const toast = (text, bad) => { const el = $('toast'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => (el.className = 'toast'), 2200); };
+  const saverGroups = () => getDeliveryStatusGroups(settings[market]);
+  const viewGroups = () => getDeliveryStatusGroups((viewer === 'me' ? settings : snapshot)[market]).groups;
+  const curFilter = () => filters[screen];
+  const paramsText = (f) => (f.order_sub_status && f.order_sub_status.length ? `order_sub_status: [${f.order_sub_status.join(', ')}]${f.is_exclude_order_sub_status ? ', is_exclude_order_sub_status: true' : ''}` : 'không có order_sub_status');
+  const matchedOrders = () => ORDERS.filter((o) => matchSubStatus(o.sub_status, curFilter()));
+  const ids = (list) => list.map((x) => x.id).join(', ') || 'không đơn nào';
+
+  // ── Thanh trên, menu ──
+  function renderChrome() {
+    $('url').textContent = SCREENS[screen].url;
+    $('title').textContent = SCREENS[screen].title;
+    $('nav-setting').hidden = !perm;
+    $('side').querySelectorAll('[data-go]').forEach((a) => a.classList.toggle('on', a.dataset.go === screen));
+    const mk = Object.entries(MARKETS).map(([v, n]) => `<button class="btn${market === v ? ' pri' : ''}" data-mk="${v}">${n}</button>`).join('');
+    const vw = screen === 'setting' ? '' : `<span class="sep"></span>Người xem <button class="btn${viewer === 'me' ? ' pri' : ''}" data-viewer="me">Người lưu</button><button class="btn${viewer === 'other' ? ' pri' : ''}" data-viewer="other">User khác</button>${viewer === 'other' ? '<button class="btn" data-act="reload">Reload</button>' : ''}`;
+    $('ctl').innerHTML = `Thị trường ${mk}${vw}<span class="sep"></span><label title="order.delivery_status_config"><input type="checkbox" id="perm" ${perm ? 'checked' : ''}>Quyền Delivery Status Groups</label>`;
+  }
+
+  // ── Màn danh sách: Order, CSR Ticket ──
+  const filterIcon = '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14l-5.5 6.5V14l-3-1.5v-4z"/></svg>';
+  const trashIcon = '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5 1h6v2h4v2H1V3h4zM2 6h12l-1 9H3z"/></svg>';
+  const fbarHtml = (withCols) => `<div class="fbar" id="fbar">
+      <button class="btn fbtn" data-act="toggle">${filterIcon}Add Filter<sup id="badge" hidden></sup></button>
+      <button class="btn danger" data-act="clear" id="clear" title="Xoá hết filter" hidden>${trashIcon}</button>
+      ${withCols ? '<button class="btn cols" data-act="cols"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14v12H1zm1.5 1.5v9h3v-9zm4.5 0v9h2v-9zm3.5 0v9h3v-9z"/></svg>Columns</button><div class="pop" id="pop"></div>' : ''}
+      <div class="casc" id="casc"></div>
+    </div><div class="chips" id="chips"></div>`;
+
+  function renderScreen() {
+    open = false; path = []; popOpen = false; indOpen = false;
+    renderChrome();
+    const el = $('screen');
+    if (screen === 'setting') { renderSetting(); return; }
+    if (screen === 'stat') {
+      el.innerHTML = `<div class="panel">
+        <div class="cardh">Add indicator <span class="explain">modal của New derived report, vẽ phẳng; chỉ giữ các ô liên quan</span></div>
+        <div class="flab">Indicator name — used as a formula variable (letters/digits/_ , no spaces)</div>
+        <input class="inp" value="delivered_orders" aria-label="indicator name">
+        <div class="flab">Order filters — every advanced filter that applies to orders (tags include/exclude, shop, partner, sub status, reasons…)</div>
+        ${fbarHtml(false)}
+        <div class="flab">Sub status (optional) — combined with Status (both must match).</div>
+        <div id="ind"></div>
+        <div class="cnt" id="count"></div>
+      </div>`;
+    } else {
+      el.innerHTML = `<div class="panel">${fbarHtml(true)}
+        ${screen === 'order' ? '<div class="tabs cntr" id="cntr"></div>' : ''}
+        <table class="ant"><thead id="thead"></thead><tbody id="rows"></tbody></table>
+        <div class="cnt" id="count"></div></div>`;
+    }
+    renderList();
+  }
+
+  function renderList() {
+    renderCasc(); renderPop(); renderChips();
+    const groups = viewGroups();
+    if (screen === 'stat') { renderInd(); $('count').textContent = `Đơn khớp Order filters: ${matchedOrders().length} / ${ORDERS.length} (dòng giải thích, app không có; ô Sub status không tính vào đây)`; return; }
+    const on = cols[screen];
+    const L = COLUMN_LABELS[screen];
+    // Cột bật trong bộ chọn cột được chèn sát trước cột Status ghim bên phải (OrderColumnContainerV1)
+    const head = screen === 'order'
+      ? ['Order ID', on.delivery_status && `<span class="changed">${L.delivery_status}</span>`, 'Courier', on.delivery_group && `<span class="changed">${L.delivery_group}</span>`, 'Status']
+      : ['Ticket ID', 'Order ID', on.delivery_status && `<span class="changed">${L.delivery_status}</span>`, on.delivery_group && `<span class="changed">${L.delivery_group}</span>`, 'Order Status'];
+    $('thead').innerHTML = '<tr>' + head.filter(Boolean).map((h) => `<th>${h}</th>`).join('') + '</tr>';
+    // giống OrderSubStatusCell / OrderDeliveryGroupCell (components/OrderDeliveryStatusCell.js)
+    const subCell = (o) => { if (!o) return '-'; const item = ITEM_MAP.get(o.sub_status); if (item) return tag(item.color, item.text); const raw = (o.partner.updates || [])[0]?.status; return raw ? tag('default', raw) : '-'; };
+    const groupCell = (o) => { if (!o) return '-'; const g = getDeliveryGroup(groups, o.sub_status); return tag(g.color, g.name); };
+    const cells = (o) => [on.delivery_status && `<td>${subCell(o)}</td>`, null, on.delivery_group && `<td data-dg>${groupCell(o)}</td>`];
+    let rows;
+    if (screen === 'order') {
+      const list = matchedOrders();
+      rows = list.map((o) => { const c = cells(o); return `<tr data-id="${o.id}"><td>${o.id}</td>${c[0] || ''}<td>${esc(o.courier)}</td>${c[2] || ''}<td>${statusTag(o.status)}</td></tr>`; });
+      const counts = ORDER_STATUS.map((s) => [s, list.filter((o) => o.status === s.key).length]).filter(([, n]) => n);
+      $('cntr').innerHTML = `<a class="on">All<sup>${list.length}</sup></a>` + counts.map(([s, n]) => `<a>${s.text}<sup>${n}</sup></a>`).join('');
+      $('count').textContent = `${list.length} / ${ORDERS.length} đơn khớp filter`;
+    } else {
+      const list = TICKETS.filter((t) => matchSubStatus(t.order?.sub_status, curFilter()));
+      rows = list.map((t) => { const c = cells(t.order); return `<tr data-id="${t.id}"><td>${t.id}</td><td>${t.order ? t.order.id : '-'}</td>${c[0] || ''}${c[2] || ''}<td>${t.order ? statusTag(t.order.status) : '-'}</td></tr>`; });
+      $('count').textContent = `${list.length} / ${TICKETS.length} ticket khớp filter`;
+    }
+    $('rows').innerHTML = rows.join('') || `<tr><td colspan="5" style="text-align:center;color:#bfbfbf;padding:24px">Không có dữ liệu khớp filter</td></tr>`;
+  }
+
+  function renderCasc() {
+    const el = $('casc');
+    const kept = [...el.querySelectorAll('ul')].map((u) => u.scrollTop);
+    el.classList.toggle('show', open);
+    if (!open) { el.innerHTML = ''; return; }
+    const colsHtml = [ROOT[screen].map((label) => {
+      if (label !== 'Delivery Status' && label !== 'Saved Filter') return `<li class="off" title="Không mô phỏng trong prototype">${esc(label)}</li>`;
+      const isNew = label === 'Delivery Status' && screen !== 'ticket' ? ' new' : '';
+      return `<li class="par${path[0] === label ? ' on' : ''}${isNew}" data-root="${label}">${label}</li>`;
+    }).join('')];
+    if (path[0] === 'Saved Filter') colsHtml.push(`<li data-sv="1">${SAVED_FILTER.name}</li>`);
+    if (path[0] === 'Delivery Status') {
+      const f = curFilter();
+      const has = !!(f.order_sub_status && f.order_sub_status.length);
+      const groups = viewGroups();
+      // giống orderSubStatusChildren (AdvanceFilterV1): Exclude filter, các nhóm (rỗng thì disabled), Ungrouped cuối
+      const ex = screen === 'stat' ? '' : `<li class="ctl"><label title="${esc(has ? EXCLUDE_TOOLTIP : SHOULD_SELECT_OPTION)}"><input type="checkbox" data-ex ${has ? '' : 'disabled'} ${f.is_exclude_order_sub_status ? 'checked' : ''}>Exclude filter</label></li>`;
+      colsHtml.push(ex + groups.map((g) => (g.sub_statuses.length ? `<li class="par${path[1] === g.id ? ' on' : ''}" data-grp="${g.id}">${esc(g.name)}</li>` : `<li class="off">${esc(g.name)}</li>`)).join(''));
+      const g = path[1] != null && groups.find((x) => x.id === path[1]);
+      // lá "All <nhóm>" mang `keys` để chọn cả nhóm (Cascader changeOnSelect={false})
+      if (g) colsHtml.push(`<li class="new" data-leaf="all:${g.id}"><b>All ${esc(g.name)} (${g.sub_statuses.length})</b></li>` + g.sub_statuses.map((k) => `<li data-leaf="${k}">${itemTag(k)}</li>`).join(''));
+    }
+    el.innerHTML = colsHtml.map((c) => `<ul>${c}</ul>`).join('');
+    el.querySelectorAll('ul').forEach((u, i) => {
+      if (kept[i] !== undefined) u.scrollTop = kept[i];
+      else if (i === 0) { const t = u.querySelector('[data-root="Delivery Status"]'); u.scrollTop = t.offsetTop - 4; }
+    });
+  }
+  function renderPop() {
+    const el = $('pop');
+    if (!el) return;
+    el.classList.toggle('show', popOpen);
+    const L = COLUMN_LABELS[screen];
+    el.innerHTML = popOpen ? '<b>Columns <span class="explain">(rút gọn, chỉ 2 cột liên quan)</span></b>' + Object.keys(L).map((k) => `<label><input type="checkbox" data-col="${k}" ${cols[screen][k] ? 'checked' : ''}>${L[k]}</label>`).join('') : '';
+  }
+  // giống AdvanceFilterResult: chip theo buildSubStatusChips; exclude thì chip đỏ
+  function renderChips() {
+    const f = curFilter();
+    const values = f.order_sub_status || [];
+    const ex = !!f.is_exclude_order_sub_status;
+    const chips = buildSubStatusChips(values, viewGroups());
+    $('chips').innerHTML = chips.map((chip, i) => `<span class="ftag${ex ? ' ex' : ''}"><b>${ex ? 'Exclude ' : ''}Delivery Status:</b> ${chip.group ? tag(chip.group.color, chip.group.name) : itemTag(chip.values[0])}<span class="x" data-chip="${i}" title="Gỡ">×</span></span>`).join('');
+    $('badge').hidden = !values.length; $('badge').textContent = values.length ? 1 : '';
+    $('clear').hidden = !values.length;
+  }
+  // Ô Sub status của indicator: giống subStatusOptions (DerivedReportModal) — bỏ No sub status, ẩn nhóm không còn mục
+  function renderInd() {
+    const opts = viewGroups().map((g) => ({ label: g.name, options: g.sub_statuses.filter((k) => k !== NO_SUB_STATUS).map((k) => ({ value: k, label: ITEM_MAP.get(k).text })) })).filter((g) => g.options.length);
+    const box = `<div class="msel${indOpen ? ' focus' : ''}" data-act="ind-dd">${indSel.length ? indSel.map((k) => tag('default', ITEM_MAP.get(k).text, `<span class="x" data-ind-x="${k}">×</span>`)).join('') : '<span class="ph0">Any sub status</span>'}</div>`;
+    const dd = indOpen ? `<div class="mdd" id="ind-dd">${opts.map((g) => `<div class="og">${esc(g.label)}</div>` + g.options.map((o) => `<div class="op${indSel.includes(o.value) ? ' sel' : ''}" data-ind="${o.value}">${esc(o.label)}</div>`).join('')).join('')}</div>` : '';
+    $('ind').innerHTML = box + dd;
+  }
+
+  // ── Trang cấu hình: giống pages/admin/setting/delivery-status-group.js ──
+  function renderSetting() {
+    const el = $('screen');
+    if (!perm) { el.innerHTML = '<div class="panel r403"><b>403</b>Sorry, you are not authorized to access this page.</div>'; return; }
+    const { record, groups } = saverGroups();
+    const rows = groups.map((g, i) => `<tr data-grp-row="${esc(g.name)}"><td>${tag(g.color, g.name)}</td>
+      <td>${g.sub_statuses.length ? `<div class="tgs">${g.sub_statuses.map(itemTag).join('')}</div>` : '<span class="muted">No items</span>'}</td>
+      <td style="text-align:center;white-space:nowrap">${g.id === UNGROUPED_ID ? '<span class="muted">System</span>' : `<button class="btn ico" data-edit="${g.id}" aria-label="Edit ${esc(g.name)}"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M11 1l4 4-9 9H2v-4zm0 2.1L4 10.1V12h1.9l7-7z"/></svg></button> <button class="btn ico danger" data-del="${g.id}" aria-label="Delete ${esc(g.name)}">${trashIcon}</button>`}</td></tr>`).join('');
+    el.innerHTML = `${record ? '' : '<div class="alert" id="alert"><i>i</i>This market has no saved configuration yet. Showing the default groups; the first save creates this market\'s configuration.</div>'}
+      <div class="panel"><div class="cardh">Delivery Status Groups <button class="btn pri" data-act="create" aria-label="Create group">+</button></div>
+      <table class="ant"><thead><tr><th style="width:170px">Name</th><th>Sub Statuses</th><th style="width:96px;text-align:center">Action</th></tr></thead><tbody id="grp-rows">${rows}</tbody></table></div>`;
+  }
+  function save(nextGroups, what) {
+    const { record } = saverGroups();
+    const params = { ...(record ? { id: record.id } : {}), type: DELIVERY_STATUS_GROUP_TYPE, settings: { groups: nextGroups.map(({ name, color, sub_statuses }) => ({ name, color, sub_statuses })) } };
+    const id = record ? record.id : nextId++;
+    settings[market] = [{ ...params, id }, ...settings[market].filter((s) => s.type !== DELIVERY_STATUS_GROUP_TYPE)];
+    log(`${what} → POST /api/ffm_settings/delivery_status ${record ? `(id ${id})` : `(không kèm id → BE tạo bản ghi id ${id})`}, gửi cả ${nextGroups.length} nhóm`);
+    toast('Upserted successfully');
+    renderRec(); renderSetting();
+  }
+  const userGroups = () => saverGroups().groups.filter((g) => g.id !== UNGROUPED_ID);
+  const normalizeName = (name) => (name || '').trim().toLowerCase();
+
+  // Modal: giống components/setting/ModalUpsertDeliveryStatusGroup.js
+  function openModal(item) {
+    modal = { item, subs: item ? [...item.sub_statuses] : [], dd: false, err: '' };
+    $('mwrap').innerHTML = `<div class="mdl" id="mdl"><h4>${item ? 'Edit Group' : 'Create Group'}</h4>
+      <div class="fld" id="f-name"><label>Name <em>*</em></label><input id="m-name" placeholder="e.g. In delivery" value="${item ? esc(item.name) : ''}"><div class="msg" id="m-err"></div></div>
+      <div class="fld"><label>Color <em>*</em></label><div class="row2"><select id="m-color">${DELIVERY_GROUP_COLORS.map((c) => `<option ${c === (item ? item.color : 'blue') ? 'selected' : ''}>${c}</option>`).join('')}</select><span id="m-color-tag"></span></div></div>
+      <div class="fld"><label>Sub Statuses</label><div id="m-subs"></div><div class="xtra">Items already in another group are disabled. Remove them from that group first.</div></div>
+      <div class="foot"><button class="btn" data-act="m-cancel">Cancel</button><button class="btn pri" data-act="m-save">Save</button></div></div>`;
+    $('mwrap').classList.add('show');
+    renderColorTag(); renderModalSubs();
+    setTimeout(() => $('m-name') && $('m-name').focus({ preventScroll: true }), 50);
+  }
+  const renderColorTag = () => { const c = $('m-color').value; $('m-color-tag').innerHTML = tag(c, c); };
+  function modalOptions() {
+    const otherGroups = userGroups().filter((g) => g.id !== modal.item?.id);
+    const toOption = (key) => {
+      const owner = otherGroups.find((g) => g.sub_statuses.includes(key));
+      const text = ITEM_MAP.get(key).text;
+      return { value: key, label: owner ? `${text} · in ${owner.name}` : text, disabled: !!owner };
+    };
+    return [
+      toOption(NO_SUB_STATUS),
+      { label: 'Stock Check', options: orderStockSubStatus().map((s) => toOption(s.key)) },
+      { label: 'Packing', options: packingOrderStatus().map((s) => toOption(s.key)) },
+      { label: 'Courier', options: orderSubStatus().map((s) => toOption(s.key)) },
+    ];
+  }
+  function renderModalSubs() {
+    const box = `<div class="msel${modal.dd ? ' focus' : ''}" data-act="m-dd">${modal.subs.length ? modal.subs.map((k) => { const it = ITEM_MAP.get(k); return tag(it.color, it.text, `<span class="x" data-m-x="${k}">×</span>`); }).join('') : '<span class="ph0">Select sub statuses</span>'}</div>`;
+    const op = (o, top) => `<div class="op${top ? ' top' : ''}${o.disabled ? ' off' : ''}${modal.subs.includes(o.value) ? ' sel' : ''}" data-m-op="${o.value}">${esc(o.label)}</div>`;
+    const dd = modal.dd ? `<div class="mdd" id="m-dd">${modalOptions().map((g) => (g.options ? `<div class="og">${g.label}</div>` + g.options.map((o) => op(o)).join('') : op(g, true))).join('')}</div>` : '';
+    $('m-subs').innerHTML = box + dd;
+  }
+  function closeModal() { modal = null; confirmBox = null; $('mwrap').classList.remove('show'); $('mwrap').innerHTML = ''; }
+  function submitModal() {
+    const name = $('m-name').value;
+    const takenNames = [...userGroups().filter((g) => g.id !== modal.item?.id).map((g) => g.name), UNGROUPED_NAME].map(normalizeName);
+    const err = !name.trim() ? 'Please enter group name' : takenNames.includes(normalizeName(name)) ? 'Group name already exists' : '';
+    $('f-name').classList.toggle('err', !!err); $('m-err').textContent = err;
+    if (err) { log(`Save "${name}" → ${err}, không gửi request`); return; }
+    const values = { name: name.trim(), color: $('m-color').value, sub_statuses: modal.subs };
+    const item = modal.item;
+    const ug = userGroups();
+    const nextGroups = item ? ug.map((g) => (g.id === item.id ? { ...g, ...values } : g)) : [...ug, values];
+    closeModal();
+    save(nextGroups, `${item ? 'Sửa' : 'Tạo'} nhóm "${values.name}" (${values.sub_statuses.length} mục)`);
+  }
+  function openConfirm(group) {
+    confirmBox = { group };
+    $('mwrap').innerHTML = `<div class="mdl cf" id="mdl"><h4><i>!</i><span id="c-title">Delete group "${esc(group.name)}"?</span></h4><p id="c-text">${group.sub_statuses.length ? `${group.sub_statuses.length} items will move to Ungrouped.` : 'This group has no items.'}</p>
+      <div class="foot"><button class="btn" data-act="c-cancel">Cancel</button><button class="btn dng" data-act="c-ok">Delete</button></div></div>`;
+    $('mwrap').classList.add('show');
+  }
+
+  // Bản ghi đang lưu: in đúng shape gửi / lưu ở BE
+  function renderRec() {
+    const { record } = saverGroups();
+    if (!record) { $('rec').textContent = `// Thị trường "${market}" chưa có bản ghi delivery_status_group\n// → mọi màn dùng bộ mặc định (getDefaultDeliveryStatusGroups)`; return; }
+    const g = record.settings.groups.map((x) => `      { "name": ${JSON.stringify(x.name)}, "color": ${JSON.stringify(x.color)}, "sub_statuses": ${JSON.stringify(x.sub_statuses).replace(/","/g, '", "')} }`).join(',\n');
+    $('rec').textContent = `{\n  "id": ${record.id},\n  "type": "delivery_status_group",\n  "settings": {\n    "groups": [\n${g}\n    ]\n  }\n}`;
+  }
+
+  // ── Sự kiện ──
+  root.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-go]');
+    if (go) { screen = go.dataset.go; renderScreen(); log(`Mở ${SCREENS[screen].title} (${SCREENS[screen].url.replace('fulfillment.pancake.vn', '')})`); return; }
+    const mk = e.target.closest('[data-mk]');
+    if (mk) {
+      if (mk.dataset.mk === market) return;
+      market = mk.dataset.mk; filters = { order: {}, ticket: {}, stat: {} }; indSel = [];
+      renderScreen(); renderRec();
+      log(`Đổi thị trường → ${MARKETS[market]} (country_code "${market}"), xoá filter đang chọn`);
+      return;
+    }
+    const vw = e.target.closest('[data-viewer]');
+    if (vw) { if (vw.dataset.viewer === viewer) return; viewer = vw.dataset.viewer; renderChrome(); renderList(); log(viewer === 'me' ? 'Người xem → người lưu cấu hình' : 'Người xem → user khác (đã mở trang trước khi lưu, giữ ffmSettings cũ)'); return; }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'reload') { snapshot = clone(settings); renderList(); log('User khác tải lại trang → GET /api/ffm_settings, thấy cấu hình mới'); return; }
+
+    // Trang cấu hình
+    if (act === 'create') { openModal(null); return; }
+    const ed = e.target.closest('[data-edit]');
+    if (ed) { openModal(userGroups().find((g) => g.id === ed.dataset.edit)); return; }
+    const del = e.target.closest('[data-del]');
+    if (del) { openConfirm(userGroups().find((g) => g.id === del.dataset.del)); return; }
+    if (act === 'm-cancel' || act === 'c-cancel') { closeModal(); return; }
+    if (act === 'c-ok') { const g = confirmBox.group; closeModal(); save(userGroups().filter((x) => x.id !== g.id), `Xoá nhóm "${g.name}", ${g.sub_statuses.length} mục về Ungrouped`); return; }
+    if (act === 'm-save') { submitModal(); return; }
+    const mx = e.target.closest('[data-m-x]');
+    if (mx) { modal.subs = modal.subs.filter((k) => k !== mx.dataset.mX); renderModalSubs(); return; }
+    const mop = e.target.closest('[data-m-op]');
+    if (mop) {
+      if (mop.classList.contains('off')) return;
+      const k = mop.dataset.mOp;
+      modal.subs = modal.subs.includes(k) ? modal.subs.filter((x) => x !== k) : [...modal.subs, k];
+      const keep = $('m-dd').scrollTop; renderModalSubs(); $('m-dd').scrollTop = keep;
+      return;
+    }
+    if (act === 'm-dd') { modal.dd = !modal.dd; renderModalSubs(); return; }
+
+    // Màn danh sách
+    if (act === 'toggle') { open = !open; if (!open) path = []; popOpen = false; renderCasc(); renderPop(); return; }
+    if (act === 'cols') { popOpen = !popOpen; open = false; path = []; renderPop(); renderCasc(); return; }
+    if (act === 'clear') { filters[screen] = {}; renderList(); log(`[${SCREENS[screen].title}] Bấm nút xoá filter → bỏ hết filter`); return; }
+    const x = e.target.closest('.ftag .x');
+    if (x) {
+      const f = curFilter();
+      const chip = buildSubStatusChips(f.order_sub_status || [], viewGroups())[x.dataset.chip];
+      const rest = f.order_sub_status.filter((k) => !chip.values.includes(k));
+      filters[screen] = rest.length ? { ...f, order_sub_status: rest } : {};
+      renderList();
+      log(`[${SCREENS[screen].title}] x chip "${chip.group ? chip.group.name : ITEM_MAP.get(chip.values[0])?.text || chip.values[0]}" → gỡ ${chip.values.length} mục; ${paramsText(filters[screen])}`);
+      return;
+    }
+    const lab = e.target.closest('.casc label');
+    if (lab && lab.querySelector('input[disabled]')) { toast(SHOULD_SELECT_OPTION, true); log('Bấm Exclude filter khi chưa chọn mục nào → checkbox đang khoá, không đổi gì'); return; }
+    const r = e.target.closest('[data-root]');
+    if (r) { path = [r.dataset.root]; renderCasc(); return; }
+    const grp = e.target.closest('[data-grp]');
+    if (grp) { path = [path[0], grp.dataset.grp]; renderCasc(); return; }
+    if (e.target.closest('[data-sv]')) {
+      filters[screen] = { order_sub_status: [...SAVED_FILTER.order_sub_status] };
+      renderList();
+      log(`[${SCREENS[screen].title}] Saved Filter › ${SAVED_FILTER.name} → ${paramsText(curFilter())} (danh sách lúc lưu)`);
+      return;
+    }
+    const leaf = e.target.closest('[data-leaf]');
+    if (leaf) {
+      const g = viewGroups().find((y) => y.id === path[1]);
+      const v = leaf.dataset.leaf;
+      const keys = v.startsWith('all:') ? g.sub_statuses : [v];
+      const f = curFilter();
+      // apply: leaf.keys || last(value), cộng dồn vào danh sách đang lọc, không trùng
+      filters[screen] = { ...f, order_sub_status: [...new Set([...(f.order_sub_status || []), ...keys])] };
+      renderList();
+      const what = v.startsWith('all:') ? `All ${g.name} (${keys.length})` : ITEM_MAP.get(v).text;
+      const result = screen === 'ticket' ? `ticket khớp: ${ids(TICKETS.filter((t) => matchSubStatus(t.order?.sub_status, curFilter())))}` : `đơn khớp: ${ids(matchedOrders())}`;
+      log(`[${SCREENS[screen].title}] Delivery Status › ${g.name} › ${what} → ${paramsText(curFilter())}; ${result}`);
+      return;
+    }
+    const ix = e.target.closest('[data-ind-x]');
+    if (ix) { indSel = indSel.filter((k) => k !== ix.dataset.indX); renderInd(); return; }
+    const io = e.target.closest('[data-ind]');
+    if (io) { const k = io.dataset.ind; indSel = indSel.includes(k) ? indSel.filter((y) => y !== k) : [...indSel, k]; const keep = $('ind-dd').scrollTop; renderInd(); $('ind-dd').scrollTop = keep; return; }
+    if (act === 'ind-dd') { indOpen = !indOpen; renderInd(); }
+  });
+  root.addEventListener('change', (e) => {
+    if (e.target.id === 'perm') {
+      perm = e.target.checked; renderChrome(); if (screen === 'setting') renderSetting();
+      log(perm ? 'Cấp quyền order.delivery_status_config → hiện mục Delivery Status Groups trong menu' : 'Bỏ quyền order.delivery_status_config → ẩn mục trong menu, trang cấu hình báo 403');
+      return;
+    }
+    if (e.target.id === 'm-color') { renderColorTag(); return; }
+    const col = e.target.closest('[data-col]');
+    if (col) {
+      cols[screen][col.dataset.col] = col.checked; renderList();
+      log(`[${SCREENS[screen].title}] Columns → ${col.checked ? 'bật' : 'tắt'} ${COLUMN_LABELS[screen][col.dataset.col]}${col.checked && col.dataset.col === 'delivery_group' ? ' (chèn sát trước cột Status)' : ''}`);
+      return;
+    }
+    if (e.target.matches('[data-ex]')) {
+      const f = curFilter();
+      filters[screen] = e.target.checked ? { ...f, is_exclude_order_sub_status: true } : (({ is_exclude_order_sub_status, ...rest }) => rest)(f);
+      renderList();
+      log(`[${SCREENS[screen].title}] ${e.target.checked ? 'Tick' : 'Bỏ tick'} Exclude filter → ${paramsText(curFilter())}; đơn khớp: ${ids(screen === 'ticket' ? TICKETS.filter((t) => matchSubStatus(t.order?.sub_status, curFilter())) : matchedOrders())}`);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!modal && !confirmBox) return;
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Enter' && modal && e.target.id === 'm-name') submitModal();
+  });
+  // Bấm ra ngoài vùng popup thì đóng (như handleClickOutside). Phần tử vừa bị vẽ lại không còn trong trang thì bỏ qua.
+  document.addEventListener('click', (e) => {
+    if (!e.target.isConnected) return;
+    if (open && !$('fbar')?.contains(e.target)) { open = false; path = []; renderCasc(); }
+    if (popOpen && !$('fbar')?.contains(e.target)) { popOpen = false; renderPop(); }
+    if (indOpen && !$('ind')?.contains(e.target)) { indOpen = false; renderInd(); }
+    if (modal && modal.dd && !$('m-subs')?.contains(e.target)) { modal.dd = false; renderModalSubs(); }
+  });
+
+  renderScreen(); renderRec();
+  log('Mở màn Order (Philippines): 19 đơn mẫu, chưa có filter');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phân quyền FFM: Role Permission (#390) và Department (#440)</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/dayjs@1.11.13/dayjs.min.js"></script>
+<script src="https://unpkg.com/antd@5.29.3/dist/antd.min.js"></script>
+<script src="https://unpkg.com/@ant-design/icons@5.6.1/dist/index.umd.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#1f2937;background:#f7f8fb;font-size:15px;line-height:1.7}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 40px 60px}
+  header{padding:40px 0 4px}
+  h1{margin:0 0 8px;font-size:28px;letter-spacing:-.3px}
+  h2{font-size:22px;margin:0 0 6px}
+  h3{font-size:16.5px;margin:22px 0 6px}
+  .meta{color:#6b7280;font-size:14px;margin-bottom:16px}
+  .summary{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px 22px}
+  .summary p{margin:0 0 10px}
+  .format{background:#fffbe8;border:1px dashed #efd77a;border-radius:10px;padding:10px 14px;font-size:14.5px}
+  .toc{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .toc a{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 16px;text-decoration:none;color:#1f2937;font-weight:600;font-size:13.5px}
+  .toc a:hover{border-color:#2563eb;color:#2563eb}
+  .section{padding:34px 0 4px}
+  .section > h2{padding-bottom:6px;border-bottom:2px solid #e5e7eb}
+  .desc{color:#6b7280;margin:0 0 14px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;background:#eef2ff;color:#3730a3;border-radius:5px;padding:1px 6px}
+  a{color:#2563eb}
+  .box{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px 22px 14px 40px;margin:0 0 12px}
+  .box li{margin:4px 0}
+  .box.plain{padding:14px 22px}
+  .warn{background:#fff7e6;border:1px solid #ffd591;border-radius:14px;padding:14px 22px;margin:0 0 12px}
+  .warn h3{margin-top:4px}
+  table.doc{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:0 0 12px}
+  table.doc th,table.doc td{text-align:left;vertical-align:top;padding:9px 14px;border-bottom:1px solid #eef0f3}
+  table.doc th{background:#f3f4f6;font-size:13.5px}
+  table.doc tr:last-child td{border-bottom:none}
+  table.doc td.group{font-weight:700;white-space:nowrap}
+  .layers{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin:6px 0 14px}
+  .layer{flex:1 1 240px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 16px}
+  .layer b{display:block;font-size:15.5px;margin-bottom:2px}
+  .layer small{color:#6b7280}
+  .arrow{align-self:center;font-size:22px;color:#9ca3af}
+  .mermaid{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:0 0 12px}
+  .tips{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px 22px 14px 40px;margin:0 0 18px}
+  .tips li{margin:4px 0}
+  .proto-bar{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 16px;margin-bottom:12px;font-size:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .app-frame{background:#fff;border:1px solid #d9d9d9;border-radius:10px;overflow:hidden;margin-bottom:16px;font-size:14px;line-height:1.5715;padding:4px 16px 16px}
+  .perm-group{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin:6px 0 2px}
+  .k{font-size:11px;padding:0 5px;margin-left:4px;background:#f5f5f5;color:#8c8c8c}
+  .scope{background:#fafafa;border-radius:8px;padding:14px 16px;margin-top:14px}
+  .scope-title{font-size:12px;font-weight:700;letter-spacing:.5px}
+  .scope-title span{font-weight:400;color:#8c8c8c;letter-spacing:0}
+  .why{font-size:12.5px;color:#595959}
+  .loading{color:#6b7280;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Phân quyền FFM: Role Permission và Department</h1>
+  <div class="meta">
+    Cập nhật lần cuối: 21/10/2026 ·
+    Issue Panchat (kênh ffm_dev): <a href="https://pancakework.vn/issues/w4/c5024/i390">#390 Tính năng phân quyền hệ thống FFM</a>,
+    <a href="https://pancakework.vn/issues/w4/c5024/i440">#440 Tính năng phân quyền theo phòng ban</a> ·
+    Đối chiếu với code nhánh <code>develop</code> của <code>sea-fulfillment</code> và <code>sea-fulfillment-web</code> ngày 21/10/2026
+  </div>
+  <div class="summary">
+    <p>Trước #390, quyền của từng role được viết cứng trong code: muốn đổi phải sửa code rồi deploy. <b>#390</b> đưa quyền ra màn <b>Role Permission</b>: mỗi role có một bộ checkbox, cấu hình riêng từng nước. Nhưng mọi user cùng role vẫn phải có quyền giống nhau. <b>#440</b> thêm <b>Department</b> (phòng ban): gom một nhóm user lại và cho nhóm đó một bộ checkbox riêng. Bộ này <b>thay hẳn</b> bộ của role, không cộng thêm vào.</p>
+    <div class="format">
+      Quyền đang áp dụng của một user, ở nước đang chọn:<br>
+      <b>ADMIN</b> → luôn đủ mọi quyền ·
+      <b>thuộc một Department ở nước này</b> → chỉ dùng bộ quyền của Department ·
+      <b>còn lại</b> → bộ quyền của role trên Role Permission.
+    </div>
+  </div>
+  <div class="toc">
+    <a href="#ba">1. Góc nhìn BA: vận hành</a>
+    <a href="#dev">2. Góc nhìn Dev: flow logic</a>
+    <a href="#gap">3. Chỗ code khác mô tả issue</a>
+    <a href="#proto">4. Prototype bấm thử</a>
+  </div>
+</header>
+
+<!-- ============================== BA ============================== -->
+<section class="section" id="ba">
+  <h2>1. Góc nhìn BA: hệ thống vận hành thế nào</h2>
+
+  <h3>1.1. Ba lớp, đọc từ trái sang phải</h3>
+  <div class="layers">
+    <div class="layer"><b>Role</b><small>Mỗi user có đúng 1 role (<code>user.group</code>), ví dụ <code>SALE</code>. Role cho biết user thuộc khối nào: Sale, CS, Warehouse hay Accountant.</small></div>
+    <div class="arrow">→</div>
+    <div class="layer"><b>Role Permission</b> (#390)<small>Mỗi role có một bộ checkbox. Mọi user cùng role, cùng nước dùng chung bộ này.</small></div>
+    <div class="arrow">→</div>
+    <div class="layer"><b>Department</b> (#440)<small>Không bắt buộc. User được thêm vào Department thì bỏ bộ checkbox của role và dùng bộ của Department.</small></div>
+  </div>
+
+  <h3>1.2. Ai nằm trong phân quyền</h3>
+  <p class="desc">Issue #390 gọi các role là Telesale, CSR, Warehouse, Accountant. Trong hệ thống, Telesale là role <code>SALE_MANAGER</code> / <code>SALE</code>, CSR là <code>CS_MANAGER</code> / <code>CS</code>.</p>
+  <table class="doc">
+    <tr><th>Nhóm</th><th>Role</th><th>Quyền được tính thế nào</th></tr>
+    <tr><td class="group">ADMIN</td><td><code>ADMIN</code></td><td>Luôn đủ mọi quyền. Không có trên màn Role Permission, không cấu hình được, không thêm được vào Department.</td></tr>
+    <tr><td class="group">Country Admin</td><td><code>COUNTRY_ADMIN</code></td><td>Có trên Role Permission, mặc định gần như đủ quyền trong các nước được giao. Không thêm được vào Department. Cùng với ADMIN, là role duy nhất quản lý được Department.</td></tr>
+    <tr><td class="group">8 role vận hành</td><td><code>WAREHOUSE_MANAGER</code> <code>WAREHOUSE</code> <code>ACCOUNTANT_MANAGER</code> <code>ACCOUNTANT</code> <code>SALE_MANAGER</code> <code>SALE</code> <code>CS_MANAGER</code> <code>CS</code></td><td>Theo Role Permission của role. Nếu được thêm vào Department thì theo Department.</td></tr>
+    <tr><td class="group">Seller</td><td><code>SELLER</code> <code>SELLER_OWNER</code></td><td>Không dùng 2 màn này. Quyền của seller do phần cấu hình riêng của seller quyết định (<code>page_permissions</code>).</td></tr>
+    <tr><td class="group">USER</td><td><code>USER</code></td><td>User mới chưa được gán role. Hệ thống không cho gọi API nào, nên role này không có trên Role Permission.</td></tr>
+  </table>
+
+  <h3>1.3. Màn Role Permission (#390)</h3>
+  <div class="box">
+    <ul>
+      <li>Vào ở Setting › General › Role Permission. Chọn một role ở cột trái. Cột phải là checkbox gom theo 7 thẻ: Order, Telesale, CSR, WMS, Reconciliation, Statistic, Setting. Phải bấm <b>Save</b> thì thay đổi mới có hiệu lực.</li>
+      <li>Cấu hình <b>riêng từng nước</b>: role <code>SALE</code> ở Philippines và <code>SALE</code> ở Thailand là 2 bộ checkbox khác nhau.</li>
+      <li>Bấm Save xong, hệ thống áp dụng ngay từ thao tác kế tiếp của user, user không cần đăng xuất.</li>
+      <li>Có checkbox hiện ở 2 thẻ, ví dụ <i>Process assigned orders</i> có ở cả thẻ Telesale lẫn CSR. Tick ở thẻ nào thì cũng là cùng một quyền.</li>
+      <li>Checkbox có 3 loại:
+        <ul>
+          <li><b>Cho phép một thao tác</b>, ví dụ View orders, Create Ticket CSR, Assign Staff.</li>
+          <li><b>Mở rộng phạm vi dữ liệu</b>: View all orders (thẻ Order), View all orders (thẻ Telesale), View All (thẻ CSR, tức là xem mọi ticket), Process assigned orders, View all shops.</li>
+          <li><b>Bỏ qua giới hạn trạng thái đơn</b>: View orders in any status, Edit orders in any status (xem 1.4).</li>
+        </ul>
+      </li>
+      <li>Giá trị mặc định lúc mới triển khai được chép đúng theo cách code cũ đang chặn, nên ngày đầu triển khai không ai bị mất hay được thêm quyền.</li>
+    </ul>
+  </div>
+
+  <h3>1.4. Order Status Scope: user được xem và sửa đơn ở những trạng thái nào</h3>
+  <div class="box">
+    <ul>
+      <li>Có 2 danh sách: <b>Viewable Order Status</b> (các trạng thái được xem) và <b>Editable Order Status</b> (các trạng thái được sửa). Hai danh sách này <b>chỉ áp cho màn Order và màn Telesale</b>, các màn khác không bị ảnh hưởng.</li>
+      <li>Tick <i>View orders in any status</i> hoặc <i>Edit orders in any status</i> thì bỏ qua danh sách tương ứng. Mặc định chỉ <code>COUNTRY_ADMIN</code>, <code>ACCOUNTANT_MANAGER</code>, <code>ACCOUNTANT</code> có 2 quyền này.</li>
+      <li><b>Không tick mà danh sách lại rỗng thì user không thấy đơn nào, hoặc không sửa được đơn nào. Danh sách rỗng không có nghĩa là thấy hết.</b> Màn hình hiện cảnh báo đỏ cho trường hợp này.</li>
+      <li>Với <b>role</b>: chọn trạng thái là lưu luôn, không cần bấm Save. Còn 2 checkbox thì phải bấm Save. Một bản ghi danh sách trạng thái có thể dùng chung cho nhiều role (ví dụ <code>SALE_MANAGER</code> và <code>SALE</code>), nên sửa ở role này là đổi luôn cho role kia. Màn hình có cảnh báo vàng <i>"This scope is shared with…"</i>.</li>
+      <li>Với <b>Department</b>: 2 danh sách thuộc về Department và lưu cùng nút Save.</li>
+    </ul>
+  </div>
+
+  <h3>1.5. User thấy những đơn nào trên màn Order</h3>
+  <p class="desc">Đơn phải đạt <b>cả 2</b> điều kiện. Màn Telesale dùng cùng luật này, nhưng đọc các checkbox ở thẻ Telesale.</p>
+  <table class="doc">
+    <tr><th style="width:230px">Điều kiện</th><th>Luật</th></tr>
+    <tr><td class="group">① Trạng thái của đơn</td><td>Trạng thái nằm trong Viewable Order Status, hoặc user có <i>View orders in any status</i>.</td></tr>
+    <tr><td class="group">② Đơn nào</td><td>
+      Có <i>View all orders</i> thì thấy mọi đơn. Không có thì tuỳ <b>role</b>:
+      <ul style="margin:4px 0">
+        <li><code>SALE_MANAGER</code> / <code>SALE</code>: chỉ đơn được gán sale cho mình. Phải có <i>Process assigned orders</i>; bỏ tick ô này là không thấy đơn nào.</li>
+        <li><code>CS_MANAGER</code> / <code>CS</code>: chỉ đơn được gán care cho mình. Cũng phải có <i>Process assigned orders</i>.</li>
+        <li><code>WAREHOUSE_MANAGER</code> / <code>WAREHOUSE</code>: chỉ đơn thuộc các shop được giao cho mình.</li>
+        <li>Role khác: chỉ đơn do chính mình tạo.</li>
+      </ul>
+    </td></tr>
+    <tr><td class="group">Sửa đơn (đổi trạng thái)</td><td>Phải có <i>Update order(s) status</i>, và trạng thái của đơn nằm trong Editable Order Status (hoặc user có <i>Edit orders in any status</i>). Riêng <code>SALE</code> (không áp cho <code>SALE_MANAGER</code>) chỉ sửa được đơn được gán cho mình.</td></tr>
+  </table>
+
+  <h3>1.6. Department (#440)</h3>
+  <div class="box">
+    <ul>
+      <li>Vào ở Setting › General › Department. Mặc định chỉ <code>ADMIN</code> và <code>COUNTRY_ADMIN</code> thấy màn này. Quyền quản lý Department <b>không cấp được cho role khác</b>: tick cho role khác trên Role Permission thì lúc lưu hệ thống cũng bỏ ô đó đi.</li>
+      <li>Một Department gồm: tên, bộ checkbox giống Role Permission, Viewable / Editable Order Status riêng, và danh sách thành viên.</li>
+      <li>Tên là bắt buộc, không được trùng với Department khác trong cùng nước (không phân biệt chữ hoa, chữ thường).</li>
+      <li>Phải lưu Department trước rồi mới thêm được thành viên. Danh sách chọn chỉ gồm user thoả cả 4 điều kiện: thuộc 8 role vận hành, đang được giao nước đang chọn, chưa bị xoá, chưa thuộc Department nào ở nước này. Người thao tác không tự thêm được chính mình.</li>
+      <li>Mỗi user thuộc tối đa 1 Department <b>ở mỗi nước</b>. Ví dụ ở PH thuộc "Sale VIP", ở TH có thể thuộc Department khác hoặc không thuộc Department nào.</li>
+      <li><b>Thành viên dùng toàn bộ quyền của Department và không được cộng thêm quyền của role.</b> Ô nào Department không tick thì thành viên không có quyền đó, kể cả khi role của họ có.</li>
+      <li>Sửa checkbox của Department thì mọi thành viên nhận thay đổi ngay. Gỡ một thành viên (bấm dấu x) thì user đó quay về quyền của role ngay.</li>
+      <li>Chỉ xoá được Department khi đã gỡ hết thành viên.</li>
+      <li>Màn User: cột Role của thành viên hiện tên Department (tag xanh), di chuột vào thì thấy role thật. User không thuộc Department hiện role như cũ.</li>
+      <li>Không đổi được role của thành viên. Phải gỡ user khỏi Department trước, thông báo lỗi có ghi rõ Department nào, ở nước nào.</li>
+      <li>Khi user bị bỏ một nước khỏi danh sách nước được giao, user tự rời Department ở nước đó. Khi user bị xoá, user rời mọi Department.</li>
+      <li>Chia đơn Telesale và chia ticket CSR tự động chỉ chọn người có <i>Process assigned orders</i> trong quyền đang áp dụng: lấy từ Department nếu user là thành viên, không thì lấy từ role. Khung giờ và số đơn / ticket tối đa vẫn cấu hình ở Telesale Configuration / CSR Configuration.</li>
+    </ul>
+  </div>
+
+  <div class="warn">
+    <h3>1.7. Department không thay role: role vẫn quyết định 4 việc</h3>
+    Department chỉ thay <b>bộ checkbox</b> và <b>Order Status Scope</b>. Kể cả khi user thuộc Department, role vẫn quyết định:
+    <ol style="margin:6px 0 0">
+      <li><b>Thấy đơn nào</b> khi không có <i>View all orders</i>, theo luật ở mục 1.5 ②.</li>
+      <li><b>Có được chia tự động hay không</b>: chia đơn Telesale chỉ xét <code>SALE_MANAGER</code> / <code>SALE</code>, chia ticket CSR chỉ xét <code>CS</code>. Ví dụ một <code>WAREHOUSE</code> thuộc Department có tick <i>Process assigned orders</i> thì vẫn không được chia đơn.</li>
+      <li><code>SALE</code> chỉ sửa được đơn được gán cho mình.</li>
+      <li><b>Gán được role nào cho ai</b> (bảng 1.8). Luật này đọc theo role, không đọc theo Department.</li>
+    </ol>
+  </div>
+
+  <h3>1.8. Ai cấu hình được gì (theo mặc định)</h3>
+  <table class="doc">
+    <tr><th>Việc</th><th>Checkbox</th><th>Mặc định ai có</th><th>Ghi chú</th></tr>
+    <tr><td>Mở Role Permission, sửa checkbox của các role</td><td>Role Permission</td><td><code>COUNTRY_ADMIN</code></td><td>ADMIN luôn làm được. Xem mục 3 về trường hợp cấp quyền này cho Manager.</td></tr>
+    <tr><td>Quản lý Department</td><td>Department</td><td><code>COUNTRY_ADMIN</code></td><td>Không cấp được cho role khác.</td></tr>
+    <tr><td>Đổi role của user</td><td>Assign role</td><td><code>COUNTRY_ADMIN</code> + 4 Manager</td><td>Bảng dưới.</td></tr>
+    <tr><td>Tạo user</td><td>Create user</td><td><code>COUNTRY_ADMIN</code></td><td></td></tr>
+    <tr><td>Sửa thông tin user khác</td><td>Edit other users</td><td><code>COUNTRY_ADMIN</code></td><td>Mọi user vẫn tự sửa được hồ sơ của mình.</td></tr>
+  </table>
+  <table class="doc">
+    <tr><th>Người thao tác</th><th>Gán được role</th><th>Cho user đang có role</th></tr>
+    <tr><td class="group">ADMIN</td><td>Mọi role</td><td>Mọi role</td></tr>
+    <tr><td class="group">COUNTRY_ADMIN</td><td>Mọi role trừ <code>ADMIN</code></td><td>Mọi role trừ <code>ADMIN</code>, <code>COUNTRY_ADMIN</code></td></tr>
+    <tr><td class="group">WAREHOUSE_MANAGER</td><td><code>WAREHOUSE</code>, <code>USER</code></td><td><code>USER</code> hoặc <code>WAREHOUSE</code></td></tr>
+    <tr><td class="group">ACCOUNTANT_MANAGER</td><td><code>ACCOUNTANT</code>, <code>USER</code></td><td><code>USER</code> hoặc <code>ACCOUNTANT</code></td></tr>
+    <tr><td class="group">SALE_MANAGER</td><td><code>SALE</code>, <code>USER</code></td><td><code>USER</code> hoặc <code>SALE</code></td></tr>
+    <tr><td class="group">CS_MANAGER</td><td><code>CS</code>, <code>USER</code></td><td><code>USER</code> hoặc <code>CS</code></td></tr>
+  </table>
+  <p class="desc">Mọi role, kể cả ADMIN, chỉ thao tác được ở các nước được giao cho mình.</p>
+
+  <h3>1.9. Câu hỏi hay gặp</h3>
+  <table class="doc">
+    <tr><th style="width:330px">Tình huống</th><th>Kiểm tra theo thứ tự</th></tr>
+    <tr><td>User <code>SALE</code> / <code>CS</code> mở màn Order không thấy đơn nào</td><td>(1) Nước đang chọn có đúng nước của đơn không. (2) User có thuộc Department ở nước đó không; nếu có thì xem cấu hình của Department chứ không xem của role. (3) Có <i>Process assigned orders</i> không. (4) Viewable Order Status có đang rỗng không. (5) Đơn đã được gán sale / care cho user chưa.</td></tr>
+    <tr><td>Thêm user vào Department xong thì user mất quyền X</td><td>Department chưa tick X. Quyền của Department không cộng với quyền của role.</td></tr>
+    <tr><td>Muốn 2 bạn cùng role <code>SALE</code> có quyền khác nhau</td><td>Tạo Department cho nhóm cần khác đi. Nhóm còn lại tiếp tục dùng Role Permission.</td></tr>
+    <tr><td>Dev vừa thêm một quyền mới, thành viên Department không có quyền đó</td><td>Quyền mới mặc định tắt với mọi Department. Admin phải vào từng Department để tick. Role thì nhận giá trị mặc định do dev đặt.</td></tr>
+    <tr><td>Muốn đổi role cho một thành viên Department</td><td>Gỡ user khỏi Department trước, rồi đổi role.</td></tr>
+  </table>
+</section>
+
+<!-- ============================== DEV ============================== -->
+<section class="section" id="dev">
+  <h2>2. Góc nhìn Dev: flow logic</h2>
+
+  <h3>2.1. Dữ liệu: 4 bảng mới và 1 bảng có sẵn</h3>
+  <table class="doc">
+    <tr><th>Bảng</th><th>Là gì</th><th>Unique</th></tr>
+    <tr><td class="group"><code>permissions</code></td><td>Danh mục quyền. Mỗi dòng gồm <code>key</code> (vd <code>order.view</code>), <code>name</code> hiển thị, <code>modules</code> (thẻ trên màn hình), <code>group_label</code> (nhóm con), <code>routes</code> (các endpoint mà key gác). Không có <code>country_code</code>.</td><td><code>(app_id, app_type, key)</code></td></tr>
+    <tr><td class="group"><code>group_permissions</code></td><td>Ma trận quyền. Mỗi dòng ứng với 1 role ở 1 nước, cột <code>permissions</code> có dạng <code>%{key =&gt; true}</code>, key không có trong map là tắt. ADMIN không có dòng nào.</td><td><code>(app_id, country_code, app_type, group)</code></td></tr>
+    <tr><td class="group"><code>departments</code></td><td>Gồm <code>name</code>, <code>permissions</code> (cùng dạng với trên), <code>viewable_order_status</code>, <code>editable_order_status</code>.</td><td><code>(app_id, country_code, app_type, lower(name))</code></td></tr>
+    <tr><td class="group"><code>department_users</code></td><td>Thành viên. Khoá ngoại <code>on_delete: :restrict</code> nên DB không cho xoá Department còn thành viên.</td><td><code>(app_id, country_code, app_type, user_id)</code></td></tr>
+    <tr><td class="group"><code>ffm_settings</code></td><td>Có từ trước. Type <code>user_group</code> lưu Viewable Order Status của role, type <code>edit_order_group</code> lưu Editable Order Status. Cột <code>groups</code> là mảng nên một bản ghi dùng chung được cho nhiều role.</td><td>—</td></tr>
+  </table>
+  <p class="desc">Phía FFM, cột <code>app_type</code> luôn là <code>"FFM"</code>. Cả 4 bảng mới đều có trigger ghi <code>system_logs</code>.</p>
+
+  <h3>2.2. Code giữ giá trị mặc định, DB giữ cấu hình thật</h3>
+  <div class="box">
+    <ul>
+      <li><a href="https://github.com/pancake-vn/sea-fulfillment/blob/develop/lib/app/permission_catalog.ex"><code>PermissionCatalog</code></a> khai báo mọi key: tên, thẻ, routes, <code>default_groups</code>. <code>default_groups</code> chép đúng các chốt viết cứng trước #390, nên lần seed đầu không đổi quyền của ai.</li>
+      <li><code>Manage.sync_permission_catalog/0</code> làm 4 việc:
+        <ul>
+          <li>ghi danh mục từ code xuống bảng <code>permissions</code>: ghi đè, và xoá key không còn trong code;</li>
+          <li>với ma trận, <b>chỉ điền key mới</b> theo mặc định, không đè ô admin đã sửa;</li>
+          <li>xoá key đã bị bỏ khỏi ma trận và khỏi Department;</li>
+          <li>trả về <code>departments_to_review</code>, là các Department cần admin xem lại vì có key mới.</li>
+        </ul>
+      </li>
+      <li>Trong khoảng sau khi deploy mà chưa chạy sync, gặp key có trong code nhưng chưa có trong DB: role dùng mặc định trong code, thành viên Department thì <b>tắt</b> (<code>not_in_db/3</code>). Key không có ở cả code lẫn DB thì cho qua.</li>
+      <li>Trên màn hình, tab danh mục (gắn endpoint vào key) chỉ để xem và chỉ tài khoản kỹ thuật thấy (<code>PermissionAction.system_account?/1</code>). Muốn sửa danh mục thì sửa code rồi chạy sync.</li>
+    </ul>
+  </div>
+
+  <h3>2.3. Luồng một request</h3>
+<pre class="mermaid">
+flowchart TD
+  A["Request từ FE<br/>kèm country_code"] --> B["Plug Auth<br/>xác định user · kiểm country_code nằm trong business_countries"]
+  B --> C["PermissionAction.put_permissions/1<br/>tìm Department của user ở nước này<br/>tính tập key đang bật, lưu vào Process"]
+  C --> D["Plug Authorize<br/>tra {controller, action} ra key qua route_index/0"]
+  D -->|"ADMIN, hoặc route chưa gắn key"| E["Cho qua"]
+  D -->|"có key"| F{"can?(user, key)"}
+  F -->|false| G["Not enough permission"]
+  F -->|true| E
+  E --> H["Controller / Action<br/>kiểm tại chỗ bằng can?/2<br/>vd sửa đơn: order.service_type, telesale.order_info"]
+  H --> I["Query dữ liệu<br/>giới hạn theo trạng thái + theo đơn nào<br/>order.view_all_status · order.view_all · order.process_assigned"]
+</pre>
+  <div class="box">
+    <ul>
+      <li><a href="https://github.com/pancake-vn/sea-fulfillment/blob/develop/lib/sea_fulfillment_web/plugs/authorize.ex"><code>Authorize</code></a> được cắm cho mọi controller trong <code>SeaFulfillmentWeb.controller/0</code>, nên không cần khai lại ở từng controller.</li>
+      <li>Route chưa gắn key thì <b>cố ý cho qua</b>: hệ thống có hơn 500 route, chặn mặc định thì lần deploy đầu sẽ khoá cả sản phẩm. Chạy <code>mix permission.audit</code> để liệt kê route chưa gắn key.</li>
+      <li><code>/users/me</code> trả về <code>permissions</code> là danh sách key đang bật (<code>PermissionAction.keys_of/1</code>). FE dùng danh sách này để ẩn / hiện menu và nút, qua hàm <code>can('key')</code> trong <code>utils/menu/settings.js</code>.</li>
+    </ul>
+  </div>
+
+  <h3>2.4. <code>can?/2</code> quyết định thế nào</h3>
+<pre class="mermaid">
+flowchart TD
+  S["can?(user, key)"] --> A{"group"}
+  A -->|ADMIN| T1["true"]
+  A -->|"SELLER · SELLER_OWNER"| T2["true, trừ key internal_only<br/>(seller bị chặn bằng page_permissions riêng)"]
+  A -->|"COUNTRY_ADMIN + 8 role vận hành"| N{"Biết được nước?"}
+  N -->|"Không (worker, script)"| T3["true"]
+  N -->|Có| D{"Thuộc Department<br/>ở nước này?"}
+  D -->|Có| P1["Đọc departments.permissions"]
+  D -->|Không| P2["Đọc dòng group_permissions của role<br/>bỏ department.manage nếu không phải COUNTRY_ADMIN"]
+  P1 --> K{"Key đã có trong DB?"}
+  P2 --> K
+  K -->|Có| R1["true nếu ô được tick"]
+  K -->|"Chưa (chưa chạy sync)"| R2["Role: theo default_groups trong code<br/>Department: false"]
+</pre>
+  <table class="doc">
+    <tr><th>Hàm</th><th>Khác <code>can?/2</code> ở đâu</th><th>Dùng khi nào</th></tr>
+    <tr><td class="group"><code>can?/2</code></td><td>—</td><td>Gác thao tác: route trong <code>Authorize</code>, kiểm tại chỗ trong action.</td></tr>
+    <tr><td class="group"><code>can_internal?/2</code></td><td>Nhóm seller nhận <code>false</code> thay vì <code>true</code>.</td><td>Các giới hạn dữ liệu mà seller vẫn phải chịu: phạm vi trạng thái đơn, phạm vi đơn, phạm vi shop.</td></tr>
+    <tr><td class="group"><code>can_internal_in_country?/3</code></td><td>Thêm điều kiện: nước phải nằm trong <code>business_countries</code> của user.</td><td><code>department.manage</code>, <code>warehouse.manage</code>, <code>shop.view_all</code>, <code>return_qc.takeover</code>.</td></tr>
+  </table>
+
+  <h3>2.5. Ba kiểu chốt quyền trong code</h3>
+  <table class="doc">
+    <tr><th style="width:190px">Kiểu</th><th>Cách làm</th><th>Ví dụ</th></tr>
+    <tr><td class="group">Theo route</td><td>Key có <code>routes</code>, plug <code>Authorize</code> tra ngược từ <code>{controller, action}</code> ra key.</td><td><code>tote.manage</code> gác <code>ToteController.create</code></td></tr>
+    <tr><td class="group">Kiểm tại chỗ</td><td>Một endpoint phục vụ nhiều mục đích nên route không cho biết user định làm gì. Key để <code>routes: []</code>, code gọi <code>can?/2</code> ngay trong action.</td><td><code>PUT /orders/:id</code> và luồng bulk update: chọn key theo cờ <code>is_telesale</code> (<code>order.edit</code> hoặc <code>telesale.edit_status</code>), kiểm <code>order.service_type</code>, <code>order.courier_info</code> trong <code>OrderAction.update/2</code></td></tr>
+    <tr><td class="group">Phạm vi dữ liệu</td><td>Key không gác route nào, chỉ đổi query. Có 3 nơi phải sửa cùng lúc: <code>OrderAction.query_by_user/3</code> (Postgres), <code>Services.EsV2.Order.query_by_user</code> (Elasticsearch), <code>FfmChannel</code> (socket đẩy đơn realtime).</td><td><code>order.view_all</code>, <code>telesale.view_all</code>, <code>csr.view_all</code>, <code>order.process_assigned</code>, <code>order.view_all_status</code>, <code>order.edit_all_status</code>, <code>shop.view_all</code></td></tr>
+  </table>
+
+  <h3>2.6. Department được đọc ở những chỗ nào</h3>
+  <div class="box">
+    <ul>
+      <li><code>PermissionAction.department_of/2</code>: từ (user, <code>country_code</code>) tra <code>department_users</code> rồi <code>departments</code>, đọc qua Cache. Chỉ áp cho 8 role vận hành (<code>department_groups/0</code>).</li>
+      <li><code>effective_keys</code>: user có Department thì lấy <code>department.permissions</code>, không thì lấy dòng ma trận của role. Hai nguồn này <b>không được gộp lại</b>.</li>
+      <li><code>department_order_status/3</code>: thay cho FFMSetting <code>user_group</code> / <code>edit_order_group</code> của role. Department chưa chọn trạng thái nào thì trả <code>[]</code>, tức là không thấy đơn nào.</li>
+      <li><code>filter_internal_with_permission/3</code>: dùng cho worker chia đơn (<code>OrderWorker.assignable_sale_ids/2</code>) và chia ticket (<code>TicketAssignAction.online_care_ids/2</code>). Hàm đọc ma trận và Department một lần cho cả danh sách user.</li>
+      <li><code>UserController.set_group/2</code>: không cho đổi role khi user còn là thành viên Department. Hàm khoá dòng user bằng <code>FOR UPDATE</code>. <code>DepartmentAction.add_members/3</code> cũng khoá dòng user, nên đổi role và thêm vào Department không chạy chen nhau được.</li>
+      <li>Sửa user bỏ bớt nước, xoá user, đồng bộ nước theo seller: gọi <code>DepartmentAction.remove_user_memberships/3</code> <b>sau khi commit</b>, rồi mới xoá cache.</li>
+      <li><code>Department.changeset/2</code> bỏ <code>department.manage</code> khỏi quyền của Department. <code>GroupPermission.changeset/2</code> bỏ <code>department.manage</code> khỏi mọi role trừ <code>COUNTRY_ADMIN</code>.</li>
+    </ul>
+  </div>
+
+  <h3>2.7. Cache và lúc nào thay đổi có hiệu lực</h3>
+  <div class="box">
+    <ul>
+      <li>Cả 4 bảng đều đọc qua <code>Cache.get_list_data/2</code>, TTL 3 ngày. Mọi hàm ghi xoá cache <b>sau khi</b> ghi thành công, nhờ vậy AC9 (gỡ thành viên) và AC10 (sửa checkbox) có hiệu lực từ request kế tiếp.</li>
+      <li>Mỗi request chỉ nạp quyền 1 lần vào Process (<code>put_permissions/1</code>), các lần gọi <code>can?/2</code> sau đó không đụng Redis. Bản nạp có ghi kèm <code>user_id</code>, <code>group</code>, <code>country_code</code>; một trong các giá trị này lệch thì hệ thống đọc lại từ cache.</li>
+      <li>Request không gửi <code>country_code</code> (ví dụ lần gọi <code>/users/me</code> đầu tiên) thì quyền được đọc theo nước đầu tiên trong <code>business_countries</code>.</li>
+    </ul>
+  </div>
+
+  <h3>2.8. Thêm một quyền mới</h3>
+  <div class="box">
+    <ol style="margin:0;padding-left:4px">
+      <li>Thêm một entry vào <code>@catalog</code> của <code>PermissionCatalog</code>: <code>key</code>, <code>name</code> (tiếng Anh, theo nhãn trong thiết kế), <code>modules</code>, <code>group_label</code>, <code>default_groups</code> (đúng với cách code đang chặn), <code>routes</code>.</li>
+      <li>Endpoint dùng chung cho nhiều mục đích thì kiểm tại chỗ bằng <code>can?/2</code>. Quyền phạm vi dữ liệu thì dùng <code>can_internal?/2</code> và sửa đủ 3 nơi (Postgres, ES, socket).</li>
+      <li>Gỡ chốt role viết cứng cũ nếu có. Còn giữ cả 2 thì ô tick trên màn hình không có tác dụng.</li>
+      <li>FE dùng <code>can('key')</code> cho menu và nút.</li>
+      <li>Deploy xong chạy <code>Manage.sync_permission_catalog/0</code>, đọc <code>departments_to_review</code> rồi báo admin tick key mới cho các Department cần.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================== GAP ============================== -->
+<section class="section" id="gap">
+  <h2>3. Chỗ code khác mô tả issue</h2>
+  <p class="desc">Hai điểm dưới đây so mô tả issue với code <code>develop</code>. Comment của 2 issue không đọc được qua API (trả về 404), nên có thể các điểm này đã được chốt trong comment.</p>
+  <table class="doc">
+    <tr><th style="width:250px">Mô tả issue</th><th>Code hiện tại</th></tr>
+    <tr><td><b>#390, các Manager</b>: chỉ cấu hình được checkbox cho role Staff cùng khối, không được sửa quyền của chính mình.</td><td>Màn Role Permission được gác bằng đúng một key là <code>permission.manage</code>, mặc định chỉ <code>COUNTRY_ADMIN</code> có. <code>upsert_group_permissions/2</code> không kiểm role của người sửa. Vì vậy nếu tick key này cho một Manager, Manager đó sửa được checkbox của <b>mọi</b> role, kể cả role của chính mình. Luật "Manager chỉ đụng tới Staff cùng khối" hiện chỉ có ở việc gán role (<code>User.has_group_permission/3</code>).</td></tr>
+    <tr><td><b>#440 AC5</b>: danh sách chọn gồm "user cơ bản hoặc user đang thuộc 1 trong các role vận hành".</td><td>Danh sách chọn chỉ gồm 8 role vận hành (<code>department_groups/0</code>), user có role <code>USER</code> không có trong đó. Nếu "user cơ bản" nghĩa là role <code>USER</code> thì đây là chỗ lệch.</td></tr>
+  </table>
+</section>
+
+<!-- ============================== PROTOTYPE ============================== -->
+<section class="section" id="proto">
+  <h2>4. Prototype bấm thử</h2>
+  <p class="desc">Mô phỏng luật trong code với dữ liệu mẫu ở 1 nước (PH). Chỉ dùng khoảng 30 quyền tiêu biểu trong hơn 90 quyền thật. Màn thật chỉ hiện tên quyền; key ở đây hiện thêm để dev đối chiếu. Đổi user ở ô <b>"Đăng nhập với tư cách"</b> để thấy cùng một cấu hình cho ra kết quả khác nhau.</p>
+  <ol class="tips">
+    <li>Chọn <b>Bình (SALE)</b>, tab <i>Kết quả</i>: Bình chỉ thấy đơn được gán cho mình, trong Viewable Order Status của role <code>SALE</code>.</li>
+    <li>Chọn <b>Chi (SALE, Department "Sale VIP")</b>: Chi thấy đơn <code>shipped</code> và sửa được đơn <code>confirmed</code>, Bình thì không. Nhưng Chi <b>không</b> thấy đơn 1010 (<code>cancel</code>) dù đơn được gán cho Chi và role <code>SALE</code> được xem trạng thái <code>cancel</code>, vì quyền của Department thay hẳn quyền của role.</li>
+    <li>Chọn <b>Lan (COUNTRY_ADMIN)</b>, vào Role Permission, chọn role <code>SALE</code>, bỏ tick <i>Process assigned orders</i>, bấm Save. Quay lại Bình: không thấy đơn nào và không được chia đơn. Chi không bị ảnh hưởng.</li>
+    <li>Lan vào Department, mở "Sale VIP", bấm x để gỡ Chi. Chọn lại Chi: Chi quay về quyền của role <code>SALE</code> ngay.</li>
+    <li>Lan vào User, thử đổi role của Em (đang ở Department "CS Return"): ô đổi role bị khoá.</li>
+    <li>Chọn <b>An (SALE_MANAGER)</b>, vào User: An chỉ đổi được Bình và Khoa, và chỉ sang <code>SALE</code> hoặc <code>USER</code>. Tab Role Permission và Department báo <i>Not enough permission</i>.</li>
+    <li>Chọn <b>Em (CS, Department "CS Return")</b>: Em thấy mọi đơn <code>delivered</code> / <code>returning</code> / <code>returned</code> nhưng không được chia ticket tự động, vì Department không tick <i>Process assigned orders</i>.</li>
+  </ol>
+  <div id="prototype-root"><div class="loading">Đang tải prototype…</div></div>
+</section>
+
+</div>
+
+<script type="text/babel" data-presets="react">
+  const { useState, useEffect, useMemo } = React;
+  const { Alert, Button, Card, Checkbox, Col, Empty, Input, Popconfirm, Row, Select, Space, Table, Tabs, Tag, Tooltip, Typography, message } = antd;
+  const { CheckCircleTwoTone, CloseCircleTwoTone, DeleteOutlined, EditOutlined, EyeOutlined, LockOutlined, PlusOutlined, ReloadOutlined } = icons;
+
+  // ---------------------------------------------------------------- Danh mục (rút gọn từ PermissionCatalog)
+  const ROLES = ['COUNTRY_ADMIN', 'WAREHOUSE_MANAGER', 'WAREHOUSE', 'ACCOUNTANT_MANAGER', 'ACCOUNTANT', 'SALE_MANAGER', 'SALE', 'CS_MANAGER', 'CS'];
+  const DEPT_ROLES = ROLES.filter((r) => r !== 'COUNTRY_ADMIN');
+  const ALL_GROUPS = ['ADMIN', ...ROLES, 'USER'];
+  const MODULES = ['Order', 'Telesale', 'CSR', 'WMS', 'Reconciliation', 'Statistic', 'Setting'];
+  const SCOPE_LABEL = 'Order Status Scope';
+
+  const G = {
+    internal: ROLES,
+    accountant: ['COUNTRY_ADMIN', 'ACCOUNTANT_MANAGER', 'ACCOUNTANT'],
+    warehouse: ['COUNTRY_ADMIN', 'WAREHOUSE_MANAGER', 'WAREHOUSE'],
+    warehouseManager: ['COUNTRY_ADMIN', 'WAREHOUSE_MANAGER'],
+    cs: ['COUNTRY_ADMIN', 'CS_MANAGER', 'CS'],
+    csManager: ['COUNTRY_ADMIN', 'CS_MANAGER'],
+    adminOnly: ['COUNTRY_ADMIN'],
+    viewAll: ['COUNTRY_ADMIN', 'SALE_MANAGER', 'CS_MANAGER', 'ACCOUNTANT_MANAGER', 'ACCOUNTANT'],
+    managers: ['COUNTRY_ADMIN', 'WAREHOUSE_MANAGER', 'ACCOUNTANT_MANAGER', 'SALE_MANAGER', 'CS_MANAGER'],
+  };
+
+  const P = (key, name, modules, group_label, defaults, extra) => ({ key, name, modules, group_label, defaults, ...(extra || {}) });
+  const CATALOG = [
+    P('order.view', 'View orders', ['Order'], null, G.internal),
+    P('order.edit', 'Update order(s) status', ['Order'], null, G.internal),
+    P('order.export', 'Export orders via email', ['Order'], null, G.internal),
+    P('order.view_all', 'View all orders', ['Order'], null, G.viewAll),
+    P('order.view_all_status', 'View orders in any status', ['Order', 'Telesale'], SCOPE_LABEL, G.accountant),
+    P('order.edit_all_status', 'Edit orders in any status', ['Order', 'Telesale'], SCOPE_LABEL, G.accountant),
+    P('telesale.edit_status', 'Update order(s) status', ['Telesale'], null, G.internal),
+    P('telesale.view_all', 'View all orders', ['Telesale'], null, G.viewAll),
+    P('order.process_assigned', 'Process assigned orders', ['Telesale', 'CSR'], null, G.internal),
+    P('order.assign_sale', 'Assign / Unassign sale', ['Telesale'], null, ['COUNTRY_ADMIN', 'SALE_MANAGER']),
+    P('csr_ticket.view', 'View CSR tickets', ['CSR'], null, G.cs),
+    P('csr_ticket.edit', 'Create Ticket CSR', ['Order', 'CSR'], null, G.cs),
+    P('csr.view_all', 'View All', ['CSR'], null, G.csManager),
+    P('order.assign_care', 'Assign / Unassign care', ['Order', 'CSR'], null, G.csManager),
+    P('purchase.view', 'View Purchase', ['WMS'], 'Inbound', G.internal),
+    P('picking.perform', 'Perform picking', ['WMS'], 'Picking', G.internal),
+    P('packing.perform', 'Create', ['WMS'], 'Packing', G.internal),
+    P('tote.manage', 'Create', ['WMS'], 'Tote Management', ['WAREHOUSE_MANAGER']),
+    P('reconciliation.courier', 'View', ['Reconciliation'], 'Courier Reconciliation', G.accountant),
+    P('seller_wallet.view', 'View', ['Reconciliation'], 'Wallet', G.accountant),
+    P('seller_transaction.manage', 'Adjust', ['Reconciliation'], 'Wallet', G.accountant),
+    P('csr.statistic_report', 'View CSR Report', ['Statistic'], null, G.cs),
+    P('telesale.statistic', 'View Telesale Report', ['Statistic'], null, G.adminOnly),
+    P('user.view', 'View User', ['Setting'], 'General', G.internal),
+    P('user.manage', 'Assign role', ['Setting'], 'General', G.managers),
+    P('permission.manage', 'Role Permission', ['Setting'], 'General', G.adminOnly),
+    P('department.manage', 'Department', ['Setting'], 'General', G.adminOnly, { countryAdminOnly: true }),
+    P('order.telesale_config', 'Telesale Configuration', ['Setting'], 'Order Configuration', G.adminOnly),
+    P('csr.config', 'CSR Configuration', ['Setting'], 'Order Configuration', G.csManager),
+  ];
+  const NAME_OF = Object.fromEntries(CATALOG.map((p) => [p.key, p.name]));
+
+  const STATUS_COLORS = { new: 'blue', need_confirm: 'gold', sale_pending: 'orange', confirmed: 'cyan', wait_print: 'geekblue', packing: 'purple', shipped: 'processing', delivered: 'green', returning: 'volcano', returned: 'magenta', cancel: 'default' };
+  const STATUS_OPTIONS = Object.keys(STATUS_COLORS).map((s) => ({ value: s, label: s }));
+  const StatusTag = ({ s }) => <Tag color={STATUS_COLORS[s]}>{s}</Tag>;
+
+  // ---------------------------------------------------------------- Dữ liệu mẫu
+  const USERS = [
+    { id: 'u1', name: 'Admin', email: 'admin@demo.vn', group: 'ADMIN' },
+    { id: 'u2', name: 'Lan', email: 'lan@demo.vn', group: 'COUNTRY_ADMIN' },
+    { id: 'u3', name: 'An', email: 'an@demo.vn', group: 'SALE_MANAGER' },
+    { id: 'u4', name: 'Bình', email: 'binh@demo.vn', group: 'SALE' },
+    { id: 'u5', name: 'Chi', email: 'chi@demo.vn', group: 'SALE' },
+    { id: 'u6', name: 'Dũng', email: 'dung@demo.vn', group: 'CS_MANAGER' },
+    { id: 'u7', name: 'Em', email: 'em@demo.vn', group: 'CS' },
+    { id: 'u8', name: 'Giang', email: 'giang@demo.vn', group: 'WAREHOUSE', shops: ['Shop A'] },
+    { id: 'u9', name: 'Hà', email: 'ha@demo.vn', group: 'ACCOUNTANT' },
+    { id: 'u10', name: 'Khoa', email: 'khoa@demo.vn', group: 'USER' },
+  ];
+  const ORDERS = [
+    { id: 1001, status: 'new', sale: 'u4', care: null, shop: 'Shop A', creator: 'u3' },
+    { id: 1002, status: 'need_confirm', sale: 'u5', care: null, shop: 'Shop B', creator: 'u3' },
+    { id: 1003, status: 'sale_pending', sale: 'u4', care: null, shop: 'Shop A', creator: 'u2' },
+    { id: 1004, status: 'confirmed', sale: 'u5', care: null, shop: 'Shop A', creator: 'u3' },
+    { id: 1005, status: 'packing', sale: 'u4', care: null, shop: 'Shop B', creator: 'u2' },
+    { id: 1006, status: 'shipped', sale: 'u5', care: 'u7', shop: 'Shop A', creator: 'u9' },
+    { id: 1007, status: 'delivered', sale: 'u4', care: 'u7', shop: 'Shop B', creator: 'u3' },
+    { id: 1008, status: 'returning', sale: 'u5', care: 'u6', shop: 'Shop A', creator: 'u3' },
+    { id: 1009, status: 'returned', sale: 'u4', care: 'u7', shop: 'Shop A', creator: 'u2' },
+    { id: 1010, status: 'cancel', sale: 'u5', care: null, shop: 'Shop B', creator: 'u9' },
+  ];
+  const userName = (state, id) => (id ? (state.users.find((u) => u.id === id) || {}).name : '—');
+
+  const pick = (keys) => Object.fromEntries(keys.map((k) => [k, true]));
+  const defaultMatrix = () => Object.fromEntries(ROLES.map((r) => [r, Object.fromEntries(CATALOG.filter((p) => p.defaults.includes(r)).map((p) => [p.key, true]))]));
+
+  const initialState = () => ({
+    matrix: defaultMatrix(),
+    // FFMSetting user_group / edit_order_group — một bản ghi gán được cho nhiều role.
+    scopes: [
+      { id: 1, type: 'user_group', groups: ['SALE_MANAGER', 'SALE'], statuses: ['new', 'need_confirm', 'sale_pending', 'confirmed', 'cancel'] },
+      { id: 2, type: 'edit_order_group', groups: ['SALE_MANAGER', 'SALE'], statuses: ['new', 'need_confirm', 'sale_pending'] },
+      { id: 3, type: 'user_group', groups: ['CS_MANAGER', 'CS'], statuses: ['confirmed', 'shipped', 'delivered', 'returning', 'returned'] },
+      { id: 4, type: 'edit_order_group', groups: ['CS_MANAGER', 'CS'], statuses: ['shipped', 'returning'] },
+      { id: 5, type: 'user_group', groups: ['WAREHOUSE_MANAGER', 'WAREHOUSE'], statuses: ['confirmed', 'wait_print', 'packing', 'shipped'] },
+      { id: 6, type: 'edit_order_group', groups: ['WAREHOUSE_MANAGER', 'WAREHOUSE'], statuses: ['confirmed', 'wait_print', 'packing'] },
+    ],
+    departments: [
+      {
+        id: 1, name: 'Sale VIP', version: 1,
+        permissions: pick(['order.view', 'order.edit', 'order.export', 'telesale.edit_status', 'order.process_assigned', 'user.view']),
+        viewable: ['new', 'need_confirm', 'sale_pending', 'confirmed', 'packing', 'shipped', 'delivered'],
+        editable: ['new', 'need_confirm', 'sale_pending', 'confirmed'],
+      },
+      {
+        id: 2, name: 'CS Return', version: 1,
+        permissions: pick(['order.view', 'order.edit', 'order.view_all', 'csr_ticket.view', 'csr_ticket.edit', 'csr.view_all', 'csr.statistic_report', 'user.view']),
+        viewable: ['delivered', 'returning', 'returned'],
+        editable: ['returning'],
+      },
+    ],
+    members: [{ deptId: 1, userId: 'u5' }, { deptId: 2, userId: 'u7' }],
+    users: USERS.map((u) => ({ ...u })),
+  });
+
+  // ---------------------------------------------------------------- Luật (mô phỏng PermissionAction / OrderAction)
+  const isSale = (g) => g === 'SALE_MANAGER' || g === 'SALE';
+  const isCs = (g) => g === 'CS_MANAGER' || g === 'CS';
+  const isWh = (g) => g === 'WAREHOUSE_MANAGER' || g === 'WAREHOUSE';
+  const truthy = (m) => Object.fromEntries(Object.entries(m || {}).filter(([, v]) => v));
+  const sameKeys = (a, b) => JSON.stringify(Object.keys(truthy(a)).sort()) === JSON.stringify(Object.keys(truthy(b)).sort());
+
+  // PermissionAction.department_of/2
+  const departmentOf = (state, user) => {
+    if (!user || !DEPT_ROLES.includes(user.group)) return null;
+    const m = state.members.find((x) => x.userId === user.id);
+    return m ? state.departments.find((d) => d.id === m.deptId) : null;
+  };
+
+  // Nguồn quyền đang áp dụng (effective_keys)
+  const permSource = (state, user) => {
+    if (user.group === 'ADMIN') return { type: 'ADMIN', perms: pick(CATALOG.map((p) => p.key)) };
+    if (!ROLES.includes(user.group)) return { type: 'NONE', perms: {} };
+    const dept = departmentOf(state, user);
+    if (dept) return { type: 'DEPT', dept, perms: truthy(dept.permissions) };
+    const perms = truthy(state.matrix[user.group]);
+    if (user.group !== 'COUNTRY_ADMIN') delete perms['department.manage'];
+    return { type: 'ROLE', perms };
+  };
+  const can = (state, user, key) => !!permSource(state, user).perms[key];
+
+  const roleScopeRecord = (state, group, type) => state.scopes.find((r) => r.type === type && r.groups.includes(group));
+  const statusList = (state, user, type) => {
+    const dept = departmentOf(state, user);
+    if (dept) return { list: (type === 'user_group' ? dept.viewable : dept.editable) || [], from: `Department "${dept.name}"` };
+    const rec = roleScopeRecord(state, user.group, type);
+    return { list: rec ? rec.statuses : [], from: `role ${user.group}` };
+  };
+
+  const dataRule = (state, user) => {
+    if (user.group === 'ADMIN') return 'mọi đơn (ADMIN)';
+    if (can(state, user, 'order.view_all')) return 'mọi đơn, vì có View all orders';
+    if (isSale(user.group)) return can(state, user, 'order.process_assigned') ? 'đơn được gán sale cho mình (khối Sale + Process assigned orders)' : 'không đơn nào: khối Sale mà thiếu cả View all orders lẫn Process assigned orders';
+    if (isCs(user.group)) return can(state, user, 'order.process_assigned') ? 'đơn được gán care cho mình (khối CS + Process assigned orders)' : 'không đơn nào: khối CS mà thiếu cả View all orders lẫn Process assigned orders';
+    if (isWh(user.group)) return `đơn của shop được giao cho mình: ${(user.shops || []).join(', ') || '(chưa giao shop nào)'}`;
+    return 'chỉ đơn do mình tạo';
+  };
+
+  // OrderAction.query_by_user/3: phạm vi trạng thái rồi tới phạm vi đơn
+  const orderVisible = (state, user, o) => {
+    if (user.group === 'ADMIN') return { ok: true, why: 'ADMIN thấy mọi đơn' };
+    if (!can(state, user, 'order.view')) return { ok: false, why: 'Thiếu View orders: API danh sách đơn trả "Not enough permission"' };
+    if (!can(state, user, 'order.view_all_status')) {
+      const { list, from } = statusList(state, user, 'user_group');
+      if (!list.includes(o.status)) return { ok: false, why: `${o.status} không nằm trong Viewable Order Status của ${from}` };
+    }
+    if (can(state, user, 'order.view_all')) return { ok: true, why: 'Có View all orders' };
+    if (isSale(user.group)) {
+      if (!can(state, user, 'order.process_assigned')) return { ok: false, why: 'Khối Sale thiếu Process assigned orders' };
+      return o.sale === user.id ? { ok: true, why: 'Đơn được gán sale cho user này' } : { ok: false, why: 'Không phải đơn được gán sale cho user này' };
+    }
+    if (isCs(user.group)) {
+      if (!can(state, user, 'order.process_assigned')) return { ok: false, why: 'Khối CS thiếu Process assigned orders' };
+      return o.care === user.id ? { ok: true, why: 'Đơn được gán care cho user này' } : { ok: false, why: 'Không phải đơn được gán care cho user này' };
+    }
+    if (isWh(user.group)) return (user.shops || []).includes(o.shop) ? { ok: true, why: `Đơn thuộc ${o.shop}, shop được giao cho user` } : { ok: false, why: `${o.shop} không được giao cho user` };
+    return o.creator === user.id ? { ok: true, why: 'Đơn do user này tạo' } : { ok: false, why: 'Không có View all orders, và đơn không do user này tạo' };
+  };
+
+  // OrderController.update/2 + validate_update_by_user/2
+  const orderEditable = (state, user, o) => {
+    if (user.group === 'ADMIN') return { ok: true, why: 'ADMIN' };
+    if (!can(state, user, 'order.edit')) return { ok: false, why: 'Thiếu Update order(s) status (thẻ Order)' };
+    if (can(state, user, 'order.edit_all_status')) return { ok: true, why: 'Có Edit orders in any status' };
+    const { list, from } = statusList(state, user, 'edit_order_group');
+    if (!list.includes(o.status)) return { ok: false, why: `${o.status} không nằm trong Editable Order Status của ${from}` };
+    if (user.group === 'SALE' && o.sale !== user.id) return { ok: false, why: 'SALE chỉ sửa được đơn được gán cho mình' };
+    return { ok: true, why: `${o.status} nằm trong Editable Order Status của ${from}` };
+  };
+
+  // User.group_permissions/1 + has_group_permission/3
+  const blockOf = (g) => (isSale(g) ? 'sale' : isCs(g) ? 'cs' : isWh(g) ? 'wh' : g === 'ACCOUNTANT_MANAGER' || g === 'ACCOUNTANT' ? 'acc' : null);
+  const assignableGroups = (g) => {
+    const map = { ADMIN: ALL_GROUPS, COUNTRY_ADMIN: ALL_GROUPS.filter((x) => x !== 'ADMIN' && x !== 'COUNTRY_ADMIN'), WAREHOUSE_MANAGER: ['WAREHOUSE'], ACCOUNTANT_MANAGER: ['ACCOUNTANT'], SALE_MANAGER: ['SALE'], CS_MANAGER: ['CS'] };
+    const list = map[g] || [];
+    return list.length ? [...new Set([...list, 'USER'])] : [];
+  };
+  const hasGroupPermission = (actorGroup, oldGroup, newGroup) => {
+    if (actorGroup === 'ADMIN') return true;
+    if (actorGroup === 'COUNTRY_ADMIN') return !['ADMIN', 'COUNTRY_ADMIN'].includes(oldGroup) && [...assignableGroups('COUNTRY_ADMIN'), 'COUNTRY_ADMIN'].includes(newGroup);
+    const block = blockOf(actorGroup);
+    if (!block) return false;
+    return (oldGroup === 'USER' || blockOf(oldGroup) === block) && !oldGroup.includes('MANAGER') && assignableGroups(actorGroup).includes(newGroup);
+  };
+
+  // ---------------------------------------------------------------- UI dùng chung
+  const Yes = ({ ok }) => (ok ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="#ff4d4f" />);
+  const Blocked = ({ reason }) => <Alert type="error" showIcon message="Not enough permission" description={reason} style={{ marginTop: 8 }} />;
+
+  const PermissionGrid = ({ permissions, values, onToggle }) => (
+    <Row gutter={[12, 12]}>
+      {MODULES.map((mod) => {
+        const items = permissions.filter((p) => p.modules.includes(mod) && p.group_label !== SCOPE_LABEL);
+        if (!items.length) return null;
+        const labels = [...new Set(items.map((p) => p.group_label || ''))];
+        return (
+          <Col key={mod} xs={24} lg={12}>
+            <Card size="small" title={mod} styles={{ body: { padding: '6px 12px 10px' } }}>
+              {labels.map((label) => (
+                <div key={label || '-'}>
+                  {label && <div className="perm-group">{label}</div>}
+                  {items.filter((p) => (p.group_label || '') === label).map((p) => (
+                    <div key={p.key}>
+                      <Checkbox checked={!!values[p.key]} onChange={(e) => onToggle(p.key, e.target.checked)}>
+                        {p.name}<code className="k">{p.key}</code>
+                      </Checkbox>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </Card>
+          </Col>
+        );
+      })}
+    </Row>
+  );
+
+  const SCOPES = [
+    { type: 'user_group', label: 'Viewable Order Status', icon: <EyeOutlined />, bypassKey: 'order.view_all_status', empty: 'sees an empty Order list: it is limited by status but no status is picked.' },
+    { type: 'edit_order_group', label: 'Editable Order Status', icon: <EditOutlined />, bypassKey: 'order.edit_all_status', empty: 'cannot update any order: it is limited by status but no status is picked.' },
+  ];
+
+  // Khối ORDER STATUS SCOPE — cùng cách FE thật: ô tick đọc bản nháp, phần hệ quả đọc bản đã lưu.
+  const ScopeBlock = ({ subject, getValue, getShared, onChange, current, saved, onToggle, saveNote }) => (
+    <div className="scope">
+      <div className="scope-title">ORDER STATUS SCOPE <span>· chỉ áp cho màn Order và Telesale · {saveNote}</span></div>
+      {SCOPES.map((s) => {
+        const bypassed = !!saved[s.bypassKey];
+        const checked = !!current[s.bypassKey];
+        const value = getValue(s.type);
+        const shared = getShared ? getShared(s.type) : [];
+        return (
+          <div key={s.type} style={{ marginTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+              <Space size={6}>{s.icon}<span>{s.label}</span></Space>
+              <Space size={8}>
+                <Checkbox checked={checked} onChange={(e) => onToggle(s.bypassKey, e.target.checked)}>{NAME_OF[s.bypassKey]}</Checkbox>
+                <Tag color={bypassed ? 'green' : 'blue'}>{bypassed ? 'All statuses' : `${value.length} Selected`}</Tag>
+              </Space>
+            </div>
+            <Select mode="multiple" style={{ width: '100%' }} value={bypassed ? [] : value} options={STATUS_OPTIONS} disabled={bypassed}
+              placeholder={bypassed ? `This ${subject} is not limited by order status` : 'Select order status'} onChange={(next) => onChange(s.type, next)} />
+            {!bypassed && value.length === 0 && <Alert type="error" showIcon style={{ marginTop: 8 }} message={`This ${subject} ${s.empty}`} />}
+            {checked !== bypassed && <Alert type="info" showIcon style={{ marginTop: 8 }} message={`${NAME_OF[s.bypassKey]} is not applied yet — press Save to apply it.`} />}
+            {!bypassed && shared.length > 0 && <Alert type="warning" showIcon style={{ marginTop: 8 }} message={`This scope is shared with: ${shared.join(', ')}. Changing it also changes those roles.`} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // ---------------------------------------------------------------- Tab: Role Permission
+  const RolePermissionTab = ({ state, setState, actor }) => {
+    const [group, setGroup] = useState(ROLES[0]);
+    const [draft, setDraft] = useState(state.matrix);
+    useEffect(() => setDraft(state.matrix), [state.matrix]);
+
+    if (!can(state, actor, 'permission.manage'))
+      return <Blocked reason={`Màn này gác bằng Role Permission (permission.manage). Mặc định chỉ COUNTRY_ADMIN có; ${actor.group} không có.`} />;
+
+    const visible = CATALOG.filter((p) => group === 'COUNTRY_ADMIN' || !p.countryAdminOnly);
+    const current = draft[group] || {};
+    const saved = state.matrix[group] || {};
+    const dirty = !sameKeys(current, saved);
+    const active = visible.filter((p) => current[p.key]).length;
+    const toggle = (key, on) => setDraft((d) => ({ ...d, [group]: { ...(d[group] || {}), [key]: on } }));
+    const save = () => {
+      const cleaned = truthy(current);
+      if (group !== 'COUNTRY_ADMIN') delete cleaned['department.manage'];
+      setState((s) => ({ ...s, matrix: { ...s.matrix, [group]: cleaned } }));
+      message.success('Update group permissions successfully');
+    };
+    // Ô chọn trạng thái của role POST ngay, không chờ Save (giống FE thật).
+    const changeScope = (type, next) =>
+      setState((s) => {
+        const rec = roleScopeRecord(s, group, type);
+        const scopes = rec ? s.scopes.map((r) => (r.id === rec.id ? { ...r, statuses: next } : r)) : [...s.scopes, { id: Date.now(), type, groups: [group], statuses: next }];
+        return { ...s, scopes };
+      });
+
+    return (
+      <Row gutter={16} style={{ marginTop: 8 }}>
+        <Col xs={24} md={6}>
+          <Card title="Role List" size="small">
+            <Space direction="vertical" style={{ width: '100%' }} size={4}>
+              {ROLES.map((g) => (
+                <Button key={g} block type={g === group ? 'primary' : 'text'} style={{ textAlign: 'left' }} onClick={() => setGroup(g)}>{g}</Button>
+              ))}
+            </Space>
+            <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>ADMIN không có ở đây: luôn đủ mọi quyền. USER và nhóm seller cũng không có ở đây.</Typography.Paragraph>
+          </Card>
+        </Col>
+        <Col xs={24} md={18}>
+          <Card size="small" title={`Role Permission Detail · ${group}`}
+            extra={<Space>
+              <Button size="small" disabled={!dirty} onClick={() => setDraft(state.matrix)}>Cancel</Button>
+              <Button size="small" type="primary" disabled={!dirty} onClick={save}>Save</Button>
+            </Space>}>
+            <Typography.Text type="secondary">Active: {active}/{visible.length} permissions</Typography.Text>
+            {group !== 'COUNTRY_ADMIN' && <Typography.Paragraph type="secondary" style={{ fontSize: 12, margin: '2px 0 10px' }}>Ô "Department" bị ẩn vì quyền này chỉ cấp được cho COUNTRY_ADMIN.</Typography.Paragraph>}
+            <div style={{ marginTop: 8 }}>
+              <PermissionGrid permissions={visible} values={current} onToggle={toggle} />
+              <ScopeBlock subject="role" saveNote="ô chọn trạng thái lưu ngay, ô tick phải bấm Save"
+                getValue={(type) => (roleScopeRecord(state, group, type) || {}).statuses || []}
+                getShared={(type) => ((roleScopeRecord(state, group, type) || {}).groups || []).filter((g) => g !== group)}
+                onChange={changeScope} current={current} saved={saved} onToggle={toggle} />
+            </div>
+          </Card>
+        </Col>
+      </Row>
+    );
+  };
+
+  // ---------------------------------------------------------------- Tab: Department
+  const toDraft = (d) => (d ? { name: d.name, permissions: { ...d.permissions }, viewable: [...d.viewable], editable: [...d.editable] } : { name: '', permissions: {}, viewable: [], editable: [] });
+  const sameDraft = (a, b) => a.name.trim() === b.name.trim() && sameKeys(a.permissions, b.permissions) && JSON.stringify([...a.viewable].sort()) === JSON.stringify([...b.viewable].sort()) && JSON.stringify([...a.editable].sort()) === JSON.stringify([...b.editable].sort());
+
+  const DepartmentTab = ({ state, setState, actor }) => {
+    const [selectedId, setSelectedId] = useState(state.departments[0] ? state.departments[0].id : 'new');
+    const dept = state.departments.find((d) => d.id === selectedId) || null;
+    const [draft, setDraft] = useState(toDraft(dept));
+    const [picked, setPicked] = useState([]);
+    useEffect(() => { setDraft(toDraft(dept)); setPicked([]); }, [selectedId, dept ? dept.version : 0]);
+
+    // department.manage chỉ COUNTRY_ADMIN giữ được (country_admin_only) — role khác không bao giờ có.
+    if (!(actor.group === 'ADMIN' || (actor.group === 'COUNTRY_ADMIN' && can(state, actor, 'department.manage'))))
+      return <Blocked reason={`Quản lý Department gác bằng department.manage. Quyền này chỉ cấp được cho COUNTRY_ADMIN (ADMIN luôn có); ${actor.group} không có, kể cả khi được tick trên Role Permission.`} />;
+
+    const members = dept ? state.members.filter((m) => m.deptId === dept.id).map((m) => state.users.find((u) => u.id === m.userId)) : [];
+    const candidates = state.users.filter((u) => DEPT_ROLES.includes(u.group) && !state.members.some((m) => m.userId === u.id));
+    const visible = CATALOG.filter((p) => !p.countryAdminOnly);
+    const saved = toDraft(dept);
+    const dirty = !sameDraft(draft, saved);
+    const active = visible.filter((p) => draft.permissions[p.key]).length;
+
+    const save = () => {
+      const name = draft.name.trim();
+      if (!name) return message.error('Department name is required');
+      if (state.departments.some((d) => d.id !== (dept && dept.id) && d.name.toLowerCase() === name.toLowerCase())) return message.error('Department name already exists');
+      const data = { name, permissions: truthy(draft.permissions), viewable: draft.viewable, editable: draft.editable };
+      if (dept) {
+        setState((s) => ({ ...s, departments: s.departments.map((d) => (d.id === dept.id ? { ...d, ...data, version: d.version + 1 } : d)) }));
+        message.success('Update department successfully');
+      } else {
+        const id = Math.max(0, ...state.departments.map((d) => d.id)) + 1;
+        setState((s) => ({ ...s, departments: [...s.departments, { id, version: 1, ...data }] }));
+        setSelectedId(id);
+        message.success('Create department successfully');
+      }
+    };
+    const remove = () => {
+      setState((s) => ({ ...s, departments: s.departments.filter((d) => d.id !== dept.id) }));
+      setSelectedId(state.departments.find((d) => d.id !== dept.id) ? state.departments.find((d) => d.id !== dept.id).id : 'new');
+      message.success('Delete department successfully');
+    };
+    const addMembers = () => {
+      if (picked.includes(actor.id)) return message.error('You cannot add yourself to a department');
+      setState((s) => ({ ...s, members: [...s.members, ...picked.map((userId) => ({ deptId: dept.id, userId }))] }));
+      setPicked([]);
+      message.success('Add members successfully');
+    };
+    const removeMember = (userId) => {
+      setState((s) => ({ ...s, members: s.members.filter((m) => !(m.deptId === dept.id && m.userId === userId)) }));
+      message.success('Remove member successfully');
+    };
+
+    return (
+      <Row gutter={16} style={{ marginTop: 8 }}>
+        <Col xs={24} md={6}>
+          <Card title="Department List" size="small" extra={<Button size="small" icon={<PlusOutlined />} onClick={() => setSelectedId('new')}>New</Button>}>
+            <Space direction="vertical" style={{ width: '100%' }} size={4}>
+              {state.departments.map((d) => (
+                <Button key={d.id} block type={d.id === selectedId ? 'primary' : 'text'} style={{ textAlign: 'left' }} onClick={() => setSelectedId(d.id)}>
+                  {d.name} ({state.members.filter((m) => m.deptId === d.id).length})
+                </Button>
+              ))}
+              {!state.departments.length && <Typography.Text type="secondary">Chưa có Department</Typography.Text>}
+            </Space>
+          </Card>
+        </Col>
+        <Col xs={24} md={18}>
+          <Card size="small" title={dept ? 'Department Detail' : 'New Department'}
+            extra={<Space>
+              {dept && (
+                <Tooltip title={members.length ? 'Remove all members before deleting the department' : null}>
+                  <Popconfirm title="Delete this department?" disabled={!!members.length} onConfirm={remove}>
+                    <Button size="small" danger icon={<DeleteOutlined />} disabled={!!members.length} />
+                  </Popconfirm>
+                </Tooltip>
+              )}
+              <Button size="small" disabled={!dirty} onClick={() => setDraft(saved)}>Cancel</Button>
+              <Button size="small" type="primary" disabled={!dirty || !draft.name.trim()} onClick={save}>Save</Button>
+            </Space>}>
+            <Typography.Text strong>Department name</Typography.Text>
+            <Input value={draft.name} placeholder="Department name" maxLength={255} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} style={{ margin: '4px 0 14px' }} />
+
+            <div className="scope" style={{ marginTop: 0, marginBottom: 14 }}>
+              <div className="scope-title">DEPARTMENT MEMBERS <span>· thêm / gỡ lưu ngay khi bấm</span></div>
+              {dept ? (
+                <>
+                  <div style={{ marginTop: 8 }}>
+                    {members.length ? members.map((u) => (
+                      <Tag key={u.id} closable onClose={(e) => { e.preventDefault(); removeMember(u.id); }} style={{ marginBottom: 4 }}>{u.name} · {u.group}</Tag>
+                    )) : <Typography.Text type="secondary">No members yet</Typography.Text>}
+                  </div>
+                  <Space.Compact style={{ width: '100%', marginTop: 8 }}>
+                    <Select mode="multiple" style={{ width: '100%' }} placeholder="Search staff by name or email" value={picked} onChange={setPicked}
+                      options={candidates.map((u) => ({ value: u.id, label: `${u.name} · ${u.email} · ${u.group}` }))}
+                      notFoundContent="Không còn user đủ điều kiện (8 role vận hành, chưa thuộc Department nào ở nước này)" />
+                    <Button type="primary" disabled={!picked.length} onClick={addMembers}>Add Member</Button>
+                  </Space.Compact>
+                </>
+              ) : <Alert type="info" showIcon style={{ marginTop: 8 }} message="Save the department first, then add members." />}
+            </div>
+
+            <Typography.Text type="secondary">Active: {active}/{visible.length} permissions · ô "Department" không có ở đây vì không cấp được qua Department</Typography.Text>
+            <div style={{ marginTop: 8 }}>
+              <PermissionGrid permissions={visible} values={draft.permissions} onToggle={(key, on) => setDraft((d) => ({ ...d, permissions: { ...d.permissions, [key]: on } }))} />
+              <ScopeBlock subject="department" saveNote="mọi thứ lưu cùng nút Save"
+                getValue={(type) => (type === 'user_group' ? draft.viewable : draft.editable)}
+                onChange={(type, next) => setDraft((d) => ({ ...d, [type === 'user_group' ? 'viewable' : 'editable']: next }))}
+                current={draft.permissions} saved={saved.permissions}
+                onToggle={(key, on) => setDraft((d) => ({ ...d, permissions: { ...d.permissions, [key]: on } }))} />
+            </div>
+          </Card>
+        </Col>
+      </Row>
+    );
+  };
+
+  // ---------------------------------------------------------------- Tab: User
+  const UserTab = ({ state, setState, actor }) => {
+    if (!can(state, actor, 'user.view')) return <Blocked reason={`Màn User gác bằng View User (user.view); ${actor.group} không có.`} />;
+    const canAssign = can(state, actor, 'user.manage');
+
+    const columns = [
+      { title: 'Name', dataIndex: 'name' },
+      { title: 'Email', dataIndex: 'email' },
+      {
+        title: 'Role', key: 'role',
+        render: (_, u) => {
+          const d = departmentOf(state, u);
+          return d ? <Tooltip title={u.group}><Tag color="blue">{d.name}</Tag></Tooltip> : <Tag>{u.group}</Tag>;
+        },
+      },
+      {
+        title: 'Quyền lấy từ', key: 'source',
+        render: (_, u) => {
+          const s = permSource(state, u);
+          return <span className="why">{s.type === 'ADMIN' ? 'ADMIN: đủ mọi quyền' : s.type === 'NONE' ? 'Không có (USER bị chặn khỏi API)' : s.type === 'DEPT' ? `Department "${s.dept.name}"` : `Role Permission · ${u.group}`}</span>;
+        },
+      },
+      {
+        title: 'Đổi role', key: 'set',
+        render: (_, u) => {
+          const d = departmentOf(state, u);
+          if (d) return <Tooltip title={`Remove this user from department "${d.name}" before changing the role`}><Tag icon={<LockOutlined />}>{u.group}</Tag></Tooltip>;
+          if (!canAssign) return <span className="why">Thiếu Assign role (user.manage)</span>;
+          const options = ALL_GROUPS.filter((g) => g !== u.group && hasGroupPermission(actor.group, u.group, g));
+          if (!options.length) return <span className="why">{actor.group} không gán được role cho user đang là {u.group}</span>;
+          return <Select size="small" style={{ width: 190 }} placeholder="Đổi role…" value={null} options={options.map((g) => ({ value: g, label: g }))}
+            onChange={(g) => { setState((s) => ({ ...s, users: s.users.map((x) => (x.id === u.id ? { ...x, group: g } : x)) })); message.success(`Set group ${u.group} → ${g}`); }} />;
+        },
+      },
+    ];
+    return (
+      <div style={{ marginTop: 8 }}>
+        <Typography.Paragraph type="secondary" style={{ fontSize: 13 }}>Cột Role: thành viên Department hiện tên Department, di chuột vào thì thấy role thật. Ô đổi role của thành viên bị khoá.</Typography.Paragraph>
+        <Table size="small" rowKey="id" pagination={false} columns={columns} dataSource={state.users} />
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------------- Tab: Kết quả
+  const SETTING_MENU = [
+    ['User', 'user.view'], ['Role Permission', 'permission.manage'], ['Department', 'department.manage'],
+    ['Telesale Configuration', 'order.telesale_config'], ['CSR Configuration', 'csr.config'],
+  ];
+
+  const ResultTab = ({ state, actor }) => {
+    const src = permSource(state, actor);
+    const keys = Object.keys(src.perms);
+    const roleKeys = ROLES.includes(actor.group) ? Object.keys(truthy(state.matrix[actor.group])).filter((k) => actor.group === 'COUNTRY_ADMIN' || k !== 'department.manage') : [];
+
+    if (src.type === 'NONE')
+      return <Alert style={{ marginTop: 8 }} type="warning" showIcon message={`${actor.group}: không có quyền nào`} description="Role USER không có trên Role Permission và bị plug Auth chặn khỏi toàn bộ API. Cần gán role cho user này trước (thử ở tab User)." />;
+
+    const viewScope = actor.group === 'ADMIN' || can(state, actor, 'order.view_all_status') ? null : statusList(state, actor, 'user_group');
+    const editScope = actor.group === 'ADMIN' || can(state, actor, 'order.edit_all_status') ? null : statusList(state, actor, 'edit_order_group');
+    const added = src.type === 'DEPT' ? keys.filter((k) => !roleKeys.includes(k)) : [];
+    const lost = src.type === 'DEPT' ? roleKeys.filter((k) => !keys.includes(k)) : [];
+
+    const telesale = !isSale(actor.group) ? { ok: false, why: 'Chỉ chia cho SALE_MANAGER / SALE (theo role)' }
+      : can(state, actor, 'order.process_assigned') ? { ok: true, why: 'Khối Sale + có Process assigned orders' } : { ok: false, why: 'Thiếu Process assigned orders' };
+    const csr = actor.group !== 'CS' ? { ok: false, why: 'Chỉ chia ticket cho role CS' }
+      : can(state, actor, 'order.process_assigned') ? { ok: true, why: 'Role CS + có Process assigned orders' } : { ok: false, why: 'Thiếu Process assigned orders' };
+
+    const columns = [
+      { title: 'Order', dataIndex: 'id', width: 70 },
+      { title: 'Status', dataIndex: 'status', render: (s) => <StatusTag s={s} /> },
+      { title: 'Sale', dataIndex: 'sale', render: (id) => userName(state, id) },
+      { title: 'Care', dataIndex: 'care', render: (id) => userName(state, id) },
+      { title: 'Shop', dataIndex: 'shop' },
+      { title: 'Người tạo', dataIndex: 'creator', render: (id) => userName(state, id) },
+      { title: 'Thấy trên màn Order', key: 'v', render: (_, o) => { const r = orderVisible(state, actor, o); return <Space align="start"><Yes ok={r.ok} /><span className="why">{r.why}</span></Space>; } },
+      { title: 'Đổi trạng thái được', key: 'e', render: (_, o) => { if (!orderVisible(state, actor, o).ok) return <span className="why">— (không thấy đơn)</span>; const r = orderEditable(state, actor, o); return <Space align="start"><Yes ok={r.ok} /><span className="why">{r.why}</span></Space>; } },
+    ];
+
+    return (
+      <div style={{ marginTop: 8 }}>
+        <Alert type={src.type === 'DEPT' ? 'info' : 'success'} showIcon
+          message={src.type === 'ADMIN' ? 'ADMIN: đủ mọi quyền, không đọc Role Permission hay Department'
+            : src.type === 'DEPT' ? `Đang dùng quyền của Department "${src.dept.name}", thay hẳn quyền của role ${actor.group}`
+            : `Đang dùng quyền của role ${actor.group} trên Role Permission (không thuộc Department nào ở nước này)`}
+          description={src.type === 'DEPT' ? (
+            <div>
+              So với role {actor.group}:{' '}
+              {added.length ? <>có thêm {added.map((k) => <Tag key={k} color="green">{NAME_OF[k]} <code className="k">{k}</code></Tag>)}</> : 'không có thêm quyền nào'}
+              {' · '}
+              {lost.length ? <>mất {lost.map((k) => <Tag key={k} color="red">{NAME_OF[k]} <code className="k">{k}</code></Tag>)}</> : 'không mất quyền nào'}
+              <div className="why" style={{ marginTop: 4 }}>Role {actor.group} vẫn quyết định user thấy đơn nào khi không có View all orders, và user có được chia tự động hay không.</div>
+            </div>
+          ) : null} />
+
+        <Row gutter={12} style={{ marginTop: 12 }}>
+          <Col xs={24} lg={16}>
+            <Card size="small" title={`Quyền đang bật (${keys.length}/${CATALOG.length})`}>
+              {MODULES.map((m) => {
+                const list = CATALOG.filter((p) => p.modules[0] === m && src.perms[p.key]);
+                return list.length ? (
+                  <div key={m} style={{ marginBottom: 4 }}>
+                    <b style={{ display: 'inline-block', width: 110 }}>{m}</b>
+                    {list.map((p) => <Tag key={p.key}>{p.group_label && p.group_label !== SCOPE_LABEL ? `${p.group_label} › ` : ''}{p.name}</Tag>)}
+                  </div>
+                ) : null;
+              })}
+              {!keys.length && <Empty description="Không có quyền nào" />}
+            </Card>
+          </Col>
+          <Col xs={24} lg={8}>
+            <Card size="small" title="Menu Setting thấy được">
+              {SETTING_MENU.map(([label, key]) => <div key={key}><Yes ok={!!src.perms[key]} /> {label} <code className="k">{key}</code></div>)}
+            </Card>
+            <Card size="small" title="Chia tự động" style={{ marginTop: 12 }}>
+              <div><Yes ok={telesale.ok} /> Chia đơn Telesale: <span className="why">{telesale.why}</span></div>
+              <div><Yes ok={csr.ok} /> Chia ticket CSR: <span className="why">{csr.why}</span></div>
+              <div className="why" style={{ marginTop: 4 }}>Ngoài ra còn phải đang online và nằm trong khung giờ, số đơn tối đa của Telesale Configuration / CSR Configuration.</div>
+            </Card>
+          </Col>
+        </Row>
+
+        <Card size="small" title="Màn Order: đơn nào thấy, đơn nào sửa được" style={{ marginTop: 12 }}>
+          <div style={{ marginBottom: 8 }}>
+            <div><EyeOutlined /> Viewable Order Status: {viewScope ? (<>{viewScope.list.length ? viewScope.list.map((s) => <StatusTag key={s} s={s} />) : <Tag color="red">rỗng, không thấy đơn nào</Tag>}<span className="why">theo {viewScope.from}</span></>) : <Tag color="green">All statuses</Tag>}</div>
+            <div><EditOutlined /> Editable Order Status: {editScope ? (<>{editScope.list.length ? editScope.list.map((s) => <StatusTag key={s} s={s} />) : <Tag color="red">rỗng, không sửa được đơn nào</Tag>}<span className="why">theo {editScope.from}</span></>) : <Tag color="green">All statuses</Tag>}</div>
+            <div>Đơn nào: <b>{can(state, actor, 'order.view') || actor.group === 'ADMIN' ? dataRule(state, actor) : 'không gọi được API danh sách đơn (thiếu View orders)'}</b></div>
+          </div>
+          <Table size="small" rowKey="id" pagination={false} columns={columns} dataSource={ORDERS} scroll={{ x: 1000 }} />
+        </Card>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------------- App
+  const App = () => {
+    const [state, setState] = useState(initialState);
+    const [actorId, setActorId] = useState('u2');
+    const [tab, setTab] = useState('result');
+    const actor = state.users.find((u) => u.id === actorId);
+    const label = (u) => { const d = departmentOf(state, u); return `${u.name} — ${u.group}${d ? ` · Department "${d.name}"` : ''}`; };
+
+    return (
+      <div>
+        <div className="proto-bar">
+          <b>Đăng nhập với tư cách:</b>
+          <Select style={{ minWidth: 330 }} value={actorId} onChange={setActorId} options={state.users.map((u) => ({ value: u.id, label: label(u) }))} />
+          <Button icon={<ReloadOutlined />} onClick={() => { setState(initialState()); message.info('Đã reset dữ liệu mẫu'); }}>Reset dữ liệu mẫu</Button>
+          <span className="why">Nước: PH (63) · dữ liệu mẫu, không phải dữ liệu thật</span>
+        </div>
+        <div className="app-frame">
+          <Tabs activeKey={tab} onChange={setTab} items={[
+            { key: 'result', label: 'Kết quả theo user đang đăng nhập', children: <ResultTab state={state} actor={actor} /> },
+            { key: 'role', label: 'Setting › Role Permission', children: <RolePermissionTab state={state} setState={setState} actor={actor} /> },
+            { key: 'dept', label: 'Setting › Department', children: <DepartmentTab state={state} setState={setState} actor={actor} /> },
+            { key: 'user', label: 'Setting › User', children: <UserTab state={state} setState={setState} actor={actor} /> },
+          ]} />
+        </div>
+      </div>
+    );
+  };
+
+  ReactDOM.createRoot(document.getElementById('prototype-root')).render(<App />);
+</script>
+<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', flowchart: { htmlLabels: true } });</script>
+</body>
+</html>

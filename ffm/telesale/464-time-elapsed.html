@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telesale: Time Elapsed và cảnh báo đơn xử lý chậm</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+  /* ── Phần thêm riêng của trang #464 (mẫu chưa có): thanh mô phỏng, tab dạng card, bảng cuộn ngang có cột cố định, header sort, tag Time Elapsed, nút Status + dropdown, tooltip, phân trang, modal Columns, khung mô phỏng ── */
+  .explain { color: var(--ink3); font-weight: 500; text-transform: none; letter-spacing: 0; }
+  .hint { color: var(--ink2); font-size: 13px; }
+  /* Bảng rộng cuộn ngang trong khung bảng: cột main của grid không được giãn theo bảng */
+  .app > .main { min-width: 0; }
+  .ph { gap: 12px; align-items: flex-start; }
+  .sim { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; font-size: 12.5px; color: rgba(0,0,0,.65); }
+  .sim b { color: rgba(0,0,0,.88); font-variant-numeric: tabular-nums; min-width: 132px; }
+  .btn.sm { padding: 2px 8px; font-size: 12px; }
+  .btn.danger { color: #ff4d4f; border-color: #ff4d4f; }
+  .btn.ico { padding: 6px 9px; line-height: 0; }
+  .tsel { border: 1px solid #d9d9d9; border-radius: 6px; padding: 3px 6px; font-size: 12.5px; background: #fff; max-width: 100%; }
+  .tools { display: flex; gap: 10px; margin-bottom: 10px; }
+  .ctabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 0 0 8px; border-top: 1px solid #d9d9d9; border-bottom: 1px solid #d9d9d9; margin: 0 -12px 10px; }
+  .ctabs a { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; margin-bottom: -1px; border: 1px solid #f0f0f0; border-bottom-color: #d9d9d9; border-radius: 8px 8px 0 0; background: #fafafa; color: rgba(0,0,0,.88); cursor: pointer; }
+  .ctabs a.on { background: #fff; color: #1677ff; border-bottom-color: #fff; }
+  .ctag { border: 1px solid #d9d9d9; background: #fafafa; border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 20px; color: rgba(0,0,0,.88); }
+  /* #1890ff: màu Tag số đếm của tab đang chọn trong components/StatusCounter.js */
+  .ctabs a.on .ctag { background: #1890ff; border-color: #1890ff; color: #fff; }
+  .tscroll { overflow-x: auto; border: 1px solid #f0f0f0; border-radius: 8px; }
+  .tscroll table.ant { width: max-content; min-width: 100%; }
+  .tscroll th, .tscroll td { white-space: nowrap; }
+  table.ant td.fix-l, table.ant th.fix-l { position: sticky; left: 0; z-index: 1; background: #fff; box-shadow: inset -1px 0 #f0f0f0; }
+  table.ant td.fix-r, table.ant th.fix-r { position: sticky; right: 0; z-index: 1; background: #fff; box-shadow: inset 1px 0 #f0f0f0; }
+  table.ant th.fix-l, table.ant th.fix-r { background: #fafafa; }
+  table.ant tr[data-id] { cursor: pointer; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { background: #f0f0f0; }
+  .sorter { display: inline-flex; flex-direction: column; vertical-align: middle; margin-left: 8px; font-size: 8px; line-height: 8px; color: #bfbfbf; }
+  .sorter i { font-style: normal; }
+  .sorter i.on { color: #1677ff; }
+  /* Tag của antd: mặc định + 3 màu preset mà components/csr/TimeElapsedCell.js dùng (green / gold / red) */
+  .etag { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #d9d9d9; background: #fafafa; color: rgba(0,0,0,.88); border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 20px; cursor: default; }
+  .etag.green { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
+  .etag.gold { color: #d48806; background: #fffbe6; border-color: #ffe58f; }
+  .etag.red { color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
+  /* Typography type="secondary" của antd (chữ "--") */
+  .te-empty { color: rgba(0,0,0,.45); cursor: default; }
+  .av { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 11px; margin-right: 6px; vertical-align: middle; }
+  .sbtn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-width: 150px; border: 1px solid; border-radius: 6px; padding: 4px 12px; color: #fff; font-size: 13px; cursor: pointer; }
+  .dd { position: absolute; top: 0; left: 0; z-index: 8; min-width: 180px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 4px; visibility: hidden; }
+  .dd.show { visibility: visible; }
+  .dd a { display: flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 4px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .dd a:hover { background: #f5f5f5; }
+  .tip { position: absolute; top: 0; left: 0; z-index: 9; background: var(--ink); color: #fff; border-radius: 6px; padding: 6px 8px; font-size: 12px; line-height: 1.5; white-space: nowrap; pointer-events: none; visibility: hidden; }
+  .tip.show { visibility: visible; }
+  .pager { display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-top: 10px; font-size: 12.5px; color: rgba(0,0,0,.65); }
+  .pager span { margin-right: 8px; }
+  .pager a { min-width: 24px; height: 24px; padding: 0 6px; display: inline-grid; place-items: center; border: 1px solid transparent; border-radius: 6px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .pager a.on { border-color: #1677ff; color: #1677ff; font-weight: 600; }
+  .pager a.off { color: #bfbfbf; cursor: not-allowed; }
+  /* Modal Columns: giống components/OrderColumn.js (Modal width 700) + OrderColumnContainerV1.js */
+  .mdl { position: absolute; top: 24px; left: 50%; width: 700px; transform: translateX(-50%); z-index: 6; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 18px 22px; visibility: hidden; }
+  .proto.open .mdl { visibility: visible; }
+  .mhd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .mhd h4 { margin: 0; font-size: 16px; }
+  .mdl .xx { cursor: pointer; color: rgba(0,0,0,.65); font-size: 18px; line-height: 1; padding: 0 4px; }
+  .mttl { font-weight: 700; padding-left: 8px; margin-bottom: 6px; }
+  .cc { display: flex; gap: 12px; }
+  .cc .pnl { border: 1px solid #f0f0f0; border-radius: 6px; padding: 8px; height: 320px; overflow: auto; }
+  .cc .pnl.l { width: 40%; }
+  .cc .pnl.r { width: 60%; }
+  .cc label { display: flex; align-items: center; gap: 8px; padding: 2px 0; cursor: pointer; }
+  .cc label.dis { color: #bfbfbf; cursor: not-allowed; }
+  .cc label.all { font-weight: 600; }
+  .srchw { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #d9d9d9; margin: 4px 0 8px; padding: 2px; color: #bfbfbf; }
+  .srchw input { border: none; outline: none; flex: 1; font-size: 13px; padding: 3px 0; min-width: 0; }
+  .cnt-sel { margin-bottom: 6px; }
+  .cnt-sel span { color: var(--ink3); font-size: 12px; }
+  .ci { display: flex; justify-content: space-between; align-items: center; gap: 8px; border: 1px solid #f0f0f0; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; background: #fff; cursor: grab; }
+  .ci.over { border-color: #1677ff; }
+  .ci .rm { cursor: pointer; color: rgba(0,0,0,.65); padding: 0 4px; }
+  .ci svg { vertical-align: -1px; color: rgba(0,0,0,.65); }
+  .new-c { color: var(--violet); font-weight: 600; }
+  .mft { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  .dec.two { grid-template-columns: 1fr 1fr; }
+  .dcard .ctx { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .frow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+  .flab { font-weight: 600; width: 100%; margin-top: 6px; }
+  pre.json { margin: 10px 0 0; }
+  pre.log { min-height: 220px; max-height: 360px; overflow: auto; margin: 8px 0 0; white-space: pre-wrap; }
+  @media (max-width: 960px) {
+    .dec.two { grid-template-columns: 1fr; }
+    .cc { flex-direction: column; } .cc .pnl.l, .cc .pnl.r { width: 100%; }
+    .mdl { width: calc(100% - 24px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>FFM · #464</div>
+  <nav class="nav">
+    <a href="#prototype">Prototype</a><a href="#rules">Business rules</a><a href="#phuong-an">Phương án &amp; câu hỏi</a><a href="#ngoai-pham-vi">Ngoài phạm vi</a><a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Telesale · Đặc tả + prototype</div>
+  <h1>Telesale: Time Elapsed và cảnh báo đơn xử lý chậm</h1>
+  <p>Thêm cột <b>Time Elapsed</b> vào danh sách Telesale để Sale và Telesale Manager thấy đơn đã chờ bao lâu kể từ lần đầu được phân công cho Sale, và sort để xử lý đơn chờ lâu trước. Đồng hồ chạy khi đơn ở New, Need confirmation, Pending và dừng khi đơn rời nhóm này; đơn được mở lại thì chạy tiếp từ mốc cũ, nên chuyển Confirmed tạm rồi về Pending không làm giảm thời gian. Cách hiển thị giống cột Time Elapsed của CSR Ticket.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i464">ffm_dev #464</a></span>
+    <span class="chip">Requested by GIP</span>
+    <span class="chip">Chưa có PR</span>
+    <span class="chip">FE + BE</span>
+    <span class="chip">Cập nhật 23/10/2026</span>
+    <span class="chip">Code: develop 20/10/2026 (dự kiến)</span>
+  </div>
+</header>
+
+<div class="note n-info" style="margin-top:18px"><span class="ic">i</span><div>
+  <p>Đang chạy: <code>now − first_assign_sale_at</code> · Đã dừng: <code>telesale_completed_at − first_assign_sale_at</code> · Thiếu mốc hoặc kết quả âm: <code>--</code></p>
+  <p>Hiển thị: <code>&lt;1m</code> · <code>45m</code> · <code>3h 20m</code> · <code>2d 5h</code>. Đang chạy: xanh dưới 12h, vàng từ 12h đến dưới 24h, đỏ từ 24h, kèm icon đồng hồ. Đã dừng: xám.</p>
+</div></div>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">01</span><h2>Prototype — màn Telesale</h2><p>Bấm thử: Columns, sort, phân trang, Status, giờ mô phỏng, Timezone, thay đổi từ nơi khác</p></div>
+
+  <div class="card" style="margin-bottom:14px;padding:12px 16px">
+    <b>Gợi ý thử</b> <span class="hint">— dòng 1–2 bật cột Time Elapsed (F5 vẫn giữ). Từ dòng 3, mỗi dòng bắt đầu từ trang vừa tải lại (F5) với cột đã bật, Timezone UTC+8</span>
+    <table class="t" style="margin-top:6px">
+      <tr><th style="width:36px">#</th><th style="width:38%">Thao tác</th><th>Kết quả mong đợi</th></tr>
+      <tr><td>1</td><td>Bấm nút Columns (ô lưới, cạnh nút Reload), tick <b>Time Elapsed</b>, OK</td><td>Cột hiện ngay trước Status: ID, Shop, Assigning Sale, Customer Name, Phone Number, Products, Created At, <b>Time Elapsed</b>, Status (cuộn ngang bảng tới cuối để thấy, như app). Ca âm: tick rồi bấm Cancel, hoặc tick rồi bỏ tick rồi OK → không có cột.</td></tr>
+      <tr><td>2</td><td>Mở lại Columns, kéo Time Elapsed lên ngay dưới Assigning Sale, OK, rồi F5</td><td>Sau F5 cột vẫn bật, thứ tự ID, Shop, Assigning Sale, Time Elapsed, Customer Name, … Ca âm: kéo Time Elapsed lên trên ID hoặc xuống dưới Status → không nhận, danh sách giữ nguyên (2 cột sticky).</td></tr>
+      <tr><td>3</td><td>Xem cột Time Elapsed ở thứ tự mặc định, trang 1–3</td><td><code>1001</code> <code>25m</code> xanh, <code>1003</code> <code>13h 0m</code> vàng, <code>1004</code> <code>2d 5h</code> đỏ, cả 3 có icon đồng hồ. <code>1005</code> <code>1h 0m</code> và <code>1011</code> <code>3d 0h</code> xám, không icon. <code>1008</code>, <code>1009</code>, <code>1014</code> hiện <code>--</code>.</td></tr>
+      <tr><td>4</td><td>Di chuột vào tag của <code>1005</code>; đổi Timezone của user sang UTC+7 rồi di chuột lại</td><td>Tooltip có <code>First assigned at</code> và <code>Completed at</code>. Sau khi đổi, giờ trong tooltip lùi 1 giờ, tag vẫn <code>1h 0m</code>.</td></tr>
+      <tr><td>5</td><td>Bấm <b>+10 phút</b></td><td><code>1012</code> (trang 2): <code>23h 50m</code> vàng → <code>1d 0h</code> đỏ. <code>1005</code> vẫn <code>1h 0m</code> xám.</td></tr>
+      <tr><td>6</td><td><code>1001</code>: Status → Confirmed. <code>1002</code>: Status → Pending. Mở Status của <code>1006</code> (Restocking)</td><td><code>1001</code> dừng ở <code>25m</code>, xám, mất icon, tooltip thêm Completed at. <code>1002</code> vẫn <code>3h 20m</code> xanh có icon. Menu của <code>1006</code> chỉ có Pending, Canceled, Duplicate Order: đơn chưa đủ hàng nên không có Confirmed.</td></tr>
+      <tr><td>7</td><td><code>1005</code> (Confirmed, <code>1h 0m</code>): Status → Pending, rồi Status → Confirmed</td><td>Sau Pending: <code>6h 0m</code> xanh có icon (tính từ First assigned at, không bắt đầu từ 0). Sau Confirmed: dừng ở <code>6h 0m</code>, xám.</td></tr>
+      <tr><td>8</td><td>Bấm header <b>Time Elapsed</b> 3 lần, mỗi lần xem trang 1 và trang 3</td><td>Lần 1, giảm dần: trang 1 = 1011, 1004, 1007, 1012, 1003; trang 3 = 1010, 1014, 1009, 1008 (đơn <code>--</code> ở cuối). Lần 2, tăng dần: trang 1 = 1010, 1001, 1013, 1005, 1006; trang 3 = 1011, 1014, 1009, 1008. Lần 3, bỏ sort: trang 1 = 1010, 1008, 1001, 1013, 1014.</td></tr>
+      <tr><td>9</td><td>Khung "Thay đổi từ nơi khác": <code>1006</code> → Confirmed, nguồn POS, Áp dụng. Rồi <code>1005</code> → Packing, Áp dụng, bấm Reload</td><td><code>1006</code> giữ <code>2h 0m</code>. <code>1005</code> (trang 2) còn trên trang tới khi Reload, sau đó rời danh sách; tab All còn 12, Confirmed 4. Khung Response show đơn <code>1005</code>: <code>"status": "packing"</code>, <code>telesale_completed_at</code> vẫn có giá trị.</td></tr>
+      <tr><td>10</td><td>Khung "Thay đổi từ nơi khác", Assigning Sale: <code>1003</code> → Sale B, Đổi Sale; <code>1003</code> → (Bỏ phân công), Đổi Sale; <code>1008</code> → Sale A, Đổi Sale</td><td><code>1003</code> vẫn <code>13h 0m</code> sau cả 2 lần, cột Assigning Sale đổi sang Sale B rồi trống. <code>1008</code> từ <code>--</code> thành <code>&lt;1m</code> xanh có icon.</td></tr>
+    </table>
+  </div>
+
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/order/telesale</span></div>
+    <div class="app">
+      <div class="side">
+        <div class="brand"><b>O</b>Orders &amp; Telesale</div>
+        <a class="on">Telesale</a><a>Order</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>Telesale</h3>
+          <div class="sim">
+            <span class="explain">Mô phỏng (app không có):</span>
+            Giờ <b id="clock"></b>
+            <button class="btn sm" data-jump="600000">+10 phút</button><button class="btn sm" data-jump="3600000">+1 giờ</button><button class="btn sm" data-jump="21600000">+6 giờ</button><button class="btn sm" data-jump="86400000">+1 ngày</button>
+            <span>Timezone của user</span>
+            <select class="tsel" id="tz">
+              <option value="8">UTC+8 (Philippines, Malaysia, Singapore)</option>
+              <option value="7">UTC+7 (Thailand, Indonesia, Cambodia, Laos)</option>
+              <option value="6.5">UTC+6:30 (Myanmar)</option>
+            </select>
+            <button class="btn sm danger" data-act="reset">Reset prototype</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="tools">
+            <button class="btn ico" data-act="reload" title="Reload"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13.5 6A5.5 5.5 0 0 0 3.2 4.5M2.5 10a5.5 5.5 0 0 0 10.3 1.5"/><path d="M3 1.8v3h3M13 14.2v-3h-3"/></svg></button>
+            <button class="btn ico" data-act="columns" title="Columns"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.75" y="2.75" width="12.5" height="10.5" rx="1"/><path d="M1.75 6h12.5M6 6v7.25M10 6v7.25"/></svg></button>
+          </div>
+          <div class="ctabs" id="tabs"></div>
+          <div class="tscroll" id="tscroll"><table class="ant"><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+          <div class="pager" id="pager"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mask" data-act="close-cols"></div>
+    <div class="mdl" id="mdl">
+      <div class="mhd"><h4>Columns</h4><span class="xx" data-act="close-cols" title="Close">×</span></div>
+      <div class="mttl">Customize Columns</div>
+      <div class="cc">
+        <div class="pnl l">
+          <label class="all"><input type="checkbox" id="cAll"> All Columns</label>
+          <div class="srchw"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg><input id="cSearch" placeholder="Search field"></div>
+          <div id="cList"></div>
+        </div>
+        <div class="pnl r">
+          <div class="cnt-sel"><b id="cCount"></b> <span>COLUMNS SELECTED</span></div>
+          <div id="cSel"></div>
+        </div>
+      </div>
+      <div class="mft"><button class="btn" data-act="close-cols">Cancel</button><button class="btn pri" data-act="ok-cols">OK</button></div>
+    </div>
+    <div class="dd" id="dd"></div>
+    <div class="tip" id="tip"></div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="grid2" style="margin-top:14px">
+    <div class="card" style="padding:14px 16px">
+      <b>Thay đổi từ nơi khác</b> <span class="hint">— mô phỏng, app không có khung này</span>
+      <div class="flab">Đổi status</div>
+      <div class="frow">
+        <select class="tsel" id="sysOrder"></select>
+        <select class="tsel" id="sysSource"></select>
+        <select class="tsel" id="sysStatus"></select>
+        <button class="btn pri" id="sysApply">Áp dụng</button>
+      </div>
+      <div class="flab">Assigning Sale</div>
+      <div class="frow">
+        <select class="tsel" id="asOrder"></select>
+        <select class="tsel" id="asSale"></select>
+        <button class="btn pri" id="asApply">Đổi Sale</button>
+      </div>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <b>Response show đơn</b> <span class="hint">— mô phỏng, rút gọn, app không có khung này</span>
+      <div class="frow">Đơn: <select class="tsel" id="showOrder"></select></div>
+      <pre class="json" id="showJson"></pre>
+      <div class="caption" id="showSummary" style="margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px;padding:14px 16px">
+    <b>Nhật ký thao tác</b> <span class="hint">— mới nhất ở trên</span>
+    <pre class="log" id="log"></pre>
+  </div>
+  <p class="caption">Viền tím nét đứt (header Time Elapsed) và chữ tím (Time Elapsed trong modal Columns) là chỗ mới so với hiện tại. Chưa có code: logic ở đây là logic dự kiến theo issue; status, màu, ngưỡng, format và bộ chọn cột chép từ <code>sea-fulfillment-web</code> nhánh develop. Dữ liệu mẫu, không gọi API; các mốc giờ tính lùi từ lúc mở trang. Prototype chỉ giữ 9 cột của màn Telesale và để 5 đơn mỗi trang để thấy sort trên nhiều trang. Hai khung dưới bảng mô phỏng thao tác từ nơi khác (POS, API, automation, ITY) và response show đơn; app thật không có 2 khung này.</p>
+</section>
+
+<section id="rules">
+  <div class="sec-h"><span class="n">02</span><h2>Business rules</h2></div>
+  <div class="card" style="padding:8px 12px">
+    <table class="t">
+      <tr><th style="width:190px">Nhóm</th><th>Quy tắc</th></tr>
+      <tr><td><b>Nơi hiển thị</b></td><td>Danh sách Telesale (<code>/admin/order/telesale</code>). Cột Time Elapsed nằm trong bộ chọn cột (nút ▦ → modal Columns), đứng ngay sau Assigning Sale trong danh sách chọn. Mặc định tắt.</td></tr>
+      <tr><td><b>Bật cột</b></td><td>Tick xong, cột hiện ngay trước Status (cột cố định cuối bảng), giống cột Return Rate ở #463. Người dùng kéo được cột tới vị trí khác, ví dụ ngay sau Assigning Sale. Lựa chọn và vị trí được ghi nhớ như các cột khác (localStorage <code>telesale_columns</code>).</td></tr>
+      <tr><td><b>Mốc bắt đầu</b></td><td><code>first_assign_sale_at</code>: lần đầu đơn được phân công cho Sale. Field đã có; đổi Sale, bỏ phân công hay phân công lại đều không đổi field này. Đơn chưa từng được phân công hiện <code>--</code>.</td></tr>
+      <tr><td><b>Nhóm status</b></td><td><b>Đang xử lý</b>: <code>new</code> New, <code>need_confirm</code> Need confirmation, <code>sale_pending</code> Pending. Đây đúng là bộ BE đang dùng để đếm <code>assigned_count</code> (<code>order.ex:228</code>). <b>Đã xử lý xong</b>: mọi status còn lại, gồm <code>waiting</code> Restocking, <code>confirmed</code> Confirmed, <code>cancel</code> Canceled và các status sau Confirmed (<code>wait_print</code> tới <code>returned</code>). Chữ "Pending" luôn là <code>sale_pending</code>; <code>pending</code> là Waiting for pick up.</td></tr>
+      <tr><td><b>Mốc dừng</b></td><td>Field mới <code>telesale_completed_at</code>. Từ nhóm đang xử lý sang nhóm đã xong: ghi thời điểm chuyển. Từ nhóm đã xong về nhóm đang xử lý: xoá field, đồng hồ chạy tiếp từ <code>first_assign_sale_at</code>. Chuyển trong cùng nhóm: giữ nguyên. Quy tắc giống nhau cho mọi nguồn đổi status (Sale, POS, API, automation, ITY).</td></tr>
+      <tr><td><b>Công thức</b></td><td>Đang chạy = now − <code>first_assign_sale_at</code>. Đã dừng = <code>telesale_completed_at</code> − <code>first_assign_sale_at</code>. Tính liên tục 24/7, kể cả ngoài giờ và ngày nghỉ. Thiếu mốc, hoặc kết quả âm, thì hiện <code>--</code>. Timezone chỉ đổi giờ hiện trong tooltip.</td></tr>
+      <tr><td><b>Hiển thị</b></td><td>Format <code>&lt;1m</code>, <code>Xm</code>, <code>Xh Ym</code>, <code>Xd Yh</code> (hàm <code>formatTimeElapsed</code> của CSR). Đang chạy: tag xanh dưới 12h, vàng từ 12h đến dưới 24h, đỏ từ 24h, có icon đồng hồ, tự cập nhật mỗi phút (từ 24h trở lên thì mỗi giờ, vì format đã bỏ phút). Đã dừng: tag xám, không icon, với mọi giá trị kể cả trên 24h. <code>--</code>: chữ xám.</td></tr>
+      <tr><td><b>Tooltip</b></td><td><code>First assigned at</code>; thêm <code>Completed at</code> khi đồng hồ đã dừng. Giờ theo timezone của user, format <code>HH:mm:ss DD/MM/YYYY</code> như <code>formatDateTime</code>.</td></tr>
+      <tr><td><b>Sort</b></td><td>Bấm header Time Elapsed: giảm dần → tăng dần → bỏ sort (giống CSR Ticket). BE sort trên toàn danh sách, đơn <code>--</code> luôn ở cuối ở cả 2 chiều. Không sort thì giữ thứ tự mặc định (đơn tạo mới nhất trước). Thứ tự được tính lúc tải danh sách: đồng hồ trên từng dòng vẫn chạy, nhưng danh sách không tự xếp lại cho tới lần tải sau.</td></tr>
+      <tr><td><b>Sau khi đổi status</b></td><td>Dòng đơn đổi ngay, không cần tải lại: Sale đổi trên màn thì theo response PUT, đổi từ nơi khác thì theo socket <code>order:updated</code>. Cả 2 đường đều thay cả dòng bằng dữ liệu mới.</td></tr>
+      <tr><td><b>Đơn rời danh sách</b></td><td>Danh sách Telesale chỉ lấy 6 status: <code>new</code>, <code>waiting</code>, <code>need_confirm</code>, <code>sale_pending</code>, <code>confirmed</code>, <code>cancel</code>. Đơn sang <code>wait_print</code> trở đi vẫn nằm trên trang tới lần tải sau, rồi rời danh sách. AC6 và AC11 kiểm bằng <code>telesale_completed_at</code> trong response show đơn.</td></tr>
+      <tr><td><b>Dữ liệu cũ</b></td><td>Không backfill. Đơn đang xử lý và đã có <code>first_assign_sale_at</code> thì chạy bình thường. Đơn đã xử lý xong trước khi triển khai thì hiện <code>--</code>.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="phuong-an">
+  <div class="sec-h"><span class="n">03</span><h2>Phương án &amp; câu hỏi</h2><p>Hai câu hỏi phát sinh khi đối chiếu issue với code, đã chốt ngày 20/10/2026. Hiện không còn câu hỏi mở.</p></div>
+  <div class="dec two">
+    <div class="dcard"><div class="q">AC1</div><h4>1. Vị trí cột khi bật (AC1)</h4>
+      <p class="ctx">Bộ chọn cột <code>OrderColumnContainerV1</code> luôn chèn cột vừa tick vào ngay trước cột cố định cuối (Status), nên không thể hiện "ngay sau Assigning Sale" như câu chữ ban đầu của AC1.</p>
+      <div class="choice"><span class="ck">✓</span><div><b>A. Giống Return Rate #463</b>: cột hiện ngay trước Status, kéo được về sau Assigning Sale, vị trí được ghi nhớ. Không phải sửa component dùng chung. Muốn đặt cạnh Assigning Sale thì phải kéo 1 lần.</div></div>
+      <div class="alt"><s>B. Chèn đúng sau Assigning Sale</s>: khớp câu chữ ban đầu, nhưng phải sửa <code>OrderColumnContainerV1</code>, component dùng chung cho Order list, Telesale, các modal Export Excel, Product / Variation. Cần owner các màn đó review.</div></div>
+    <div class="dcard"><div class="q">AC6 / AC11</div><h4>2. Kiểm AC6 / AC11 khi đơn rời danh sách Telesale</h4>
+      <p class="ctx">Đơn sang <code>wait_print</code> trở đi không còn nằm trong danh sách Telesale, nên không nhìn được Time Elapsed trên màn.</p>
+      <div class="choice"><span class="ck">✓</span><div><b>A. Kiểm qua field</b>: xem <code>telesale_completed_at</code> trong response show đơn. Giữ nguyên phạm vi; người kiểm cần xem API hoặc DevTools.</div></div>
+      <div class="alt"><s>B. Hiển thị thêm ở chi tiết đơn</s>: nhìn được bằng mắt, nhưng mở rộng phạm vi, cần GIP chốt.</div></div>
+  </div>
+</section>
+
+<section id="ngoai-pham-vi">
+  <div class="sec-h"><span class="n">04</span><h2>Ngoài phạm vi</h2><p>Và các giới hạn đã biết</p></div>
+  <div class="grid2">
+    <div class="note n-info"><span class="ic">i</span><div>
+      <p><b>Ngoài phạm vi</b></p>
+      <ul class="clean">
+        <li>Không gửi notification (push, email, in-app) khi đơn chậm.</li>
+        <li>Không tự đổi status hay phân công lại Sale khi quá thời gian.</li>
+        <li>Không tính theo giờ làm việc hay ngày nghỉ; không cấu hình ngưỡng màu theo shop hoặc thị trường.</li>
+        <li>Không xây báo cáo SLA Telesale.</li>
+        <li>Không backfill dữ liệu cũ, không lưu mốc go-live.</li>
+        <li>Không xử lý T3, T4.</li>
+      </ul>
+    </div></div>
+    <div class="note n-warn"><span class="ic">!</span><div>
+      <p><b>Giới hạn đã biết</b></p>
+      <ul class="clean">
+        <li>Time Elapsed đo tổng thời gian từ lần đầu phân công tới lần xử lý xong gần nhất, không đo thời gian Sale thực sự thao tác trên đơn.</li>
+        <li>Quy tắc mở lại chặn được việc Confirmed tạm rồi về Pending để giảm Time Elapsed. Đơn bị Confirmed sai mà không ai mở lại thì Time Elapsed không phát hiện được; việc đó cần Order History hoặc một yêu cầu báo cáo / audit riêng.</li>
+      </ul>
+    </div></div>
+  </div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">05</span><h2>Cho dev</h2><p>Dự kiến, chưa có code. Số dòng tính trên nhánh <code>develop</code> ngày 20/10/2026.</p></div>
+  <div class="status">
+    <div class="card" style="padding:8px 10px">
+      <table class="t" style="table-layout:fixed">
+        <tr><th style="width:330px">BE · sea-fulfillment</th><th>Sửa gì</th></tr>
+        <tr><td>Migration</td><td>Migration thêm cột <code>orders.telesale_completed_at</code> (<code>naive_datetime</code>), theo <code>CLAUDE.md</code> §11 của BE. Không thêm vào <code>@optional_fields</code> của <code>Order</code>, để client và POS không gửi đè được.</td></tr>
+        <tr><td><code>lib/sea_fulfillment_web/model/order.ex</code></td><td>Ghi / xoá field trong <code>Order.changeset</code>, cạnh <code>handle_update_assigned_count</code> (<code>lib/sea_fulfillment_web/model/order.ex:222</code>), dùng đúng bộ <code>["new", "need_confirm", "sale_pending"]</code> ở dòng 228. Lưu ý: khối <code>prepare_changes</code> ở dòng 185 đang bỏ qua kết quả của <code>handle_update_assigned_count</code> và trả về changeset gốc; nếu <code>put_change</code> đặt trong khối này thì phải trả về changeset đã đổi.</td></tr>
+        <tr><td><code>lib/services/es_v2/order.ex</code> (mapping)</td><td>ES (<code>lib/services/es_v2/order.ex</code>): thêm <code>telesale_completed_at</code> (type <code>date</code>) vào <code>order_mapping/0</code> cạnh <code>first_assign_sale_at</code> (khoảng dòng 2139) và vào danh sách field encode (dòng 267). Không cần reindex: doc cũ không có field thì là <code>null</code>.</td></tr>
+        <tr><td><code>lib/services/es_v2/order.ex</code> (sort)</td><td>Sort: thêm <code>time_elapsed</code> vào <code>@allowed_sort_keys</code> (dòng 1445), script sort theo mẫu <code>time_elapsed_sort/1</code> của <code>es_v2/ticket.ex:1166</code>. Đơn thiếu mốc hoặc kết quả âm đẩy xuống cuối ở cả 2 chiều. FE gửi <code>sort_by</code> / <code>sort_direction</code>, hàm <code>normalize_sort_params</code> đã đọc 2 param này.</td></tr>
+        <tr><td>List, PUT, show, socket</td><td>List (ES), response PUT update đơn, show đơn và payload socket <code>order:updated</code> đều phải có <code>first_assign_sale_at</code> và <code>telesale_completed_at</code>. FE thay cả dòng bằng payload (<code>UPDATE_DATA</code>, <code>reducers/current.js:162</code>); thiếu field thì dòng vừa đổi status chạy hoặc dừng sai cho tới khi tải lại.</td></tr>
+      </table>
+    </div>
+    <div class="card" style="padding:8px 10px">
+      <table class="t" style="table-layout:fixed">
+        <tr><th style="width:330px">FE · sea-fulfillment-web</th><th>Sửa gì</th></tr>
+        <tr><td><code>pages/admin/order/telesale.js</code> (cột)</td><td><code>pages/admin/order/telesale.js</code>: thêm <code>time_elapsed</code> vào <code>plainOptions</code> và <code>columns</code> ngay sau <code>assigning_sale_id</code>. State khởi tạo <code>useState(plainOptions)</code> (dòng 94) đang bật mọi cột, phải loại <code>time_elapsed</code> ra. Người đã lưu <code>telesale_columns</code> không có key mới, nên cột vẫn tắt.</td></tr>
+        <tr><td><code>pages/admin/order/telesale.js</code> (sort)</td><td>Cột mới: <code>sorter: true</code>, <code>sortDirections: ['descend', 'ascend']</code>, <code>sortOrder</code> theo state, giống <code>pages/admin/csr/ticket.js:302</code>. Màn Telesale hiện chưa gửi sort khi gọi <code>getOrders</code>: cần gửi <code>sort_by</code> / <code>sort_direction</code> và về trang 1 khi đổi sort.</td></tr>
+        <tr><td><code>components/csr/TimeElapsedCell.js</code></td><td>Tách phần hiển thị của <code>components/csr/TimeElapsedCell.js</code> thành component nhận <code>startAt</code>, <code>endAt</code>, <code>isRunning</code> (ngưỡng 12h / 24h, tick theo phút / giờ, <code>formatTimeElapsed</code> của <code>utils/csr.js</code>). CSR giữ các trạng thái riêng (<code>Not picked up</code>, <code>Missing information</code>, giá trị âm màu cam); Telesale hiện <code>--</code> cho trường hợp thiếu mốc và âm. Chạy lại <code>test/components/TimeElapsedCell.test.js</code> sau khi tách.</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong biến, mỗi thao tác cập nhật rồi gọi render…() vẽ lại. Logic là logic dự kiến (chưa có code).
+(() => {
+  const root = document.getElementById('proto');
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const MINUTE = 60 * 1000;
+  const HOUR = 60 * MINUTE;
+
+  const ICON = {
+    clock: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5"/></svg>',
+    down: '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l5 5 5-5"/></svg>',
+    drag: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5v13M1.5 8h13M6 3.5l2-2 2 2M6 12.5l2 2 2-2M3.5 6l-2 2 2 2M12.5 6l2 2-2 2"/></svg>',
+    pin: '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M10.4 1.3l4.3 4.3-1.4.5-2.9 2.9.4 3.4-1.4 1.4-2.8-2.8-3.6 3.6-.7-.7 3.6-3.6-2.8-2.8 1.4-1.4 3.4.4 2.9-2.9z"/></svg>',
+    copy: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M11 5V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2"/></svg>',
+  };
+
+  // ── Status: giống utils/tools.js orderStatus (chữ theo static/translations/en/constant.json, status.order.*) ──
+  // Bỏ need_attention: chỉ FE có, không nằm trong @status BE và không thuộc danh sách Telesale.
+  const orderStatus = [
+    { key: 'new', text: 'New', bgColor: '#08979c' },
+    { key: 'waiting', text: 'Restocking', bgColor: '#ad8b00' },
+    { key: 'need_confirm', text: 'Need confirmation', bgColor: '#1677ff' },
+    { key: 'sale_pending', text: 'Pending', bgColor: '#c7c434' },
+    { key: 'confirmed', text: 'Confirmed', bgColor: '#003eb3' },
+    { key: 'wait_print', text: 'Wait Print', bgColor: '#da5c9d' },
+    { key: 'printed', text: 'Printed', bgColor: '#ba0062' },
+    { key: 'packing', text: 'Packing', bgColor: '#722ed1' },
+    { key: 'pending', text: 'Waiting for pick up', bgColor: '#eb2f96' },
+    { key: 'shipped', text: 'Shipped', bgColor: '#fa8c16' },
+    { key: 'delivered', text: 'Delivered', bgColor: '#52c41a' },
+    { key: 'returning', text: 'Returning', bgColor: '#fa541c' },
+    { key: 'returned', text: 'Returned', bgColor: '#a8071a' },
+    { key: 'cancel', text: 'Canceled', bgColor: '#f5222d' },
+  ];
+
+  // giống utils/tools.js telesaleStatus: danh sách Telesale chỉ lấy 6 status này (BE es_v2/order.ex:1244)
+  const telesaleStatus = ['new', 'waiting', 'need_confirm', 'sale_pending', 'confirmed', 'cancel'];
+
+  const statusText = (key) => orderStatus.find((item) => item.key === key)?.text || key;
+
+  // giống utils/tools.js getOrderStatus: các status Sale chọn được từ nút Status
+  const getOrderStatus = (order) => {
+    let list = [];
+    switch (order.status) {
+      case 'new':
+        list = ['sale_pending', 'confirmed', 'cancel'];
+        break;
+      case 'need_confirm':
+        list = ['sale_pending', 'confirmed', 'cancel'];
+        break;
+      case 'sale_pending':
+        list = ['sale_pending', 'confirmed', 'cancel'];
+        break;
+      case 'confirmed':
+        list = ['sale_pending', 'cancel'];
+        break;
+      case 'waiting': {
+        list = ['sale_pending', 'cancel'];
+        // app: !order.items.find((item) => (item.added_to_cart_quantity || 0) < item.quantity); đơn mẫu đều chưa đủ hàng
+        const allowedConfirm = order.items_ready;
+        if (allowedConfirm) list.unshift('confirmed');
+        break;
+      }
+      case 'packing':
+        list = ['pending', 'cancel'];
+        break;
+      case 'pending':
+        list = ['shipped', 'cancel'];
+        break;
+      case 'shipped':
+        list = ['returning', 'delivered'];
+        break;
+      case 'returning':
+        list = ['returned', 'delivered'];
+        break;
+    }
+    return list;
+  };
+
+  // ── Logic dự kiến ──
+
+  // Nhóm "đang xử lý": đúng bộ BE dùng để đếm assigned_count (order.ex:228).
+  const TELESALE_PROCESSING_STATUSES = ['new', 'need_confirm', 'sale_pending'];
+  const isProcessing = (status) => TELESALE_PROCESSING_STATUSES.includes(status);
+
+  // BE dự kiến (Order.changeset): ghi / xoá telesale_completed_at theo nhóm của status cũ và mới.
+  const applyStatusChange = (order, newStatus, at) => {
+    if (newStatus === order.status) return order;
+
+    let completedAt = order.telesale_completed_at;
+    if (isProcessing(order.status) && !isProcessing(newStatus)) completedAt = at;
+    if (!isProcessing(order.status) && isProcessing(newStatus)) completedAt = null;
+
+    return { ...order, status: newStatus, telesale_completed_at: completedAt };
+  };
+
+  // first_assign_sale_at chỉ ghi ở lần phân công đầu; đổi Sale, bỏ phân công, phân công lại không đụng tới.
+  const applyAssignSale = (order, saleId, at) => ({
+    ...order,
+    assigning_sale_id: saleId || null,
+    first_assign_sale_at: order.first_assign_sale_at || (saleId ? at : null),
+  });
+
+  // FE dự kiến: props cho component hiển thị dùng chung với CSR.
+  const telesaleTimeElapsedProps = (order) => ({
+    startAt: order.first_assign_sale_at,
+    endAt: order.telesale_completed_at,
+    isRunning: isProcessing(order.status),
+  });
+
+  // Số giây, hoặc null khi thiếu mốc / âm (hiện "--").
+  const elapsedSeconds = ({ startAt, endAt, isRunning }, now) => {
+    const end = isRunning ? now : endAt;
+    if (!startAt || !end) return null;
+
+    const seconds = Math.floor((end - startAt) / 1000);
+    return seconds < 0 ? null : seconds;
+  };
+
+  // giống utils/csr.js formatTimeElapsed
+  const formatTimeElapsed = (seconds) => {
+    if (seconds == null) return null;
+
+    const totalMinutes = Math.floor(Math.abs(seconds) / 60);
+    let text;
+
+    if (totalMinutes < 1) text = '<1m';
+    else if (totalMinutes < 60) text = `${totalMinutes}m`;
+    else if (totalMinutes < 1440) text = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+    else text = `${Math.floor(totalMinutes / 1440)}d ${Math.floor((totalMinutes % 1440) / 60)}h`;
+
+    return seconds < 0 ? `-${text}` : text;
+  };
+
+  const elapsedText = (order, now) => formatTimeElapsed(elapsedSeconds(telesaleTimeElapsedProps(order), now)) || '--';
+
+  // BE dự kiến: script sort theo mẫu time_elapsed_sort/1 của ticket; "--" luôn cuối, hoà thì id giảm dần.
+  const sortByTimeElapsed = (orders, direction, now) =>
+    orders
+      .map((order) => ({ order, value: elapsedSeconds(telesaleTimeElapsedProps(order), now) }))
+      .sort((a, b) => {
+        if (a.value == null || b.value == null) return a.value == null && b.value == null ? b.order.id - a.order.id : a.value == null ? 1 : -1;
+        return (direction === 'asc' ? a.value - b.value : b.value - a.value) || b.order.id - a.order.id;
+      })
+      .map((item) => item.order);
+
+  // Mô phỏng gọi getOrders({ filter, is_telesale: true }) + counter.
+  const querySnapshot = ({ orders, tab, sorter, now }) => {
+    const telesaleOrders = orders.filter((order) => telesaleStatus.includes(order.status));
+    const counters = {};
+    telesaleOrders.forEach((order) => (counters[order.status] = (counters[order.status] || 0) + 1));
+
+    const list = tab === 'all' ? telesaleOrders : telesaleOrders.filter((order) => order.status === tab);
+    const sorted = sorter ? sortByTimeElapsed(list, sorter.sort_direction, now) : [...list].sort((a, b) => b.inserted_at - a.inserted_at || b.id - a.id);
+
+    return { ids: sorted.map((order) => order.id), counters };
+  };
+
+  // ── Ngưỡng màu + tick: giống components/csr/TimeElapsedCell.js ──
+  const RUNNING_WARNING_SECONDS = 12 * 3600;
+  const RUNNING_DANGER_SECONDS = 24 * 3600;
+  // App tick mỗi phút (từ 24h trở lên thì mỗi giờ); prototype vẽ lại mỗi phút cho mọi dòng, kết quả hiển thị như nhau.
+  const TICK_MINUTE_MS = 60 * 1000;
+
+  const runningTagColor = (seconds) => {
+    if (seconds >= RUNNING_DANGER_SECONDS) return 'red';
+    if (seconds >= RUNNING_WARNING_SECONDS) return 'gold';
+    return 'green';
+  };
+
+  // ── Định dạng giờ: giống utils/tools.js formatDateTime ──
+  const pad = (n) => String(n).padStart(2, '0');
+  const inTz = (tz, ms) => new Date(ms + Math.round(tz * 60) * MINUTE);
+  const hms = (d) => `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  // formatDateTime(timezone, time, true): 'HH:mm:ss DD/MM/YYYY'
+  const formatDateTime = (tz, ms) => {
+    if (!ms) return '_';
+    const d = inTz(tz, ms);
+    return `${hms(d)} ${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+  };
+  // formatDateTime(timezone, time) không truyền full (cột Created At): moment calendar, so ngày theo timezone của user
+  const formatCalendar = (tz, ms, nowMs) => {
+    if (!ms) return '_';
+    const d = inTz(tz, ms);
+    const n = inTz(tz, nowMs);
+    const dayIndex = (x) => Math.floor(Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()) / (24 * HOUR));
+    const diff = dayIndex(d) - dayIndex(n);
+    if (diff === 0) return `${hms(d)} Today`;
+    if (diff === -1) return `${hms(d)} Yesterday`;
+    if (diff === 1) return `${hms(d)} Tomorrow`;
+    if (d.getUTCFullYear() === n.getUTCFullYear()) return `${hms(d)} ${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}`;
+    return formatDateTime(tz, ms);
+  };
+  const toNaive = (ms) => (ms ? new Date(ms).toISOString().slice(0, 19) : null);
+
+  // ── Dữ liệu mẫu ──
+  const SALES = [
+    { id: 'sale_a', name: 'Sale A', color: '#1677ff' },
+    { id: 'sale_b', name: 'Sale B', color: '#13c2c2' },
+    { id: 'sale_c', name: 'Sale C', color: '#722ed1' },
+  ];
+  const saleName = (id) => SALES.find((sale) => sale.id === id)?.name;
+  // giống utils/tools.js showUser (Avatar size 20 + tên)
+  const showUser = (id) => {
+    const sale = SALES.find((item) => item.id === id);
+    return sale ? `<span class="av" style="background:${sale.color}">${sale.name.slice(-1)}</span>${esc(sale.name)}` : '';
+  };
+
+  const BASE = Math.floor(Date.now() / MINUTE) * MINUTE;
+  const ago = (minutes) => (minutes == null ? null : BASE - minutes * MINUTE);
+
+  // [id, display_id, status, sale, tạo cách đây (phút), first_assign_sale_at (phút), telesale_completed_at (phút)]
+  const SEED = [
+    [1, '1001', 'new', 'sale_a', 30, 25, null],
+    [2, '1002', 'need_confirm', 'sale_b', 210, 200, null],
+    [3, '1003', 'sale_pending', 'sale_a', 840, 780, null],
+    [4, '1004', 'new', 'sale_c', 3240, 3180, null],
+    [5, '1005', 'confirmed', 'sale_b', 370, 360, 300],
+    [6, '1006', 'waiting', 'sale_a', 1500, 1440, 1320],
+    [7, '1007', 'cancel', 'sale_c', 4380, 4320, 2880],
+    [8, '1008', 'new', null, 15, null, null], // chưa từng phân công
+    [9, '1009', 'confirmed', 'sale_a', 7260, 7200, null], // đơn cũ, xử lý xong trước khi triển khai
+    [10, '1010', 'sale_pending', 'sale_b', 5, 0.5, null],
+    [11, '1011', 'confirmed', 'sale_c', 5820, 5760, 1440],
+    [12, '1012', 'need_confirm', 'sale_a', 1440, 1430, null],
+    [13, '1013', 'new', 'sale_b', 50, 45, null],
+    [14, '1014', 'confirmed', 'sale_c', 120, 60, 70], // dữ liệu lệch: completed trước first
+  ];
+
+  const SEED_ORDERS = SEED.map(([id, display_id, status, sale, created, first, completed], index) => ({
+    id,
+    display_id,
+    status,
+    shop: index % 2 ? 'Shop B' : 'Shop A',
+    assigning_sale_id: sale,
+    customer_name: `Customer ${String(id).padStart(2, '0')}`,
+    phone_number: `090000000${String(id).padStart(2, '0')}`,
+    // giống renderProduct của pages/admin/order/telesale.js: `${variation_info.name} x ${quantity}`
+    items: `Sample Product ${String.fromCharCode(65 + (index % 4))} x ${(index % 3) + 1}`,
+    inserted_at: ago(created),
+    first_assign_sale_at: ago(first),
+    telesale_completed_at: ago(completed),
+    items_ready: false,
+  }));
+
+  // ── Bộ chọn cột: giống pages/admin/order/telesale.js (defaultColumns, stickyColumns) + OrderColumnContainerV1.js ──
+  const plainOptions = ['display_id', 'shop', 'assigning_sale_id', 'time_elapsed', 'customer_name', 'customer_phone', 'items', 'inserted_at', 'status'];
+  const defaultColumns = ['display_id', 'items', 'customer_phone', 'status'];
+  const stickyColumns = ['display_id', 'status'];
+  // FE dự kiến: bỏ time_elapsed khỏi giá trị khởi tạo để cột mặc định tắt (develop làm vậy với return_rate).
+  const initialColumns = plainOptions.filter((key) => key !== 'time_elapsed');
+  const STORAGE_KEY = 'proto-464:telesale_columns';
+
+  // giống utils/tools.js getStoredColumnKeys
+  const getStoredColumnKeys = (storageKey, validKeys) => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return null;
+      return parsed.filter((key) => validKeys.includes(key));
+    } catch {
+      return null;
+    }
+  };
+
+  // Cột: tiêu đề và cột cố định giống `columns` của pages/admin/order/telesale.js (prototype giữ 9 cột)
+  const COLUMNS = [
+    { key: 'display_id', title: 'ID', width: 90, fixed: 'left', render: (o) => esc(o.display_id) },
+    { key: 'shop', title: 'Shop', width: 110, render: (o) => esc(o.shop) },
+    { key: 'assigning_sale_id', title: 'Assigning Sale', width: 140, render: (o) => showUser(o.assigning_sale_id) },
+    { key: 'time_elapsed', title: 'Time Elapsed', width: 150, sorter: true, render: (o) => timeElapsedTag(o) },
+    { key: 'customer_name', title: 'Customer Name', width: 140, render: (o) => esc(o.customer_name || '-') },
+    { key: 'customer_phone', title: 'Phone Number', width: 130, render: (o) => esc(o.phone_number || '-') },
+    { key: 'items', title: 'Products', width: 190, render: (o) => esc(o.items) },
+    { key: 'inserted_at', title: 'Created At', width: 170, render: (o) => formatCalendar(timezone, o.inserted_at, now()) },
+    { key: 'status', title: 'Status', width: 180, fixed: 'right', render: (o) => statusBtn(o) },
+  ];
+  const titleOf = (key) => COLUMNS.find((column) => column.key === key)?.title;
+
+  // Sticky đầu / cuối: chỉ cột sticky xếp liên tiếp ở đầu / cuối `columns` mới bị khoá vị trí (OrderColumnContainerV1)
+  const leading = [];
+  const trailing = [];
+  for (let i = 0; i < COLUMNS.length && stickyColumns.includes(COLUMNS[i].key); i++) leading.push(COLUMNS[i].key);
+  for (let i = COLUMNS.length - 1; i >= 0 && stickyColumns.includes(COLUMNS[i].key); i--) trailing.unshift(COLUMNS[i].key);
+
+  // ── Trạng thái ──
+  let offset = 0; // độ lệch của giờ mô phỏng so với giờ thật; app thật dùng Date.now()
+  let timezone = 8;
+  let orders = SEED_ORDERS.map((order) => ({ ...order }));
+  let selectedColumns = (() => {
+    const stored = getStoredColumnKeys(STORAGE_KEY, plainOptions);
+    return stored && stored.length ? stored : initialColumns;
+  })();
+  let tab = 'all';
+  let sorter = null;
+  let page = 1;
+  const PAGE_SIZE = 5;
+  let snapshot = querySnapshot({ orders, tab, sorter, now: Date.now() });
+  let showId = 5;
+  let logs = [];
+  let draft = null; // danh sách cột đang sửa trong modal Columns
+  let colSearch = '';
+  let ddOrderId = null; // đơn đang mở dropdown Status
+  let dragFrom = null;
+  const sys = { orderId: 6, source: 'POS', status: 'confirmed' };
+  const assign = { orderId: 3, saleId: 'sale_b' };
+  const SOURCES = ['POS', 'API', 'Automation', 'ITY', 'Sale (chi tiết đơn)'];
+  const TZ_LABEL = { 8: 'UTC+8 (Philippines, Malaysia, Singapore)', 7: 'UTC+7 (Thailand, Indonesia, Cambodia, Laos)', 6.5: 'UTC+6:30 (Myanmar)' };
+
+  const now = () => Date.now() + offset;
+  const clock = (ms) => formatDateTime(timezone, ms).slice(0, 8);
+  const findOrder = (id) => orders.find((order) => order.id === id);
+
+  const log = (text) => {
+    logs.unshift(`${clock(now())} · ${text}`);
+    logs = logs.slice(0, 60);
+    $('log').textContent = logs.join('\n');
+  };
+  const toast = (text, bad) => {
+    const el = $('toast');
+    el.textContent = text;
+    el.className = 'toast show' + (bad ? ' bad' : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => (el.className = 'toast'), 1800);
+  };
+
+  // ── Ô Time Elapsed + nút Status ──
+  function timeElapsedTag(order) {
+    const { startAt, endAt, isRunning } = telesaleTimeElapsedProps(order);
+    const seconds = elapsedSeconds({ startAt, endAt, isRunning }, now());
+    const running = isRunning && seconds != null;
+    const tip = startAt ? [`First assigned at: ${formatDateTime(timezone, startAt)}`].concat(isRunning ? [] : [`Completed at: ${formatDateTime(timezone, endAt)}`]).join('\n') : '';
+    const tipAttr = tip ? ` data-tip="${esc(tip)}"` : '';
+    if (seconds == null) return `<span class="te-empty" data-te="${order.display_id}"${tipAttr}>--</span>`;
+    const color = running ? runningTagColor(seconds) : '';
+    return `<span class="etag ${color}" data-te="${order.display_id}" data-color="${color || 'default'}"${tipAttr}>${running ? ICON.clock : ''}${esc(formatTimeElapsed(seconds))}</span>`;
+  }
+  // giống components/OrderStatusBtn.js: nút màu bgColor + DownOutlined
+  function statusBtn(order) {
+    const info = orderStatus.find((item) => item.key === order.status);
+    return `<button class="sbtn" data-sbtn="${order.id}" style="background:${info?.bgColor};border-color:${info?.bgColor}">${esc(info?.text || order.status)}${ICON.down}</button>`;
+  }
+
+  // ── Vẽ lại ──
+  const visibleColumns = () => selectedColumns.map((key) => COLUMNS.find((column) => column.key === key)).filter(Boolean);
+  const cellClass = (column) => (column.fixed === 'left' ? ' class="fix-l"' : column.fixed === 'right' ? ' class="fix-r"' : '');
+
+  function renderTabs() {
+    const counters = snapshot.counters;
+    // giống components/StatusCounter.js: All không cộng các status trong excludeFromAll (cancel)
+    const allCount = Object.values(counters).reduce((acc, value) => acc + value, 0) - (counters.cancel || 0);
+    const items = [{ key: 'all', text: 'All' }, ...orderStatus.filter((item) => telesaleStatus.includes(item.key))];
+    $('tabs').innerHTML = items
+      .map((item) => `<a class="${tab === item.key ? 'on' : ''}" data-tab="${item.key}">${item.text}<span class="ctag">${item.key === 'all' ? allCount : counters[item.key] || 0}</span></a>`)
+      .join('');
+  }
+  function renderHead() {
+    $('thead').innerHTML = `<tr>${visibleColumns()
+      .map((column) => {
+        const style = `min-width:${column.width}px;width:${column.width}px${column.key === 'status' ? ';text-align:center' : ''}`;
+        if (!column.sorter) return `<th${cellClass(column)} style="${style}">${column.title}</th>`;
+        const dir = sorter?.sort_direction;
+        return `<th class="sortable" data-sort style="${style}"><span class="changed">${column.title}</span><span class="sorter"><i class="${dir === 'asc' ? 'on' : ''}">▲</i><i class="${dir === 'desc' ? 'on' : ''}">▼</i></span></th>`;
+      })
+      .join('')}</tr>`;
+  }
+  function renderRows() {
+    hideTip();
+    const cols = visibleColumns();
+    const ids = snapshot.ids.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    $('rows').innerHTML =
+      ids
+        .map((id) => findOrder(id))
+        .filter(Boolean)
+        .map((order) => `<tr data-id="${order.id}">${cols.map((column) => `<td${cellClass(column)}${column.key === 'status' ? ' style="text-align:center"' : ''}>${column.render(order)}</td>`).join('')}</tr>`)
+        .join('') || `<tr><td colspan="${cols.length}" style="text-align:center;color:#bfbfbf;padding:24px">No data</td></tr>`;
+  }
+  function renderPager() {
+    const total = snapshot.ids.length;
+    const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const start = total ? (page - 1) * PAGE_SIZE + 1 : 0;
+    const end = Math.min(page * PAGE_SIZE, total);
+    let html = `<span>${start}-${end} / ${total} orders</span><a data-page="${page - 1}" class="${page === 1 ? 'off' : ''}">‹</a>`;
+    for (let p = 1; p <= pages; p++) html += `<a data-page="${p}" class="${p === page ? 'on' : ''}">${p}</a>`;
+    html += `<a data-page="${page + 1}" class="${page === pages ? 'off' : ''}">›</a>`;
+    $('pager').innerHTML = html;
+  }
+  function renderClock() {
+    $('clock').textContent = formatDateTime(timezone, now());
+  }
+  const orderOptions = (value) => orders.map((order) => `<option value="${order.id}" ${order.id === value ? 'selected' : ''}>${order.display_id} · ${esc(statusText(order.status))}</option>`).join('');
+  function renderSim() {
+    $('sysOrder').innerHTML = orderOptions(sys.orderId);
+    $('sysSource').innerHTML = SOURCES.map((source) => `<option ${source === sys.source ? 'selected' : ''}>${esc(source)}</option>`).join('');
+    $('sysStatus').innerHTML = orderStatus.map((item) => `<option value="${item.key}" ${item.key === sys.status ? 'selected' : ''}>${item.text}</option>`).join('');
+    $('asOrder').innerHTML = orderOptions(assign.orderId);
+    $('asSale').innerHTML = SALES.map((sale) => `<option value="${sale.id}" ${sale.id === assign.saleId ? 'selected' : ''}>${sale.name}</option>`).join('') + `<option value="" ${assign.saleId === '' ? 'selected' : ''}>(Bỏ phân công)</option>`;
+    $('showOrder').innerHTML = orderOptions(showId);
+  }
+  function renderShow() {
+    const shown = findOrder(showId);
+    $('showJson').textContent = JSON.stringify(
+      {
+        id: shown.id,
+        display_id: shown.display_id,
+        status: shown.status,
+        assigning_sale_id: shown.assigning_sale_id,
+        first_assign_sale_at: toNaive(shown.first_assign_sale_at),
+        telesale_completed_at: toNaive(shown.telesale_completed_at),
+      },
+      null,
+      2
+    );
+    $('showSummary').innerHTML = `Time Elapsed: <b>${esc(elapsedText(shown, now()))}</b> (${telesaleTimeElapsedProps(shown).isRunning ? 'đang chạy' : 'đã dừng'}) · Trong danh sách Telesale: <b>${telesaleStatus.includes(shown.status) ? 'Có' : 'Không'}</b>`;
+  }
+  function render() {
+    renderTabs();
+    renderHead();
+    renderRows();
+    renderPager();
+    renderClock();
+    renderSim();
+    renderShow();
+  }
+
+  const reload = () => {
+    snapshot = querySnapshot({ orders, tab, sorter, now: now() });
+    const pages = Math.max(1, Math.ceil(snapshot.ids.length / PAGE_SIZE));
+    if (page > pages) page = pages;
+  };
+
+  // ── Đổi dữ liệu ──
+  const saveOrder = (next) => {
+    orders = orders.map((order) => (order.id === next.id ? next : order));
+  };
+
+  const describeChange = (prev, next) => {
+    const at = now();
+    const value = elapsedText(next, at);
+    let effect;
+    if (prev.status === next.status) effect = `status không đổi, telesale_completed_at giữ nguyên (${value})`;
+    else if (isProcessing(prev.status) && !isProcessing(next.status)) effect = `ghi telesale_completed_at = ${clock(next.telesale_completed_at)}, đồng hồ dừng ở ${value}`;
+    else if (!isProcessing(prev.status) && isProcessing(next.status)) effect = `xoá telesale_completed_at, đồng hồ chạy tiếp từ First assigned at: ${value}`;
+    else if (isProcessing(next.status)) effect = `cùng nhóm đang xử lý, telesale_completed_at không đổi, đồng hồ vẫn chạy (${value})`;
+    else effect = `cùng nhóm đã xử lý xong, giữ nguyên telesale_completed_at (${value})`;
+
+    const leave = telesaleStatus.includes(next.status) ? '' : ' · status này không thuộc danh sách Telesale: dòng còn trên trang tới lần tải sau';
+    return `${statusText(prev.status)} → ${statusText(next.status)} → ${effect}${leave}`;
+  };
+
+  const onSaleStatus = (order, key) => {
+    const next = applyStatusChange(order, key, now());
+    saveOrder(next);
+    showId = order.id;
+    render();
+    toast('Updated successfully!');
+    const needReason = key === 'cancel' || (key === 'sale_pending' && order.status !== 'confirmed');
+    log(`Status ${order.display_id}: ${describeChange(order, next)}${needReason ? ' (app thật mở ModalPendingReason để chọn lý do trước khi lưu)' : ''}`);
+  };
+
+  const onSystemChange = () => {
+    const order = findOrder(sys.orderId);
+    const next = applyStatusChange(order, sys.status, now());
+    saveOrder(next);
+    showId = order.id;
+    render();
+    log(`[${sys.source}] ${order.display_id}: ${describeChange(order, next)} · dòng trên danh sách đổi theo socket order:updated`);
+  };
+
+  const onAssignSale = () => {
+    const order = findOrder(assign.orderId);
+    const next = applyAssignSale(order, assign.saleId, now());
+    saveOrder(next);
+    showId = order.id;
+    render();
+
+    let effect;
+    if (!order.first_assign_sale_at && next.first_assign_sale_at) effect = `ghi first_assign_sale_at = ${clock(next.first_assign_sale_at)}, Time Elapsed: ${elapsedText(next, now())}`;
+    else if (!next.first_assign_sale_at) effect = 'đơn chưa từng được phân công, Time Elapsed vẫn --';
+    else effect = `first_assign_sale_at giữ nguyên, Time Elapsed không reset (${elapsedText(next, now())})`;
+    log(`Assigning Sale ${order.display_id}: ${saleName(order.assigning_sale_id) || '(trống)'} → ${saleName(next.assigning_sale_id) || '(trống)'} → ${effect}`);
+  };
+
+  // ── Modal Columns: giống OrderColumnContainerV1.js ──
+  const visibleColList = () => (colSearch ? COLUMNS.filter((column) => column.title.toLowerCase().includes(colSearch.toLowerCase())) : COLUMNS);
+
+  // Cột vừa tick chèn ngay trước các cột sticky cuối (Status).
+  const insertKeys = (prev, keys) => {
+    const next = [...prev];
+    next.splice(prev.length - trailing.length, 0, ...keys);
+    return next;
+  };
+  const toggle = (key, checked) => {
+    if (!checked) draft = draft.filter((item) => item !== key);
+    else if (!draft.includes(key)) draft = insertKeys(draft, [key]);
+  };
+  const onCheckAll = (checked) => {
+    const visible = visibleColList();
+    if (checked) draft = insertKeys(draft, visible.map((column) => column.key).filter((key) => !draft.includes(key)));
+    else draft = draft.filter((key) => defaultColumns.includes(key) || !visible.some((column) => column.key === key));
+  };
+  // Khi kéo, cột sticky đầu / cuối phải giữ nguyên thứ tự ở 2 đầu danh sách đã chọn.
+  const isValidStickyOrder = (keys) =>
+    keys.slice(0, leading.length).join('|') === leading.join('|') && keys.slice(keys.length - trailing.length).join('|') === trailing.join('|');
+
+  function renderColList() {
+    const visible = visibleColList();
+    const checkedCount = visible.filter((column) => draft.includes(column.key)).length;
+    $('cAll').checked = checkedCount === visible.length && visible.length > 0;
+    $('cAll').indeterminate = checkedCount > 0 && checkedCount < visible.length;
+    $('cList').innerHTML = visible
+      .map((column) => {
+        const locked = defaultColumns.includes(column.key);
+        return `<label class="${locked ? 'dis' : ''}"><input type="checkbox" data-col="${column.key}" ${draft.includes(column.key) ? 'checked' : ''} ${locked ? 'disabled' : ''}><span class="${column.key === 'time_elapsed' ? 'new-c' : ''}">${column.title}</span></label>`;
+      })
+      .join('');
+  }
+  function renderColSel() {
+    $('cCount').textContent = draft.length;
+    $('cSel').innerHTML = draft
+      .map((key, index) => {
+        const pinned = leading.includes(key) || trailing.includes(key);
+        return `<div class="ci" draggable="true" data-idx="${index}" data-key="${key}"><span>${ICON.drag}&nbsp; ${pinned ? `<span data-tip="Sticky column">${ICON.pin}</span> ` : ''}<span class="${key === 'time_elapsed' ? 'new-c' : ''}">${titleOf(key)}</span></span>${defaultColumns.includes(key) ? '' : `<span class="rm" data-rm="${key}" title="Remove">×</span>`}</div>`;
+      })
+      .join('');
+  }
+  function openColumns() {
+    draft = [...selectedColumns];
+    colSearch = '';
+    $('cSearch').value = '';
+    renderColList();
+    renderColSel();
+    root.classList.add('open');
+  }
+  function closeColumns(reason) {
+    if (!draft) return;
+    root.classList.remove('open');
+    draft = null;
+    hideTip();
+    if (reason) log(reason);
+  }
+  const onSaveColumns = (keys) => {
+    selectedColumns = keys;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+    closeColumns();
+    renderHead();
+    renderRows();
+    log(`Columns → OK: ${keys.includes('time_elapsed') ? 'Time Elapsed đang bật' : 'Time Elapsed đang tắt'}; thứ tự cột: ${keys.map(titleOf).join(', ')} (đã lưu, F5 vẫn giữ)`);
+  };
+  const onDrop = (to) => {
+    const from = dragFrom;
+    dragFrom = null;
+    if (from == null || from === to) return;
+    const next = [...draft];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    if (!isValidStickyOrder(next)) {
+      log(`Kéo ${titleOf(moved)} tới vị trí ${to + 1} → không nhận: ID phải đứng đầu, Status phải đứng cuối (cột sticky); danh sách giữ nguyên`);
+      return;
+    }
+    draft = next;
+    renderColSel();
+    log(`Kéo ${titleOf(moved)} tới vị trí ${to + 1} → ${draft.map(titleOf).join(', ')} (chưa lưu, bấm OK để lưu)`);
+  };
+
+  // ── Dropdown Status + tooltip ──
+  function openDropdown(order, btn) {
+    const dd = $('dd');
+    ddOrderId = order.id;
+    dd.innerHTML =
+      getOrderStatus(order)
+        .map((key) => `<a data-dd="${key}">${esc(statusText(key))}</a>`)
+        .join('') + `<a data-dd="duplicate_order">${ICON.copy}Duplicate Order</a>`;
+    const r = btn.getBoundingClientRect();
+    const pr = root.getBoundingClientRect();
+    let top = r.bottom - pr.top + 4;
+    if (top + dd.offsetHeight > root.clientHeight - 6) top = r.top - pr.top - dd.offsetHeight - 4;
+    dd.style.top = `${top}px`;
+    dd.style.left = `${Math.max(6, r.right - pr.left - dd.offsetWidth)}px`;
+    dd.classList.add('show');
+  }
+  function closeDropdown() {
+    ddOrderId = null;
+    $('dd').classList.remove('show');
+  }
+  function showTip(el) {
+    const tip = $('tip');
+    tip.innerHTML = el.dataset.tip
+      .split('\n')
+      .map((line) => `<div>${esc(line)}</div>`)
+      .join('');
+    const r = el.getBoundingClientRect();
+    const pr = root.getBoundingClientRect();
+    let top = r.top - pr.top - tip.offsetHeight - 6;
+    if (top < 4) top = r.bottom - pr.top + 6;
+    const left = Math.min(Math.max(4, r.left - pr.left + r.width / 2 - tip.offsetWidth / 2), root.clientWidth - tip.offsetWidth - 4);
+    tip.style.top = `${top}px`;
+    tip.style.left = `${left}px`;
+    tip.classList.add('show');
+  }
+  function hideTip() {
+    $('tip').classList.remove('show');
+  }
+
+  // ── Sự kiện trong khung prototype ──
+  root.addEventListener('click', (e) => {
+    const sbtn = e.target.closest('[data-sbtn]');
+    if (sbtn) {
+      const order = findOrder(Number(sbtn.dataset.sbtn));
+      if (ddOrderId === order.id) closeDropdown();
+      else openDropdown(order, sbtn);
+      return;
+    }
+    const ddItem = e.target.closest('[data-dd]');
+    if (ddItem) {
+      const order = findOrder(ddOrderId);
+      closeDropdown();
+      if (ddItem.dataset.dd === 'duplicate_order') log(`Duplicate Order ${order.display_id}: ngoài phạm vi prototype (app thật hỏi xác nhận rồi tạo đơn mới)`);
+      else onSaleStatus(order, ddItem.dataset.dd);
+      return;
+    }
+    const jumpBtn = e.target.closest('[data-jump]');
+    if (jumpBtn) {
+      offset += Number(jumpBtn.dataset.jump);
+      renderRows();
+      renderClock();
+      renderShow();
+      log(`Giờ mô phỏng ${jumpBtn.textContent} → đồng hồ đang chạy tăng theo, đồng hồ đã dừng giữ nguyên; thứ tự sort chỉ tính lại ở lần tải sau`);
+      return;
+    }
+    const tabEl = e.target.closest('[data-tab]');
+    if (tabEl) {
+      tab = tabEl.dataset.tab;
+      page = 1;
+      reload();
+      render();
+      log(`Tab ${tab === 'all' ? 'All' : statusText(tab)} → gọi lại danh sách, về trang 1`);
+      return;
+    }
+    const pageEl = e.target.closest('[data-page]');
+    if (pageEl) {
+      const next = Number(pageEl.dataset.page);
+      const pages = Math.max(1, Math.ceil(snapshot.ids.length / PAGE_SIZE));
+      if (next < 1 || next > pages || next === page) return;
+      page = next;
+      reload();
+      render();
+      log(`Trang ${page} → gọi lại danh sách với cùng sort`);
+      return;
+    }
+    if (e.target.closest('[data-sort]')) {
+      // sortDirections: ['descend', 'ascend'] → bấm lần lượt: giảm dần → tăng dần → bỏ sort
+      const dir = sorter?.sort_direction;
+      sorter = !dir ? { sort_by: 'time_elapsed', sort_direction: 'desc' } : dir === 'desc' ? { sort_by: 'time_elapsed', sort_direction: 'asc' } : null;
+      page = 1;
+      reload();
+      render();
+      log(
+        sorter
+          ? `Sort Time Elapsed ${sorter.sort_direction === 'desc' ? 'giảm dần' : 'tăng dần'} → BE sort toàn danh sách (sort_by=time_elapsed, sort_direction=${sorter.sort_direction}), về trang 1; đơn -- nằm cuối`
+          : 'Bỏ sort → thứ tự mặc định (đơn tạo mới nhất trước), về trang 1'
+      );
+      return;
+    }
+    const rm = e.target.closest('[data-rm]');
+    if (rm) {
+      draft = draft.filter((key) => key !== rm.dataset.rm);
+      renderColList();
+      renderColSel();
+      return;
+    }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'reload') {
+      reload();
+      render();
+      log('Reload → gọi lại danh sách (cùng tab, cùng sort)');
+      return;
+    }
+    if (act === 'columns') return openColumns();
+    if (act === 'close-cols') return closeColumns('Cancel → đóng modal Columns, không lưu thay đổi');
+    if (act === 'ok-cols') return onSaveColumns(draft);
+    if (act === 'reset') {
+      localStorage.removeItem(STORAGE_KEY);
+      window.location.reload();
+      return;
+    }
+    const row = e.target.closest('tr[data-id]');
+    if (row) {
+      const order = findOrder(Number(row.dataset.id));
+      showId = order.id;
+      renderSim();
+      renderShow();
+      log(`Click dòng ${order.display_id} → app thật mở ModalOrderDetail; prototype đưa đơn vào khung Response show đơn`);
+    }
+  });
+  root.addEventListener('change', (e) => {
+    if (e.target.id === 'tz') {
+      timezone = Number(e.target.value);
+      render();
+      log(`Timezone của user → ${TZ_LABEL[timezone]}: giờ trong tooltip đổi, Time Elapsed không đổi`);
+      return;
+    }
+    if (e.target.id === 'cAll') {
+      onCheckAll(e.target.checked);
+      renderColList();
+      renderColSel();
+      return;
+    }
+    const col = e.target.closest('[data-col]');
+    if (col) {
+      toggle(col.dataset.col, col.checked);
+      renderColList();
+      renderColSel();
+      log(`Columns: ${col.checked ? 'tick' : 'bỏ tick'} ${titleOf(col.dataset.col)}${col.checked ? ' → chèn ngay trước Status' : ''} (chưa lưu, bấm OK để lưu)`);
+    }
+  });
+  $('cSearch').addEventListener('input', (e) => {
+    colSearch = e.target.value;
+    renderColList();
+  });
+  // Kéo thả danh sách cột đã chọn (app dùng react-beautiful-dnd; prototype dùng kéo thả HTML5)
+  $('cSel').addEventListener('dragstart', (e) => {
+    const item = e.target.closest('.ci');
+    if (!item) return;
+    dragFrom = Number(item.dataset.idx);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.dataset.key);
+  });
+  $('cSel').addEventListener('dragover', (e) => {
+    const item = e.target.closest('.ci');
+    if (!item) return;
+    e.preventDefault();
+    $('cSel').querySelectorAll('.ci.over').forEach((el) => el !== item && el.classList.remove('over'));
+    item.classList.add('over');
+  });
+  $('cSel').addEventListener('dragleave', (e) => {
+    const item = e.target.closest('.ci');
+    if (item && !item.contains(e.relatedTarget)) item.classList.remove('over');
+  });
+  $('cSel').addEventListener('drop', (e) => {
+    const item = e.target.closest('.ci');
+    if (!item) return;
+    e.preventDefault();
+    item.classList.remove('over');
+    onDrop(Number(item.dataset.idx));
+  });
+  $('cSel').addEventListener('dragend', () => {
+    dragFrom = null;
+    $('cSel').querySelectorAll('.ci.over').forEach((el) => el.classList.remove('over'));
+  });
+  root.addEventListener('mouseover', (e) => {
+    const el = e.target.closest('[data-tip]');
+    if (el) showTip(el);
+  });
+  root.addEventListener('mouseout', (e) => {
+    const el = e.target.closest('[data-tip]');
+    if (el && !el.contains(e.relatedTarget)) hideTip();
+  });
+  $('tscroll').addEventListener('scroll', () => {
+    closeDropdown();
+    hideTip();
+  });
+  // Bấm ra ngoài dropdown thì đóng (antd đóng theo mousedown). Phần tử vừa bị vẽ lại không còn trong trang thì bỏ qua.
+  document.addEventListener('mousedown', (e) => {
+    if (ddOrderId == null || !e.target.isConnected) return;
+    if ($('dd').contains(e.target) || e.target.closest('[data-sbtn]')) return;
+    closeDropdown();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (ddOrderId != null) closeDropdown();
+    else if (draft) closeColumns('Esc → đóng modal Columns, không lưu thay đổi');
+  });
+
+  // ── Khung mô phỏng ngoài prototype ──
+  $('sysOrder').addEventListener('change', (e) => (sys.orderId = Number(e.target.value)));
+  $('sysSource').addEventListener('change', (e) => (sys.source = e.target.value));
+  $('sysStatus').addEventListener('change', (e) => (sys.status = e.target.value));
+  $('sysApply').addEventListener('click', onSystemChange);
+  $('asOrder').addEventListener('change', (e) => (assign.orderId = Number(e.target.value)));
+  $('asSale').addEventListener('change', (e) => (assign.saleId = e.target.value));
+  $('asApply').addEventListener('click', onAssignSale);
+  $('showOrder').addEventListener('change', (e) => {
+    showId = Number(e.target.value);
+    renderShow();
+  });
+
+  setInterval(renderClock, 1000);
+  setInterval(() => {
+    renderRows();
+    renderShow();
+  }, TICK_MINUTE_MS);
+
+  render();
+  log(`Mở màn Telesale: 14 đơn mẫu, cột Time Elapsed ${selectedColumns.includes('time_elapsed') ? 'đang bật (lấy từ localStorage)' : 'đang tắt (mặc định)'}`);
+})();
+</script>
+</body>
+</html>

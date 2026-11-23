@@ -1,0 +1,176 @@
+[
+  {
+    "name": "Heading/4xl",
+    "key": "c16dea344cdb64a460e1e29996ee2e76a9323933",
+    "fontFamily": "Inter",
+    "fontStyle": "Bold",
+    "fontWeight": 700,
+    "fontSize": 36,
+    "lineHeight": 40,
+    "letterSpacing": -0.8,
+    "boundTo": "📘 Typography: Font size/4xl, Line height/4xl, Letter spacing/4xl"
+  },
+  {
+    "name": "Heading/3xl",
+    "key": "74abde42b6da146ce352aea3471f4934207b447a",
+    "fontFamily": "Inter",
+    "fontStyle": "Semi Bold",
+    "fontWeight": 600,
+    "fontSize": 30,
+    "lineHeight": 36,
+    "letterSpacing": -0.6,
+    "boundTo": "📘 Typography: Font size/3xl, Line height/3xl, Letter spacing/3xl"
+  },
+  {
+    "name": "Heading/2xl",
+    "key": "c66d9a0468f57c229150fa96ee57a4aa335b0509",
+    "fontFamily": "Inter",
+    "fontStyle": "Semi Bold",
+    "fontWeight": 600,
+    "fontSize": 24,
+    "lineHeight": 32,
+    "letterSpacing": -0.5,
+    "boundTo": "📘 Typography: Font size/2xl, Line height/2xl, Letter spacing/2xl"
+  },
+  {
+    "name": "Heading/xl",
+    "key": "6065539e2a043062e59347676209edddaaa8d8be",
+    "fontFamily": "Inter",
+    "fontStyle": "Semi Bold",
+    "fontWeight": 600,
+    "fontSize": 20,
+    "lineHeight": 28,
+    "letterSpacing": -0.3,
+    "boundTo": "📘 Typography: Font size/xl, Line height/xl, Letter spacing/xl"
+  },
+  {
+    "name": "Heading/lg",
+    "key": "ff234dd0773c587ba665c439d7a2f306bbbd16b5",
+    "fontFamily": "Inter",
+    "fontStyle": "Semi Bold",
+    "fontWeight": 600,
+    "fontSize": 18,
+    "lineHeight": 28,
+    "letterSpacing": -0.2,
+    "boundTo": "📘 Typography: Font size/lg, Line height/lg, Letter spacing/lg"
+  },
+  {
+    "name": "Body/md-regular",
+    "key": "062220115fbde23009c0a8d2a729b81382db51e5",
+    "fontFamily": "Inter",
+    "fontStyle": "Regular",
+    "fontWeight": 400,
+    "fontSize": 16,
+    "lineHeight": 24,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/md, Line height/md, Letter spacing/md"
+  },
+  {
+    "name": "Body/md-medium",
+    "key": "0e402e2e06eccf0a93ac0d87b132897c245821b9",
+    "fontFamily": "Inter",
+    "fontStyle": "Medium",
+    "fontWeight": 500,
+    "fontSize": 16,
+    "lineHeight": 24,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/md, Line height/md, Letter spacing/md"
+  },
+  {
+    "name": "Body/md-semibold",
+    "key": "d89e17312466e39397b0fd341398355bc6085c41",
+    "fontFamily": "Inter",
+    "fontStyle": "Semi Bold",
+    "fontWeight": 600,
+    "fontSize": 16,
+    "lineHeight": 24,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/md, Line height/md, Letter spacing/md"
+  },
+  {
+    "name": "Body/sm-regular",
+    "key": "0b7c62d14ba29088089afdf2e73ae10e0bc05000",
+    "fontFamily": "Inter",
+    "fontStyle": "Regular",
+    "fontWeight": 400,
+    "fontSize": 14,
+    "lineHeight": 20,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/sm, Line height/sm, Letter spacing/sm"
+  },
+  {
+    "name": "Body/sm-medium",
+    "key": "baa92b5f3e9cadc292c895b7c7b8d21dfb309f87",
+    "fontFamily": "Inter",
+    "fontStyle": "Medium",
+    "fontWeight": 500,
+    "fontSize": 14,
+    "lineHeight": 20,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/sm, Line height/sm, Letter spacing/sm"
+  },
+  {
+    "name": "Body/sm-semibold",
+    "key": "4f2d76b531a445b59e421c24e72d75da3b2873d5",
+    "fontFamily": "Inter",
+    "fontStyle": "Semi Bold",
+    "fontWeight": 600,
+    "fontSize": 14,
+    "lineHeight": 20,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/sm, Line height/sm, Letter spacing/sm"
+  },
+  {
+    "name": "Caption/xs-regular",
+    "key": "3c188c5db98a25cadf2e76af3ceab257e86386f3",
+    "fontFamily": "Inter",
+    "fontStyle": "Regular",
+    "fontWeight": 400,
+    "fontSize": 12,
+    "lineHeight": 16,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/xs, Line height/xs, Letter spacing/xs"
+  },
+  {
+    "name": "Caption/xs-medium",
+    "key": "46c51890f3bcfb9174ef9be74f3fb691c339f14f",
+    "fontFamily": "Inter",
+    "fontStyle": "Medium",
+    "fontWeight": 500,
+    "fontSize": 12,
+    "lineHeight": 16,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/xs, Line height/xs, Letter spacing/xs"
+  },
+  {
+    "name": "Caption/xs-semibold",
+    "key": "ba50984a33fe60c7f91b766611215c0b726c2445",
+    "fontFamily": "Inter",
+    "fontStyle": "Semi Bold",
+    "fontWeight": 600,
+    "fontSize": 12,
+    "lineHeight": 16,
+    "letterSpacing": 0,
+    "boundTo": "📘 Typography: Font size/xs, Line height/xs, Letter spacing/xs"
+  },
+  {
+    "name": "Code/sm",
+    "key": "c7b8f9a97ec1fb2f31d11698c7dac37dac7f5bd7",
+    "fontFamily": "Geist Mono",
+    "fontStyle": "Regular",
+    "fontWeight": 400,
+    "fontSize": 13,
+    "lineHeight": 20,
+    "letterSpacing": 0
+  },
+  {
+    "name": "Code/xs",
+    "key": "05d0323e44b1ea044ccba8ed01a0d9b82619b0dc",
+    "fontFamily": "Geist Mono",
+    "fontStyle": "Regular",
+    "fontWeight": 400,
+    "fontSize": 12,
+    "lineHeight": 16,
+    "letterSpacing": 0
+  }
+]

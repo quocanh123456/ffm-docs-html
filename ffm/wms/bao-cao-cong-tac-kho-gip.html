@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo tổng quan chuyến công tác kho GIP VN02 – WMS 创智云仓 (29/10 – 01/11/2026)</title>
+<style>
+:root { --cn:#d4380d; --cn-bg:#fff2e8; --ffm:#1677ff; --ffm-bg:#e6f4ff; --gip:#722ed1; --gip-bg:#f9f0ff; --bd:#e5e7eb; --ink:#1f2937; --ink2:#6b7280; --ok:#389e0d; --mid:#d48806; --bad:#cf1322; }
+* { box-sizing:border-box; }
+body { margin:0; font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color:var(--ink); background:#f5f6f8; }
+.wrap { max-width:1180px; margin:0 auto; padding:24px 20px 60px; }
+.top { position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid var(--bd); }
+.top .in { max-width:1180px; margin:0 auto; padding:10px 20px; display:flex; gap:14px; flex-wrap:wrap; font-size:13px; }
+.top a { color:var(--ink2); text-decoration:none; } .top a:hover { color:var(--ffm); }
+.hero { background:#fff; border:1px solid var(--bd); border-radius:14px; padding:22px 26px; }
+.hero .kind { font-size:12px; letter-spacing:.5px; color:var(--ink2); text-transform:uppercase; }
+.hero h1 { font-size:24px; margin:4px 0 8px; }
+.meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.chip { font-size:12px; border:1px solid var(--bd); border-radius:999px; padding:2px 10px; background:#fafafa; }
+.chip.draft { background:#fffbe6; border-color:#ffe58f; color:#ad6800; font-weight:600; }
+.legend { display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; margin-top:12px; }
+.sw { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-1px; margin-right:5px; }
+.cnc { color:var(--cn); font-weight:600; } .ffmc { color:var(--ffm); font-weight:600; } .gipc { color:var(--gip); font-weight:600; }
+.kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px; }
+.kpi { background:#fff; border:1px solid var(--bd); border-radius:12px; padding:14px 16px; }
+.kpi .v { font-size:24px; font-weight:800; } .kpi .l { font-size:12.5px; color:var(--ink2); }
+.sec-h { display:flex; align-items:baseline; gap:10px; margin:32px 0 10px; flex-wrap:wrap; }
+.sec-h .no { font-weight:800; color:var(--ink2); font-size:14px; }
+.sec-h h2 { margin:0; font-size:19px; } .sec-h .d { color:var(--ink2); font-size:13px; }
+.card { background:#fff; border:1px solid var(--bd); border-radius:12px; padding:16px 20px; margin-bottom:12px; }
+.card h3 { margin:0 0 8px; font-size:15.5px; }
+.flow { display:flex; align-items:stretch; flex-wrap:wrap; gap:8px 0; }
+.st { border:1.5px solid var(--cn); background:var(--cn-bg); border-radius:10px; padding:8px 10px; min-width:120px; max-width:170px; font-size:12.5px; }
+.st b { display:block; font-size:13px; }
+.st.gip { border-color:var(--gip); background:var(--gip-bg); }
+.st .n { display:inline-block; width:18px; height:18px; border-radius:50%; background:var(--cn); color:#fff; font-size:11px; text-align:center; line-height:18px; margin-right:4px; }
+.st.gip .n { background:var(--gip); }
+.ar { align-self:center; padding:0 6px; color:#9ca3af; font-size:18px; }
+.branch { margin:8px 0 0 28px; font-size:13px; }
+.branch .tag { display:inline-block; background:#fff1f0; color:var(--bad); border:1px solid #ffa39e; border-radius:6px; padding:0 6px; font-size:12px; margin-right:6px; }
+table { border-collapse:collapse; width:100%; }
+th, td { border:1px solid var(--bd); padding:8px 10px; vertical-align:top; text-align:left; font-size:13.5px; }
+th { background:#fafafa; }
+th.cn-h { background:var(--cn-bg); color:var(--cn); } th.ffm-h { background:var(--ffm-bg); color:var(--ffm); } th.gip-h { background:var(--gip-bg); color:var(--gip); }
+td.cn { background:#fffaf6; } td.ffm { background:#f7fbff; } td.gip { background:#fcf8ff; }
+.pill { display:inline-block; font-size:11.5px; font-weight:600; padding:1px 8px; border-radius:999px; white-space:nowrap; }
+.p-ok { background:#f6ffed; color:var(--ok); border:1px solid #b7eb8f; }
+.p-mid { background:#fffbe6; color:var(--mid); border:1px solid #ffe58f; }
+.p-bad { background:#fff1f0; color:var(--bad); border:1px solid #ffa39e; }
+.p-info { background:#f0f5ff; color:#2f54eb; border:1px solid #adc6ff; }
+.src { font-size:11.5px; color:var(--ink2); }
+.tagsrc { display:inline-block; font-size:11px; font-weight:700; border-radius:4px; padding:0 5px; margin-right:3px; }
+.t-k { background:#f6ffed; color:var(--ok); } .t-v { background:#e6fffb; color:#08979c; } .t-t { background:#f0f5ff; color:#2f54eb; } .t-s { background:#f5f5f5; color:#595959; } .t-d { background:#fff7e6; color:#d46b08; }
+.note { border-radius:10px; padding:10px 14px; margin:10px 0; font-size:13.5px; }
+.n-warn { background:#fffbe6; border:1px solid #ffe58f; } .n-info { background:#e6f4ff; border:1px solid #91caff; } .n-red { background:#fff1f0; border:1px solid #ffa39e; }
+.shot img { width:100%; border-radius:10px; border:1px solid var(--bd); }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid2 .card { margin:0; }
+ol, ul { margin:6px 0; padding-left:22px; } li { margin:3px 0; }
+.q { margin:8px 0; } .q b { color:var(--cn); }
+code { background:#f5f5f5; border-radius:4px; padding:0 4px; font-size:12.5px; }
+
+.swleg { display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; margin:0 0 10px; color:#374151; }
+.swleg i { display:inline-block; width:14px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; border:1.5px solid; }
+.lg-w { background:var(--cn-bg); border-color:var(--cn) !important; } .lg-g { background:var(--gip-bg); border-color:var(--gip) !important; }
+.lg-p { background:#fff; border-color:#9ca3af !important; } .lg-alt { background:#fff; border-color:#9ca3af !important; border-style:dashed !important; }
+.lg-err { background:#fff1f0; border-color:var(--bad) !important; }
+.swim { position:relative; overflow-x:auto; border:1px solid var(--bd); border-radius:10px; }
+.swim { --labw:118px; --colw:96px; }
+.swim .g { position:relative; display:grid; grid-template-columns: var(--labw) repeat(var(--cols), minmax(var(--colw), 1fr)); }
+.swim .lab { font-size:12px; font-weight:700; padding:10px; border-right:1px solid var(--bd); display:flex; align-items:center; background:#fafafa; position:sticky; left:0; z-index:2; }
+.swim .lab.w { color:var(--cn); background:#fffaf6; } .swim .lab.g2 { color:var(--gip); background:#fcf8ff; }
+.swim .band { border-bottom:1px solid var(--bd); }
+.swim .band.alt { background:#fcfcfd; }
+.swim .bx { margin:8px 7px; border:1.5px solid #9ca3af; background:#fff; border-radius:9px; padding:6px 8px; font-size:12px; line-height:1.35; z-index:1; position:relative; align-self:center; }
+.swim .bx b { display:block; font-size:12.5px; }
+.swim .bx .k { display:inline-block; width:16px; height:16px; border-radius:50%; background:#6b7280; color:#fff; font-size:10px; text-align:center; line-height:16px; margin-right:4px; }
+.swim .bx.w { border-color:var(--cn); background:var(--cn-bg); } .swim .bx.w .k { background:var(--cn); }
+.swim .bx.gp { border-color:var(--gip); background:var(--gip-bg); } .swim .bx.gp .k { background:var(--gip); }
+.swim .bx.alt { border-style:dashed; }
+.swim .bx.err { border-color:var(--bad); background:#fff1f0; } .swim .bx.err .k { background:var(--bad); }
+.swim svg { position:absolute; left:0; top:0; pointer-events:none; z-index:0; }
+
+@media (max-width: 900px) { .kpis, .grid2 { grid-template-columns:1fr 1fr; } }
+@media (max-width: 600px) { .kpis, .grid2 { grid-template-columns:1fr; } }
+@media print { .swim { --labw:78px; --colw:58px; } .swim .bx { margin:6px 3px; padding:4px 5px; font-size:9.5px; } .swim .bx b { font-size:10px; } .swim .lab { font-size:10px; padding:6px; }
+.top { display:none; } body { background:#fff; } .card, tr { break-inside:avoid; } }
+</style></head>
+<body>
+<div class="top"><div class="in">
+<a href="#tomtat">Tóm tắt</a><a href="#khao-sat">Cách khảo sát</a><a href="#kho">Bức tranh kho</a><a href="#luong">Luồng vận hành</a><a href="#tool">Tool riêng của GIP</a><a href="#diem-yeu">Điểm yếu WMS</a><a href="#bai-toan">Bài toán cốt lõi</a><a href="#ffm">So với FFM</a><a href="#kiem-hoan">Kiểm hàng & hoàn</a><a href="#de-xuat">Đề xuất</a><a href="#hoi">Câu hỏi mở</a>
+</div></div>
+<div class="wrap">
+
+<div class="hero">
+  <div class="kind">Báo cáo tổng quan chuyến công tác · bản nháp</div>
+  <h1>Kho GIP VN02 vận hành trên <span class="cnc">WMS 创智云仓</span> – tổng quan chuyến công tác 29/10 – 01/11/2026</h1>
+  <p>WMS Trung Quốc đủ các bước cơ bản nhưng <b>tạo picking list rất nhiều thao tác và không phân loại được đơn theo cách kho cần</b>, không biết <b>đơn hoả tốc</b>, và <b>mất dấu đơn sau khi bàn giao ĐVVC</b>. Quản lý kho GIP phải tự làm một <b>tool riêng (Warehouse.matrix)</b> lấy dữ liệu qua API của WMS để chia đơn, tạo list và in. Bài toán lớn nhất của kho là <b>tạo picking list + sắp xếp hàng</b> sao cho picker – phần lớn là lao động phổ thông, thời vụ – nhặt nhanh nhất.</p>
+  <div class="meta"><span class="chip draft">Bản nháp – BA bổ sung tiếp</span><span class="chip">Đoàn: BA · PM · Dev FFM</span><span class="chip">Cập nhật 02/11/2026 · đã gộp nhận xét từ báo cáo dev</span></div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--cn)"></span><b class="cnc">WMS 创智云仓</b> – phần mềm kho GIP đang dùng</span>
+    <span><span class="sw" style="background:var(--gip)"></span><b class="gipc">Tool GIP</b> – tool quản lý kho tự làm (Warehouse.matrix)</span>
+    <span><span class="sw" style="background:var(--ffm)"></span><b class="ffmc">FFM WMS</b> – theo KB ffm-knowledge</span>
+  </div>
+  <div class="legend">
+    <span><span class="tagsrc t-k">K</span>kho / quản lý chia sẻ</span><span><span class="tagsrc t-t">T</span>thấy tận mắt / trên ảnh</span><span><span class="tagsrc t-d">Đ</span>đoàn đánh giá</span><span><span class="tagsrc t-s">S</span>suy luận, cần xác nhận</span><span><span class="tagsrc t-v">DV</span>theo báo cáo dev anh Thắng (đối chiếu code FFM)</span>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">~3.500</div><div class="l">đơn đóng mỗi ngày, Shopee nhiều nhất <span class="tagsrc t-k">K</span></div></div>
+  <div class="kpi"><div class="v">~50%</div><div class="l">đơn TMĐT là đơn 1 SKU (đơn đồng chất) <span class="tagsrc t-k">K</span></div></div>
+  <div class="kpi"><div class="v">4 tab</div><div class="l">tool riêng của GIP: vận hành đơn, hàng bán chạy & bố trí kho, tra tồn, tổng hợp PDF & nhặt <span class="tagsrc t-t">T</span></div></div>
+  <div class="kpi"><div class="v">3 loại kệ</div><div class="l">pick · storage · damage <span class="tagsrc t-k">K</span></div></div>
+</div>
+
+<div class="sec-h" id="tomtat"><span class="no">01</span><h2>Tóm tắt</h2><span class="d">Những điều quan trọng nhất rút ra</span></div>
+<div class="card">
+<ol>
+<li><b>Tạo picking list là điểm nghẽn lớn nhất.</b> Màn tạo phiếu của WMS nhiều thao tác, không in được theo nhóm đơn kho cần: đơn đồng chất (1 SKU, 1 cái), đơn nhiều cái cùng SKU, đơn từ 2–10 cái cùng SKU, đơn mix. <span class="tagsrc t-k">K</span><span class="tagsrc t-d">Đ</span></li>
+<li><b>Quản lý kho tự làm tool riêng qua API của WMS</b> để chia đơn theo ĐVVC → số cái (PCS) → SKU → số đơn mỗi SKU, rồi tạo list ngược vào WMS. <span class="tagsrc t-k">K</span><span class="tagsrc t-t">T</span></li>
+<li><b>WMS không biết đơn hoả tốc</b> → shipper hoả tốc đến kho khó tìm đơn, tỷ lệ huỷ cao. Tool GIP tìm đơn hoả tốc, in waybill và đóng ngay. <span class="tagsrc t-k">K</span></li>
+<li><b>WMS mất kết nối sau khi bàn giao ĐVVC</b> → quản lý phải cào dữ liệu từ trang tracking của từng ĐVVC, có hãng chặn khi gọi nhiều. <span class="tagsrc t-k">K</span></li>
+<li><b>Nhân sự bất định</b>: lao động phổ thông, nhiều thời vụ, không biết trước ngày mai bao nhiêu người → phần mềm phải linh hoạt theo số người, người mới phải hiểu quy trình ngay. <span class="tagsrc t-k">K</span></li>
+<li><b>Hai điểm mù của cách GIP làm:</b> nhặt bằng phiếu giấy không quét nên hệ thống không biết hàng đi đâu từ kệ tới bàn đóng gói; chia kiện theo ĐVVC bằng tay nên dễ bỏ nhầm rổ. Đổi lại GIP nhặt nhanh hơn FFM. <span class="tagsrc t-v">DV</span></li>
+<li><b>Kiểm hàng và hàng hoàn không có luồng riêng</b>: đếm tay rồi bù chênh lệch bằng phiếu xuất / nhập; hàng hoàn nhập như hàng mới, không gắn đơn gốc. <span class="tagsrc t-v">DV</span></li>
+<li><b>Đi nhặt là bước tốn thời gian nhất.</b> Picker ít để ý location, người cũ nhớ mã, người mới cần thấy <b>ảnh sản phẩm</b>; kho mong có <b>bản đồ kho</b> và <b>đường đi của từng picking list</b>, và hệ thống <b>đề xuất sắp xếp hàng</b> theo lượng đơn. <span class="tagsrc t-k">K</span><span class="tagsrc t-d">Đ</span></li>
+</ol>
+</div>
+
+<div class="sec-h" id="khao-sat"><span class="no">02</span><h2>Cách khảo sát thực tế</h2><span class="d">Khác với kế hoạch ban đầu</span></div>
+<div class="card">
+<ul>
+<li><b>Lịch:</b> 29/10 chiều đi tổng quan kho; các ngày sau quan sát vận hành, làm việc với quản lý kho. 01/11 về Hà Nội.</li>
+<li><b>Không hỏi theo bộ câu hỏi đã chuẩn bị</b>: nhân viên kho chưa thạo chính phần mềm, nên khó lấy dữ liệu theo từng màn. Đoàn chuyển sang <b>quan sát vận hành và hỏi quản lý kho</b> – người hiểu hệ thống nhất và là người làm tool riêng. <span class="tagsrc t-d">Đ</span></li>
+<li>Hệ quả: báo cáo mạnh về <b>cách kho vận hành và nỗi đau thật</b>, còn mỏng ở <b>logic bên trong WMS</b> (trạng thái, mốc trừ tồn, cấu hình) – xem mục 10.</li>
+</ul>
+</div>
+
+<div class="sec-h" id="kho"><span class="no">03</span><h2>Bức tranh kho</h2><span class="d">Quy mô, cơ cấu đơn, nhân sự</span></div>
+<div class="grid2">
+<div class="card"><h3>Đơn hàng</h3><ul>
+<li>Trung bình <b>~3.500 đơn/ngày</b>, Shopee chiếm nhiều nhất. <span class="tagsrc t-k">K</span></li>
+<li>Ảnh tool lúc chụp: <b>2.060 đơn chờ</b> (Submitted), Shopee Express 1.003 · J&T 514 · GHN 335 · GHN TikTok 139 · Best 67; <b>Shipped hôm nay 3.656</b>. <span class="tagsrc t-t">T</span></li>
+<li>Trong 1.003 đơn SPX: <b>696 đơn 1 cái</b> (141 SKU), 72 đơn 2 cái, 128 đơn mix. <span class="tagsrc t-t">T</span></li>
+<li>Đơn 1 SKU chiếm khoảng <b>một nửa</b> đơn TMĐT. <span class="tagsrc t-k">K</span></li>
+</ul></div>
+<div class="card"><h3>Nhân sự</h3><ul>
+<li>Chủ yếu <b>lao động phổ thông</b>, <b>nhiều thời vụ</b>, người mới vào ra liên tục. <span class="tagsrc t-k">K</span></li>
+<li>Quản lý <b>không biết trước ngày mai ai đi làm, ai nghỉ</b> → cách chia việc thay đổi theo ngày. <span class="tagsrc t-k">K</span></li>
+<li>Nhân viên chưa thạo phần mềm; người cũ nhớ mã SKU, người mới không. <span class="tagsrc t-k">K</span><span class="tagsrc t-d">Đ</span></li>
+</ul></div>
+</div>
+
+<div class="sec-h" id="luong"><span class="no">04</span><h2>Luồng vận hành thực tế</h2><span class="d">Swimlane theo người / hệ thống làm từng bước</span></div>
+<div class="swleg"><span><i class="lg-w"></i>WMS 创智云仓</span><span><i class="lg-g"></i>Tool GIP</span><span><i class="lg-p"></i>Người / bên ngoài</span><span><i class="lg-alt"></i>Nhánh phụ</span><span><i class="lg-err"></i>Ngoại lệ</span></div>
+<div class="card">
+<h3>Nhập kho & phân khu</h3>
+<div class="swim" id="sw-in" data-lanes='[["kho", "NV nhận hàng", "p"], ["wms", "WMS 创智云仓", "w"], ["ke", "NV lên kệ / quản lý", "p"]]' data-steps='[{"id": "a1", "l": "kho", "c": 1, "t": "Nhận hàng về kho"}, {"id": "a2", "l": "kho", "c": 2, "t": "Kiểm hàng (QC)", "s": "hoặc bỏ QC: nguyên pallet / thùng", "f": ["a1"]}, {"id": "a3", "l": "wms", "c": 3, "t": "Ghi nhận nhập", "s": "theo SKU hoặc theo thùng (BOX)", "f": ["a2"]}, {"id": "a4", "l": "ke", "c": 4, "t": "Putaway", "s": "kệ pick (1 pallet = 1 vị trí) / storage", "f": ["a3"]}, {"id": "a5", "l": "wms", "c": 5, "t": "Cộng tồn", "s": "storage có tồn nhưng không cho pick", "f": ["a4"]}, {"id": "a6", "l": "wms", "c": 6, "t": "Cảnh báo hết kệ pick", "x": "alt", "f": ["a5"]}, {"id": "a7", "l": "ke", "c": 7, "t": "Đẩy hàng storage → pick", "x": "alt", "f": ["a6"]}, {"id": "a8", "l": "ke", "c": 5, "t": "Hàng hỏng → kệ damage", "s": "GIP – seller thỏa thuận", "x": "err", "f": ["a4"]}]'></div>
+<ul class="src" style="margin-top:8px">
+<li>Nhận nguyên khối: theo <b>pallet</b> không QC, chia pallet sang pick / storage <span class="tagsrc t-k">K</span>; hoặc theo <b>thùng (BOX)</b> – sản phẩm khai sẵn quy cách thùng và mã vạch thùng, quét 1 mã là nhận cả thùng <span class="tagsrc t-v">DV</span>.</li>
+<li>Kệ damage: hàng hỏng / hàng hoàn không bán được, GIP và seller thỏa thuận xử lý <span class="tagsrc t-k">K</span>; chưa rõ hệ thống có quản tồn kệ này không – xem câu hỏi mở.</li>
+</ul>
+</div>
+<div class="card">
+<h3>Xuất kho – luồng thường</h3>
+<div class="swim" id="sw-out" data-lanes='[["san", "Sàn TMĐT", "p"], ["wms", "WMS 创智云仓", "w"], ["tool", "Tool GIP (quản lý kho)", "g"], ["pick", "Picker", "p"], ["pack", "Packer", "p"], ["dvvc", "ĐVVC", "p"]]' data-steps='[{"id": "o1", "l": "san", "c": 1, "t": "Đơn mới"}, {"id": "o2", "l": "wms", "c": 2, "t": "Nhận đơn", "s": "Submitted – chờ nhặt", "f": ["o1"]}, {"id": "o3", "l": "tool", "c": 3, "t": "Chia đơn", "s": "ĐVVC → PCS → SKU → số đơn", "f": ["o2"]}, {"id": "o4", "l": "tool", "c": 4, "t": "Tạo picking list", "s": "Tạo WMS qua API, in list", "f": ["o3"]}, {"id": "o5", "l": "pick", "c": 5, "t": "Nhặt bằng giỏ", "s": "khu kệ pick, không quét", "f": ["o4"]}, {"id": "o6", "l": "pack", "c": 6, "t": "Nhập mã picking list → quét SKU", "f": ["o5"]}, {"id": "o7", "l": "wms", "c": 7, "t": "Gợi ý đơn, in waybill", "s": "\"Successfully checked out\"", "f": ["o6"]}, {"id": "o8", "l": "pack", "c": 8, "t": "Dán waybill, xếp rổ theo ĐVVC", "f": ["o7"]}, {"id": "o9", "l": "dvvc", "c": 9, "t": "Quét lấy hàng", "f": ["o8"]}, {"id": "o10", "l": "tool", "c": 10, "t": "Theo dõi sau bàn giao", "s": "cào trang tracking ĐVVC", "f": ["o9"]}, {"id": "x1", "l": "pack", "c": 7, "t": "Đơn huỷ: báo lỗi đỏ", "s": "không đóng được", "x": "err", "f": ["o6"]}, {"id": "x2", "l": "pick", "c": 8, "t": "Đưa hàng về khu pick", "s": "làm tay, hệ thống không ghi", "x": "err", "f": ["x1"]}]'></div>
+<table style="margin-top:12px">
+<tr><th style="width:22%">Loại đơn ở bàn đóng gói</th><th>Thao tác <span class="tagsrc t-k">K</span></th></tr>
+<tr><td>1 SKU, 1 cái</td><td>Quét SKU 1 lần → in waybill ngay.</td></tr>
+<tr><td>Cùng SKU, ≥ 2 cái</td><td>Quét đủ số lần → in waybill.</td></tr>
+<tr><td>Nhiều sản phẩm / mix</td><td>Hệ thống gợi ý đơn đó có bao nhiêu sản phẩm, quét đủ rồi in.</td></tr>
+</table>
+<div class="note n-info"><b>Không có mã giỏ</b>: packer nhập mã <b>picking list</b> của giỏ để hiện danh sách đơn. <span class="tagsrc t-k">K</span> Màn đoàn chụp ngày 29/10 là <b>Secondary sorting</b>, báo "Successfully checked out" sau khi quét. <span class="tagsrc t-t">T</span></div>
+</div>
+<div class="card">
+<h3>Đóng nhanh – đơn hoả tốc</h3>
+<div class="swim" id="sw-exp" data-lanes='[["dvvc", "Shipper hoả tốc", "p"], ["tool", "Tool GIP", "g"], ["kho", "Picker / packer", "p"]]' data-steps='[{"id": "h1", "l": "dvvc", "c": 1, "t": "Shipper đến lấy"}, {"id": "h2", "l": "tool", "c": 2, "t": "Tìm đơn hoả tốc", "f": ["h1"]}, {"id": "h3", "l": "tool", "c": 3, "t": "In waybill ngay", "f": ["h2"]}, {"id": "h4", "l": "kho", "c": 4, "t": "Nhặt + đóng ngay", "f": ["h3"]}, {"id": "h5", "l": "dvvc", "c": 5, "t": "Nhận hàng", "f": ["h4"]}]'></div>
+<p class="src">WMS không phân biệt đơn hoả tốc; shipper đến mới đi tìm → mất thời gian, đơn bị huỷ nhiều. <span class="tagsrc t-k">K</span></p>
+</div>
+<div class="card">
+<h3>Đóng nhanh – đơn đồng chất</h3>
+<div class="swim" id="sw-same" data-lanes='[["tool", "Tool GIP (quản lý kho)", "g"], ["pack", "Packer", "p"], ["dvvc", "ĐVVC", "p"]]' data-steps='[{"id": "d1", "l": "tool", "c": 1, "t": "In trước cả list waybill", "s": "list đơn đồng chất"}, {"id": "d2", "l": "pack", "c": 2, "t": "Chuẩn bị túi", "f": ["d1"]}, {"id": "d3", "l": "pack", "c": 3, "t": "Nhìn waybill, đóng", "s": "bỏ bước quét SKU", "x": "alt", "f": ["d2"]}, {"id": "d4", "l": "pack", "c": 4, "t": "Xếp rổ theo ĐVVC", "f": ["d3"]}, {"id": "d5", "l": "dvvc", "c": 5, "t": "Quét lấy hàng", "f": ["d4"]}]'></div>
+<p class="src">Nhanh hơn nhưng không còn bước quét kiểm hàng – rủi ro đóng nhầm. <span class="tagsrc t-k">K</span><span class="tagsrc t-d">Đ</span></p>
+</div>
+
+<div class="card">
+<h3>Hàng hoàn – đi chung luồng nhập hàng</h3>
+<div class="swim" id="sw-ret" data-lanes='[["dvvc", "ĐVVC", "p"], ["kho", "NV kiểm hàng hoàn", "p"], ["wms", "WMS 创智云仓", "w"], ["ke", "NV lên kệ", "p"], ["ql", "Quản lý kho / seller", "p"]]' data-steps='[{"id": "r1", "l": "dvvc", "c": 1, "t": "Trả đơn hoàn về kho"}, {"id": "r2", "l": "kho", "c": 2, "t": "Kiểm tay", "s": "xem hàng tốt / hỏng", "f": ["r1"]}, {"id": "r3", "l": "wms", "c": 3, "t": "Tạo phiếu nhập loại hoàn", "s": "hàng tốt – hoàn từ đơn / hoàn từ sàn; không gắn đơn gốc", "f": ["r2"]}, {"id": "r4", "l": "ke", "c": 4, "t": "Xếp kệ", "f": ["r3"]}, {"id": "r5", "l": "wms", "c": 5, "t": "Cộng tồn", "s": "lẫn với số nhập hàng", "f": ["r4"]}, {"id": "r6", "l": "ke", "c": 3, "t": "Hàng hỏng → kệ damage", "s": "khu vật lý", "x": "err", "f": ["r2"]}, {"id": "r7", "l": "ql", "c": 4, "t": "GIP – seller thỏa thuận xử lý", "s": "ngoài hệ thống", "x": "err", "f": ["r6"]}]'></div>
+<ul class="src" style="margin-top:8px">
+<li>Không có luồng hoàn riêng: hàng còn tốt nhập như hàng mới bằng phiếu nhập loại hoàn rồi xếp kệ; hàng hỏng xử lý ngoài hệ thống. <span class="tagsrc t-v">DV</span></li>
+<li>Hàng hỏng đưa vào kệ damage, GIP và seller thỏa thuận cách xử lý. <span class="tagsrc t-k">K</span></li>
+<li>Hệ quả: không biết đơn nào đã hoàn về kho, khó đối chiếu với ĐVVC; số nhập hàng lẫn hàng hoàn; hàng hỏng không có chỗ ghi nhận. <span class="tagsrc t-v">DV</span> FFM đã có màn Return QC gắn đơn gốc, tách Good / Not good – xem mục 07b.</li>
+</ul>
+</div>
+<div class="sec-h" id="tool"><span class="no">05</span><h2>Tool riêng của quản lý kho – Warehouse.matrix</h2><span class="d">Ảnh chụp màn tool, đọc từ ảnh <span class="tagsrc t-t">T</span></span></div>
+<div class="card shot">
+<img src="images/bao-cao-cong-tac-kho-gip-tool.png" alt="Tool Warehouse.matrix của GIP">
+</div>
+<div class="grid2">
+<div class="card"><h3>Tool làm được gì</h3><ul>
+<li><b>4 tab:</b> Vận hành đơn hàng · Hàng bán chạy & bố trí kho (ABC) · Tra cứu tồn kho WMS · Tổng hợp PDF & nhặt hàng (tìm & in 1 lần).</li>
+<li><b>Đồng bộ YunWMS</b>, tự làm mới (Live 2s); đếm đơn theo trạng thái WMS: Submitted, Shelved, Shipped hôm nay; có <b>Bot Telegram</b>.</li>
+<li><b>Lọc theo ĐVVC</b> (SPX, J&T, GHN, GHN TikTok, Viettel Post, Best), gộp GHN.</li>
+<li><b>Chia đơn theo số cái (PCS)</b>: cột 1 PCS, 2 PCS … 15 PCS và <b>MIX</b> (combo SKU, vd "1x … + 1x …"); mỗi SKU hiện số đơn và %.</li>
+<li><b>Lọc theo số đơn mỗi SKU</b>: &lt;5 đơn (lẻ), 5–9, 10–19, ≥20, ≥N tuỳ chọn → nút <b>Copy … + Tạo WMS / Tạo List WMS</b>.</li>
+<li>Tab phụ: tổng hợp SKU & gộp PCS, tra cứu vận đơn Shipped, tổng hợp theo picking list, <b>phân nhóm khu vực (13 khu)</b>, bóc tách đơn MIX, phân tách SKU & đóng gói PCS, cấu hình SKU.</li>
+<li><b>Chế độ đóng gói chuyên sâu</b>, in phiếu 100×150, xuất Excel.</li>
+</ul></div>
+<div class="card"><h3>Suy ra từ ảnh <span class="tagsrc t-s">S</span></h3><ul>
+<li>Tool có tab <b>"Mã Google Apps Script (Code.gs)"</b> → nhiều khả năng dựng trên <b>Google Sheets + Apps Script</b>, gọi API của WMS.</li>
+<li>Nhãn <b>"Submitted (E11=4)", "Shelved (E11=5)", "Shipped (E11=8)"</b> → trạng thái đơn trong API WMS có mã số: 4 = Submitted, 5 = Shelved, 8 = Shipped. Giúp dựng lại vòng đời trạng thái.</li>
+<li>Nút <b>"Tạo WMS"</b> → tool tạo picking list ngược vào WMS qua API, không thao tác tay trên màn Order picking.</li>
+<li>Tab <b>"Hàng bán chạy & bố trí kho (ABC)"</b> → quản lý đã bắt đầu tự phân loại hàng theo tốc độ bán để sắp xếp kho.</li>
+</ul>
+<div class="note n-warn">Tool là cách kho bù cho chỗ WMS thiếu – chính là danh sách nhu cầu thật mà FFM nên đáp ứng sẵn trong sản phẩm.</div></div>
+</div>
+
+<div class="sec-h" id="diem-yeu"><span class="no">06</span><h2>Điểm yếu của WMS 创智云仓 & cách kho xoay xở</h2><span class="d">Mỗi điểm yếu là một cơ hội cho FFM</span></div>
+<div class="card">
+<table>
+<tr><th style="width:20%">Điểm yếu</th><th>Hệ quả</th><th class="gip-h">Kho đang xử lý</th><th style="width:12%">Nguồn</th></tr>
+<tr><td><b>Tạo picking list nhiều thao tác, lọc không đúng nhu cầu</b></td><td>Không in được theo nhóm đơn đồng chất / cùng SKU nhiều cái / mix / khoảng PCS; mất thời gian, kém hiệu quả.</td><td class="gip">Tool chia đơn theo PCS, SKU, số đơn rồi tạo list qua API.</td><td><span class="tagsrc t-k">K</span><span class="tagsrc t-d">Đ</span></td></tr>
+<tr><td><b>Không nhận biết đơn hoả tốc</b></td><td>Shipper đến mới tìm đơn, chậm, tỷ lệ huỷ cao.</td><td class="gip">Tool tìm đơn hoả tốc, in waybill và đóng ngay.</td><td><span class="tagsrc t-k">K</span></td></tr>
+<tr><td><b>Mất dấu đơn sau bàn giao ĐVVC</b></td><td>Không biết đơn đi tới đâu.</td><td class="gip">Cào trang tracking của từng ĐVVC; một số hãng chặn khi gọi nhiều.</td><td><span class="tagsrc t-k">K</span></td></tr>
+<tr><td><b>Không có mã giỏ</b></td><td>Packer phải nhập mã picking list.</td><td class="gip">Dùng mã picking list thay mã giỏ.</td><td><span class="tagsrc t-k">K</span></td></tr>
+<tr><td><b>Không hỗ trợ người mới</b></td><td>Picker không để ý location, người mới không biết hàng trông thế nào.</td><td class="gip">Dựa vào người cũ nhớ mã.</td><td><span class="tagsrc t-k">K</span><span class="tagsrc t-d">Đ</span></td></tr>
+<tr><td><b>Không linh hoạt theo số người</b></td><td>Quản lý phải tự chia việc mỗi ngày theo người có mặt.</td><td class="gip">Tự chọn tiêu chí, tự chia list.</td><td><span class="tagsrc t-k">K</span></td></tr>
+<tr><td><b>Đơn huỷ khi đang nhặt</b></td><td>Hàng phải đưa về kệ bằng tay, hệ thống không theo dõi.</td><td class="gip">Làm tay.</td><td><span class="tagsrc t-k">K</span></td></tr>
+<tr><td><b>Hàng giữa kệ và bàn đóng gói không truy được</b></td><td>Nhặt không quét: đóng gói thấy thiếu không biết do lấy thiếu, nhầm SKU, rơi hay kệ hết; không gắn được người chịu trách nhiệm.</td><td class="gip">Phát hiện ở bàn đóng gói, xử lý tay.</td><td><span class="tagsrc t-v">DV</span></td></tr>
+<tr><td><b>Tồn theo vị trí lệch dần</b></td><td>Không trừ tồn vị trí lúc hàng rời kệ; lệch tích luỹ tới khi kiểm kê rồi nắn bằng file, mất dấu vết.</td><td class="gip">Nắn tồn bằng import file / Batch Adjust Inventory.</td><td><span class="tagsrc t-v">DV</span></td></tr>
+<tr><td><b>Chia kiện theo ĐVVC dễ nhầm</b></td><td>Bỏ nhầm rổ → ĐVVC A cầm đơn của B; thường chỉ biết khi bị trả lại hoặc khách khiếu nại.</td><td class="gip">Chia bằng mắt, không có bước kiểm.</td><td><span class="tagsrc t-v">DV</span></td></tr>
+<tr><td><b>Nhân viên khó dùng phần mềm</b></td><td>Giao diện dày đặc, nhiều thao tác.</td><td class="gip">Quản lý làm thay phần khó trên tool.</td><td><span class="tagsrc t-d">Đ</span></td></tr>
+</table>
+</div>
+
+<div class="sec-h" id="bai-toan"><span class="no">07</span><h2>Bài toán vận hành cốt lõi</h2><span class="d">Điều kho thật sự cần giải</span></div>
+<div class="card">
+<p><b>Mục tiêu vận hành kho</b>: bàn giao ĐVVC đúng hạn, tối ưu chi phí vật liệu và nhân công. <b>Bước tốn thời gian nhất là đi nhặt</b>, và tốc độ nhặt phụ thuộc vào <b>cách tạo picking list</b> và <b>cách sắp xếp hàng trong kho</b>. <span class="tagsrc t-k">K</span><span class="tagsrc t-d">Đ</span></p>
+<table>
+<tr><th style="width:24%">Nhu cầu</th><th>Mô tả</th></tr>
+<tr><td><b>1. Tạo picking list linh hoạt</b></td><td>Chia đơn theo loại: đồng chất (1 SKU 1 cái), cùng SKU nhiều cái, khoảng PCS (vd 2–10 cái cùng SKU), mix; theo ĐVVC; theo số đơn mỗi SKU; theo khu. Quản lý chọn cách chia theo vận hành từng ngày.</td></tr>
+<tr><td><b>2. Linh hoạt theo số người</b></td><td>Ngày mai có bao nhiêu người thì chia việc tương ứng, không cố định.</td></tr>
+<tr><td><b>3. Người mới hiểu ngay</b></td><td>Hiện <b>ảnh sản phẩm</b> khi nhặt; quy trình đơn giản, nhìn là làm được.</td></tr>
+<tr><td><b>4. Sắp xếp kho theo lượng đơn</b></td><td>Hệ thống <b>đề xuất vị trí đặt hàng</b> dựa trên số lượng đơn xuất (hàng bán chạy gần khu đóng gói…).</td></tr>
+<tr><td><b>5. Bản đồ kho & đường đi</b></td><td>Vẽ <b>map kho</b> và <b>đường đi của từng picking list</b> để picker đi ngắn nhất.</td></tr>
+<tr><td><b>6. Xử lý nhanh đơn gấp</b></td><td>Đơn hoả tốc nổi lên ngay, in và đóng ngay; đơn đồng chất in waybill hàng loạt.</td></tr>
+</table>
+</div>
+
+<div class="sec-h" id="kiem-hoan"><span class="no">07b</span><h2>Kiểm hàng, hàng hoàn & khái niệm "lô"</h2><span class="d">Bổ sung từ báo cáo dev anh Thắng <span class="tagsrc t-v">DV</span></span></div>
+<div class="card">
+<table>
+<tr><th style="width:16%">Khâu</th><th class="cn-h">WMS 创智云仓 (GIP vận hành)</th><th class="ffm-h">FFM WMS</th><th style="width:13%">Nhận định</th></tr>
+<tr><td><b>Kiểm hàng</b></td><td class="cn">Không dùng tính năng kiểm kê riêng: đếm tay tại kệ, tự so với tồn, không khoá kệ; lệch thì tạo phiếu xuất / nhập kho để bù, hoặc nhập tồn từ file, điều chỉnh tồn hàng loạt.</td><td class="ffm">Phiếu kiểm kê #468 đang làm: phiếu SC, khoá kệ, duyệt chênh lệch rồi mới chỉnh tồn, đồng bộ POS; đếm trên mobile ở #469. Chưa có màn cập nhật tồn bằng file.</td><td><span class="pill p-mid">FFM đang làm</span></td></tr>
+<tr><td><b>Hàng hoàn</b></td><td class="cn">Không có luồng riêng: kiểm tay, hàng tốt nhập như hàng mới (phiếu nhập loại hoàn) rồi xếp kệ; hàng hỏng xử lý ngoài hệ thống. Không gắn với đơn gốc.</td><td class="ffm">Màn Return QC: quét mã vận đơn tạo phiếu hoàn gắn đơn gốc → quét tote → Good / Not good, có video; Good lên kệ, Not good vào vị trí damage.</td><td><span class="pill p-ok">FFM tốt hơn</span></td></tr>
+<tr><td><b>Khái niệm "lô"</b></td><td class="cn">Lô gắn với thùng (đơn vị đóng gói vật lý); tồn theo lô xem theo vị trí, pallet, thùng, ngày xếp kệ, tuổi kho.</td><td class="ffm">Lô = từng dòng phiếu nhập (đợt nhập, có hạn dùng), dùng cấp hàng theo FIFO / LIFO / FEFO; không có thùng, pallet, tuổi kho.</td><td><span class="pill p-info">Cùng chữ, khác nghĩa</span></td></tr>
+</table>
+<div class="note n-warn"><b>Rủi ro của cách GIP</b>: bù chênh lệch bằng phiếu xuất / nhập làm lẫn số nhập xuất thật; nắn tồn bằng file là ghi đè, không duyệt, không giữ lý do → khó phát hiện thất thoát. <span class="tagsrc t-v">DV</span></div>
+</div>
+
+<div class="sec-h" id="ffm"><span class="no">08</span><h2>So với FFM WMS</h2><span class="d">Phía FFM theo KB ffm-knowledge; đối chiếu sơ bộ</span></div>
+<div class="card">
+<table>
+<tr><th style="width:17%">Điểm</th><th class="cn-h">WMS 创智云仓 + tool GIP</th><th class="ffm-h">FFM WMS hiện tại</th><th style="width:13%">Nhận định</th></tr>
+<tr><td><b>Chia đơn tạo picking list</b></td><td class="cn">WMS có lọc cơ bản (1 SP / cùng SKU / nhiều SKU, loại đơn, kênh, khu) nhưng nhiều thao tác; tool GIP chia chi tiết theo ĐVVC, khoảng PCS, SKU, số đơn/SKU, mix, khu.</td><td class="ffm">Hệ thống tự gom: hoả tốc → sàn → thường, hoặc theo SKU chủ đạo; tối đa 20 đơn/list; không chọn / bỏ từng đơn. Code FE đã có modal chọn đơn tay <code>CreatePickingListModal</code> nhưng chưa gắn vào màn <span class="tagsrc t-v">DV</span>. <span class="src">(wms-inbuild/logic.md BR-WMS-006, C.1)</span></td><td><span class="pill p-bad">FFM thiếu tiêu chí</span></td></tr>
+<tr><td><b>Đơn hoả tốc</b></td><td class="cn">WMS không biết; tool GIP tự tìm.</td><td class="ffm">Có cờ <code>is_express</code>, lô hoả tốc tách riêng và đứng đầu danh sách trên mobile. <span class="src">(C.1)</span></td><td><span class="pill p-ok">FFM tốt hơn</span></td></tr>
+<tr><td><b>Sau bàn giao ĐVVC</b></td><td class="cn">Mất kết nối, phải cào trang tracking.</td><td class="ffm">Tích hợp ĐVVC: trạng thái cập nhật qua webhook / crawl theo từng hãng. <span class="src">(20_Integrations/carriers.md)</span></td><td><span class="pill p-ok">FFM tốt hơn</span></td></tr>
+<tr><td><b>Mã giỏ</b></td><td class="cn">Không có, dùng mã picking list.</td><td class="ffm">Tote có mã, quét Tote khi nhặt và đóng gói. <span class="src">(A.3)</span></td><td><span class="pill p-ok">FFM tốt hơn</span></td></tr>
+<tr><td><b>Nhặt hàng</b></td><td class="cn">Cầm phiếu giấy, không quét vị trí / sản phẩm – nhanh.</td><td class="ffm">Quét tote → vị trí → sản phẩm trên mobile, mỗi lượt quét trừ tồn theo vị trí và ghi sổ công việc (ai, ở đâu, bao nhiêu) – chậm hơn nhưng truy vết được. <span class="tagsrc t-v">DV</span></td><td><span class="pill p-info">Đánh đổi tốc độ ↔ truy vết</span></td></tr>
+<tr><td><b>Linh hoạt theo số người</b></td><td class="cn">Quản lý tự chia mỗi ngày.</td><td class="ffm">Web assign + nhân viên tự nhận list trên mobile (self-claim). <span class="src">(BR-WMS-006)</span></td><td><span class="pill p-mid">FFM có một phần</span></td></tr>
+<tr><td><b>Đóng gói theo SKU, gợi ý đơn</b></td><td class="cn">Quét SKU → gợi ý đơn → in waybill.</td><td class="ffm">Quét Tote → quét SP → quét waybill để chốt; đơn đầu hàng đợi, chưa có chế độ quét SP tự ghép đơn. <span class="src">(BR-WMS-009)</span></td><td><span class="pill p-mid">Khác cách</span></td></tr>
+<tr><td><b>Đóng nhanh không quét</b></td><td class="cn">In waybill hàng loạt, nhìn waybill mà đóng.</td><td class="ffm">Bắt quét đủ (anti-fraud), không có chế độ bỏ quét. <span class="src">(BR-WMS-010)</span></td><td><span class="pill p-info">Đánh đổi tốc độ ↔ kiểm soát</span></td></tr>
+<tr><td><b>Ảnh SP khi nhặt</b></td><td class="cn">Không có (theo kho).</td><td class="ffm">KB chưa đề cập.</td><td><span class="pill p-mid">Cần hỏi dev FFM</span></td></tr>
+<tr><td><b>Sắp xếp kho / ABC / map / đường đi</b></td><td class="cn">WMS không có; tool GIP có tab ABC.</td><td class="ffm">Khi xếp kệ <b>đã có gợi ý vị trí</b> (vị trí đang chứa đúng SKU, chưa đầy, trống nhiều xếp trước) nhưng không xét độ bán chạy, khoảng cách, SKU mới không có gợi ý <span class="tagsrc t-v">DV</span>. Khi nhặt gợi ý "kệ nhiều hàng nhất trước", không theo đường đi; chưa có sơ đồ kho. <span class="src">(BR-WMS-007; overview §7)</span></td><td><span class="pill p-mid">FFM có một phần</span></td></tr>
+<tr><td><b>Kệ pick / storage / damage</b></td><td class="cn">Có 3 loại; cảnh báo hết kệ pick.</td><td class="ffm">Có <code>storage_type</code> pick / reserve / damage…; chưa có cảnh báo châm hàng. <span class="src">(A.1)</span></td><td><span class="pill p-mid">FFM thiếu cảnh báo</span></td></tr>
+<tr><td><b>Nhập nguyên pallet không QC</b></td><td class="cn">Có.</td><td class="ffm">Mọi phiếu nhập qua QC. <span class="src">(BR-WMS-001, 003)</span></td><td><span class="pill p-bad">FFM thiếu</span></td></tr>
+<tr><td><b>Đơn huỷ khi đang nhặt</b></td><td class="cn">Báo lỗi ở bàn đóng; trả kệ bằng tay.</td><td class="ffm">Packing chặn đơn cancel; luồng cất hàng về kệ đang làm #466.</td><td><span class="pill p-mid">Đang làm</span></td></tr>
+</table>
+<div class="note n-info">Nhận định dựa vào KB và báo cáo dev anh Thắng (đối chiếu code FFM), chưa phải quyết định làm tính năng.</div>
+</div>
+
+<div class="sec-h" id="de-xuat"><span class="no">09</span><h2>Đề xuất hướng cho FFM</h2><span class="d">Đề xuất của BA – chờ PM duyệt. FFM là SaaS: tiêu chí, ngưỡng để client tự cấu hình</span></div>
+<div class="card">
+<table>
+<tr><th style="width:5%">#</th><th style="width:26%">Nhóm</th><th>Nội dung</th><th style="width:10%">Ưu tiên</th></tr>
+<tr><td>1</td><td><b>Tạo picking list theo tiêu chí</b></td><td>Chia đơn theo loại (đồng chất / cùng SKU nhiều cái / khoảng PCS / mix), ĐVVC, khu, số đơn mỗi SKU, <b>theo shop</b>; lưu bộ tiêu chí dùng lại; số đơn mỗi list do kho đặt; thêm / bỏ từng đơn (tận dụng <code>CreatePickingListModal</code>); gợi ý gom đơn có sản phẩm nằm gần nhau.</td><td><span class="pill p-bad">Must</span></td></tr>
+<tr><td>2</td><td><b>Đóng gói đơn đồng chất nhanh</b></td><td>Quét SP tự ghép đơn và in waybill; in waybill hàng loạt cho list đồng chất – vẫn giữ kiểm soát (vd quét 1 lần đại diện) thay vì bỏ hẳn.</td><td><span class="pill p-bad">Must</span></td></tr>
+<tr><td>3</td><td><b>Hỗ trợ người mới khi nhặt</b></td><td>Ảnh sản phẩm + vị trí trên app nhặt; thứ tự đi nhặt theo vị trí.</td><td><span class="pill p-mid">Should</span></td></tr>
+<tr><td>4</td><td><b>Sắp xếp kho theo lượng đơn</b></td><td>Phân loại ABC theo tốc độ bán, đề xuất vị trí; về sau là map kho và đường đi của picking list.</td><td><span class="pill p-mid">Should</span></td></tr>
+<tr><td>5</td><td><b>Kệ pick / storage + cảnh báo châm hàng</b></td><td>Cảnh báo hết kệ pick, tạo việc chuyển hàng từ storage.</td><td><span class="pill p-mid">Should</span></td></tr>
+<tr><td>6</td><td><b>Nhập nguyên pallet / thùng</b></td><td>Cho phép bỏ QC theo cấu hình, chia pallet sang pick / storage; nhận theo thùng (quy cách thùng, mã vạch thùng – quét 1 mã cộng cả thùng).</td><td><span class="pill p-info">Could</span></td></tr>
+<tr><td>7</td><td><b>Chế độ pick theo kho</b> <span class="tagsrc t-v">DV</span></td><td>Mỗi kho chọn Quét đầy đủ (mặc định) hoặc Pick theo phiếu (bỏ quét vị trí, sản phẩm khi nhặt; vẫn quét tote). Kèm kiểm bù ở đóng gói: thiếu hàng phải chọn lý do, báo cáo chênh lệch theo danh sách. Đáp ứng nhu cầu tốc độ / linh hoạt của kho đông thời vụ.</td><td><span class="pill p-bad">Must</span></td></tr>
+<tr><td>8</td><td><b>Gợi ý rổ bàn giao theo ĐVVC</b> <span class="tagsrc t-v">DV</span></td><td>Đóng xong hiện to tên ĐVVC / mã rổ; bước sau rổ gắn ĐVVC, bỏ kiện phải quét rổ, sai ĐVVC báo ngay.</td><td><span class="pill p-mid">Should</span></td></tr>
+<tr><td>9</td><td><b>Kiểm hàng qua phiếu, import có duyệt</b> <span class="tagsrc t-v">DV</span></td><td>GIP chuyển sang phiếu kiểm kê #468; cập nhật tồn bằng file tạo phiếu điều chỉnh chờ duyệt, lưu lý do.</td><td><span class="pill p-mid">Should</span></td></tr>
+<tr><td>10</td><td><b>Gọn 3 loại vị trí + map kho</b> <span class="tagsrc t-v">DV</span></td><td>Pick / Storage / Damage (reserve, bulk gộp vào Storage); sơ đồ kho tự vẽ trên lưới làm nền cho gợi ý vị trí và đường đi (đi cùng nhóm 4).</td><td><span class="pill p-mid">Should</span></td></tr>
+</table>
+<div class="note n-warn"><b>Điểm mạnh FFM nên giữ và nói rõ với client</b>: nhận biết đơn hoả tốc, theo dõi đơn sau bàn giao qua tích hợp ĐVVC, Tote có mã, nhân viên tự nhận list trên mobile.</div>
+</div>
+
+<div class="sec-h" id="hoi"><span class="no">10</span><h2>Câu hỏi còn mở</h2><span class="d">Chưa lấy được ở chuyến này – hỏi tiếp quản lý kho / đội dev WMS / dev FFM</span></div>
+<div class="card">
+<div class="q"><b>Kệ damage</b> – Có ghi nhận tồn không (báo cáo dev ghi hàng hỏng xử lý ngoài hệ thống)? Sau khi GIP – seller thỏa thuận, trừ tồn bằng thao tác nào?</div>
+<div class="q"><b>Xuất kho</b> – Đơn tính là đã xuất ở thời điểm nào: lúc quét ở bàn đóng gói ("Successfully checked out") hay lúc ĐVVC quét?</div>
+<div class="q"><b>Đóng gói</b> – Sau khi in waybill có quét lại mã vận đơn để hoàn tất không?</div>
+<div class="q"><b>Đơn huỷ khi đang nhặt</b> – Hàng về kệ, tồn vị trí có được cộng lại không?</div>
+<div class="q"><b>Tool GIP</b> – Dùng những API nào của WMS (lấy đơn, tạo picking list, trạng thái)? Bảng mã trạng thái E11 đầy đủ? Tool có chia sẻ cho FFM tham khảo được không?</div>
+<div class="q"><b>Phân nhóm 13 khu vực</b> – Khu chia theo tiêu chí gì? Có dùng để tạo list theo khu không?</div>
+<div class="q"><b>Dev FFM</b> – App nhặt của FFM đã hiện ảnh sản phẩm chưa? Có thể mở rộng tiêu chí gom đơn theo PCS / số đơn mỗi SKU không?</div>
+</div>
+
+<div class="sec-h"><span class="no">11</span><h2>Bước tiếp theo</h2></div>
+<div class="card"><ol>
+<li>BA bổ sung các ý còn thiếu vào bản nháp này.</li>
+<li>Gửi PM duyệt mục 09 (đề xuất & ưu tiên).</li>
+<li>Hỏi tiếp các câu mục 10 qua tin nhắn với quản lý kho GIP.</li>
+<li>Sau khi PM duyệt: viết issue cho nhóm Must, bắt đầu từ "Tạo picking list theo tiêu chí".</li>
+</ol>
+<p class="src">Tài liệu liên quan: báo cáo buổi tổng quan 29/10 (<code>bao-cao/wms/2026-10-29-bao-cao-onsite-gip-tong-quan.html</code>), function list 173 chức năng (<code>ffm/wms/so-sanh-chuc-nang-wms-gip-ffm</code>), bảng 56 màn của dev (<code>ffm/wms/so-sanh-wms-gip-va-ffm</code>), báo cáo khảo sát của dev anh Thắng (<code>ffm/wms/quy-trinh-kho-gip-va-ffm</code> – có 3 prototype: sơ đồ kho, pick theo shop, chế độ pick).</p>
+<div class="note n-info">Ảnh tool đã che mã đơn; mã SKU trong ảnh là mã sản phẩm của kho, giữ để minh hoạ cách chia đơn.</div>
+</div>
+
+</div><script>
+(function(){
+const SYS = { w: 'w', g: 'g', p: 'p' };
+function build(el) {
+  const lanes = JSON.parse(el.dataset.lanes), steps = JSON.parse(el.dataset.steps);
+  const cols = Math.max(...steps.map(s => s.c));
+  const g = document.createElement('div'); g.className = 'g';
+  g.style.setProperty('--cols', cols); g.style.minWidth = 'calc(var(--labw) + ' + cols + ' * var(--colw))';
+  g.style.gridTemplateRows = 'repeat(' + lanes.length + ', minmax(70px, auto))';
+  const laneIdx = {}, laneSys = {};
+  lanes.forEach(([id, label, sys], i) => {
+    laneIdx[id] = i + 1; laneSys[id] = sys;
+    const band = document.createElement('div'); band.className = 'band' + (i % 2 ? ' alt' : '');
+    band.style.gridColumn = '1 / -1'; band.style.gridRow = i + 1; g.appendChild(band);
+    const lab = document.createElement('div'); lab.className = 'lab ' + (sys === 'w' ? 'w' : sys === 'g' ? 'g2' : '');
+    lab.style.gridColumn = 1; lab.style.gridRow = i + 1; lab.textContent = label; g.appendChild(lab);
+  });
+  let n = 0; const boxes = {};
+  steps.forEach(st => {
+    const b = document.createElement('div');
+    const sys = laneSys[st.l];
+    b.className = 'bx ' + (st.x === 'err' ? 'err' : (sys === 'w' ? 'w' : sys === 'g' ? 'gp' : '')) + (st.x === 'alt' ? ' alt' : '');
+    b.style.gridColumn = st.c + 1; b.style.gridRow = laneIdx[st.l];
+    const num = st.x ? '' : '<span class="k">' + (++n) + '</span>';
+    b.innerHTML = '<b>' + num + st.t + '</b>' + (st.s ? st.s : '');
+    g.appendChild(b); boxes[st.id] = b;
+  });
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  g.appendChild(svg); el.appendChild(g);
+  function draw() {
+    const R = g.getBoundingClientRect();
+    svg.setAttribute('width', g.offsetWidth); svg.setAttribute('height', g.offsetHeight);
+    svg.innerHTML = '<defs><marker id="ah-' + el.id + '" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/></marker></defs>';
+    steps.forEach(st => (st.f || []).forEach(fid => {
+      const a = boxes[fid].getBoundingClientRect(), b = boxes[st.id].getBoundingClientRect();
+      const x1 = a.right - R.left, y1 = a.top + a.height / 2 - R.top, x2 = b.left - R.left, y2 = b.top + b.height / 2 - R.top;
+      let d;
+      if (x2 > x1 + 4) { const mx = x1 + Math.max(8, (x2 - x1) / 2); d = 'M' + x1 + ',' + y1 + ' H' + mx + ' V' + y2 + ' H' + (x2 - 2); }
+      else { const ax = a.left + a.width / 2 - R.left, ay = (y2 > y1 ? a.bottom : a.top) - R.top, by = (y2 > y1 ? b.top : b.bottom) - R.top;
+             d = 'M' + ax + ',' + ay + ' V' + by; }
+      const dashed = st.x === 'alt' || st.x === 'err';
+      svg.insertAdjacentHTML('beforeend', '<path d="' + d + '" fill="none" stroke="' + (st.x === 'err' ? '#cf1322' : '#6b7280') + '" stroke-width="1.6"' + (dashed ? ' stroke-dasharray="5 4"' : '') + ' marker-end="url(#ah-' + el.id + ')"/>');
+    }));
+  }
+  draw(); window.addEventListener('resize', draw); window.addEventListener('beforeprint', draw); window.addEventListener('afterprint', draw);
+  if (window.matchMedia) window.matchMedia('print').addEventListener('change', draw);
+  if (document.fonts) document.fonts.ready.then(draw);
+}
+document.querySelectorAll('.swim').forEach(build);
+})();
+</script></body></html>

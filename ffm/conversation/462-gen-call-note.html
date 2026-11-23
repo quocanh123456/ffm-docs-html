@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tạo nhanh Conversation bằng slash command /gen_call_note</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+  /* ── Phần thêm riêng của trang #462 (mẫu chưa có): khối Note Information / Conversations, list command của Mentions, modal form, lịch DatePicker, Select ── */
+  #proto .ph { flex-wrap: wrap; gap: 8px 12px; }
+  .phl { display: flex; align-items: center; gap: 8px; }
+  .phl h3 { margin-right: 6px; }
+  .explain { color: var(--ink3); font-size: 12px; }
+  .ph .ctl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(0,0,0,.65); }
+  .tsel { border: 1px solid #d9d9d9; border-radius: 6px; padding: 3px 6px; font-size: 12.5px; background: #fff; }
+  .scr { display: grid; grid-template-columns: 1fr 470px; gap: 14px; align-items: start; }
+  .ghost { border: 1px dashed #d9d9d9; border-radius: 8px; padding: 16px; color: var(--ink3); font-size: 12.5px; min-height: 160px; background: #fafafa; }
+  .ghost b { display: block; color: rgba(0,0,0,.65); margin-bottom: 4px; }
+  .box { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; }
+  .box .lbl { font-weight: 700; padding: 12px 16px 0; }
+  .box .in { padding: 0 16px 14px; }
+  .tabs a.off { color: #bfbfbf; cursor: not-allowed; }
+  .flbl { font-size: 12px; color: var(--ink2); font-weight: 600; margin-bottom: 6px; }
+  .uav { flex: none; width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; }
+  .uav.lg { width: 32px; height: 32px; font-size: 13px; }
+  .ico { border: none; background: none; padding: 2px 4px; cursor: pointer; color: #1677ff; border-radius: 4px; line-height: 0; }
+  .ico.del { color: #ff4d4f; }
+  .ico:hover { background: #f5f5f5; }
+  .ico svg { width: 13px; height: 13px; fill: currentColor; }
+  .nlist { max-height: 300px; overflow-y: auto; }
+  .ni { padding: 8px 10px 0; }
+  .ni-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .ni-u { display: flex; align-items: center; gap: 6px; }
+  .ni-b { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+  .ni-x { white-space: pre-wrap; word-break: break-word; }
+  .edited { display: block; font-size: 12px; color: #bfbfbf; }
+  .dv { border-top: 1px solid #f0f0f0; margin: 10px 0 0; }
+  .tlist { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 0 8px; }
+  .tn { display: flex; gap: 10px; padding: 4px 6px; }
+  .tn-b { flex: 1; min-width: 0; }
+  .tn-m { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .tn-m b { font-size: 13px; }
+  .tn-m small { font-size: 12px; color: var(--ink3); }
+  .tn-x { white-space: pre-wrap; word-break: break-word; margin: 2px 0 0; }
+  .tn-x i { font-style: normal; margin-left: 6px; font-size: 11px; color: #bfbfbf; }
+  .tn-f { display: flex; justify-content: flex-end; }
+  .ta-w { position: relative; }
+  .ta { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 11px; font: 13px/1.5715 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; resize: none; color: rgba(0,0,0,.88); display: block; }
+  .ta:focus { outline: none; border-color: #4096ff; box-shadow: 0 0 0 2px var(--blue-bg); }
+  .ta.bl, .ta.bl:focus { border: none; box-shadow: none; padding: 0; }
+  .ta::placeholder { color: #bfbfbf; }
+  .upl { position: absolute; right: 12px; bottom: 10px; color: var(--ink3); line-height: 0; }
+  .upl svg, .tk-ft .upl svg { width: 16px; height: 16px; }
+  .tk-form { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .tk-ft { display: flex; justify-content: space-between; align-items: center; }
+  .tk-ft .upl { position: static; }
+  .btn svg { width: 12px; height: 12px; fill: currentColor; vertical-align: -1px; margin-right: 6px; }
+  .btn.sm { padding: 1px 8px; font-size: 12.5px; }
+  .mdrop { position: absolute; z-index: 7; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 4px; min-width: 240px; visibility: hidden; transform: translateY(-100%); }
+  .mdrop.show { visibility: visible; }
+  .mopt { padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+  .mopt.on { background: #f5f5f5; }
+  .mopt b { display: block; }
+  .mopt small { color: var(--ink2); font-size: 12px; }
+  .mmask { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 10; visibility: hidden; }
+  .mdl { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); width: 420px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 20px 24px; z-index: 11; visibility: hidden; }
+  .proto.mopen .mmask, .proto.mopen .mdl { visibility: visible; }
+  .mdl h4 { margin: 0 0 16px; font-size: 15px; }
+  .mdl .x { position: absolute; top: 14px; right: 16px; border: none; background: none; font-size: 18px; line-height: 1; color: var(--ink3); cursor: pointer; }
+  .mdl .fld { margin-bottom: 16px; position: relative; }
+  .mdl .fld label em { margin-right: 4px; }
+  .mdl .fld.err .rsel { border-color: #ff4d4f; }
+  .mdl .ft { display: flex; justify-content: flex-end; gap: 8px; }
+  .inw { position: relative; }
+  .inw input { padding-right: 52px; }
+  .inw .sfx { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; color: #bfbfbf; line-height: 0; }
+  .inw .sfx svg { width: 14px; height: 14px; fill: currentColor; }
+  .inw .clr { cursor: pointer; visibility: hidden; }
+  .inw:hover .clr.has { visibility: visible; }
+  .pk { position: absolute; top: calc(100% + 4px); left: 0; z-index: 12; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); display: flex; flex-direction: column; visibility: hidden; font-size: 12.5px; }
+  .pk.show { visibility: visible; }
+  .pk-in { display: flex; }
+  .cal { padding: 8px 10px; width: 250px; }
+  .cal-h { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 6px; border-bottom: 1px solid #f0f0f0; margin-bottom: 6px; }
+  .cal-h button { border: none; background: none; cursor: pointer; color: var(--ink3); font-size: 14px; padding: 0 4px; }
+  .cal-h b { font-weight: 600; }
+  .cal table { width: 100%; border-collapse: collapse; text-align: center; }
+  .cal th { font-weight: 400; padding: 3px 0; }
+  .cal td { padding: 2px 0; }
+  .cal td span { display: inline-block; min-width: 24px; line-height: 24px; border-radius: 4px; cursor: pointer; }
+  .cal td span:hover { background: #f5f5f5; }
+  .cal td.out span { color: #bfbfbf; }
+  .cal td.sel span { background: #1677ff; color: #fff; }
+  .tcols { display: flex; border-left: 1px solid #f0f0f0; }
+  .tcols ul { position: relative; list-style: none; margin: 0; padding: 4px 0; width: 52px; height: 236px; overflow-y: auto; border-left: 1px solid #f0f0f0; }
+  .tcols ul:first-child { border-left: none; }
+  .tcols li { text-align: center; line-height: 28px; cursor: pointer; margin: 0 4px; border-radius: 4px; }
+  .tcols li:hover { background: #f5f5f5; }
+  .tcols li.sel { background: var(--blue-bg); font-weight: 600; }
+  .tcols .hd { text-align: center; font-weight: 600; padding: 6px 0 4px; border-bottom: 1px solid #f0f0f0; }
+  .pk-ft { display: flex; justify-content: flex-end; padding: 6px 10px; border-top: 1px solid #f0f0f0; }
+  .rsel { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 30px 5px 10px; font-size: 13px; cursor: pointer; position: relative; background: #fff; min-height: 32px; }
+  .rsel:focus { outline: none; border-color: #4096ff; box-shadow: 0 0 0 2px var(--blue-bg); }
+  .rsel .ph0 { color: #bfbfbf; }
+  .rsel::after { content: "▾"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #bfbfbf; }
+  .sdrop { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 12; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 4px; visibility: hidden; max-height: 256px; overflow-y: auto; }
+  .sdrop.show { visibility: visible; }
+  .sdrop div { padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+  .sdrop div.on { background: #f5f5f5; }
+  .sdrop div.cur { background: var(--blue-bg); font-weight: 600; }
+  pre.log { min-height: 200px; max-height: 420px; overflow-y: auto; margin: 0; white-space: pre-wrap; }
+  .chipset { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chipset span { background: var(--slate-bg); border-radius: 6px; padding: 1px 8px; font-size: 13px; }
+  .chipset code { background: none; padding: 0; }
+  .tryt td:first-child { color: var(--ink3); }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>FFM · #462</div>
+  <nav class="nav">
+    <a href="#prototype">Prototype</a><a href="#quy-tac">Business rules</a><a href="#quyet-dinh">Đã quyết định</a><a href="#ngoai-pham-vi">Ngoài phạm vi</a><a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Conversation · Đặc tả + prototype</div>
+  <h1>Tạo nhanh Conversation bằng slash command <code>/gen_call_note</code></h1>
+  <p>Ở Philippines, ITY tự ghi note cuộc gọi. Các market khác chưa tích hợp ITY nên Sale phải tự gõ note, vừa mất thời gian vừa lệch format. Tính năng này cho Sale và CSR gõ <code>/gen_call_note</code> ở ô tạo note, điền 3 trường (Call attempt, Called at, Call result), rồi hệ thống chèn note đúng format ITY vào ô.</p>
+  <p style="margin-top:8px">Note được chèn vẫn là text thường: người dùng sửa thoải mái rồi gửi như mọi note khác, qua API hiện tại.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i462">ffm_dev #462</a></span>
+    <span class="chip">PR FE <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/533">sea-fulfillment-web#533</a></span>
+    <span class="chip">Requested by GIP</span>
+    <span class="chip">Chỉ FE, BE không đổi</span>
+    <span class="chip">Cập nhật 02/11/2026</span>
+    <span class="chip">Code: FE e6949931</span>
+  </div>
+</header>
+
+<div class="note n-info" style="margin-top:18px"><span class="ic">i</span><div>
+  <p>Format: <code>{ordinal} call {YYYY-MM-DD HH:mm:ss} {call_result}</code> → ví dụ <code>1st call 2026-10-16 09:52:56 no-answered</code></p>
+</div></div>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">01</span><h2>Prototype — Conversation</h2><p>Bấm thử: gõ <code>/</code>, form 3 trường, Cancel / Esc, đổi market, sửa note cũ, màn CSR Ticket</p></div>
+
+  <div class="card" style="margin-bottom:14px;padding:12px 16px">
+    <b>Gợi ý thử</b> <span style="color:var(--ink2);font-size:13px">— mỗi dòng bắt đầu từ trang vừa tải (F5), màn Telesale, market Philippines; <code>&lt;Called at&gt;</code> = giờ hiện tại của market lúc mở form</span>
+    <table class="t tryt" style="margin-top:6px">
+      <tr><th style="width:36px">#</th><th>Thao tác</th><th>Kết quả mong đợi</th></tr>
+      <tr><td>1</td><td>Ở ô trống gõ <code>/</code>, rồi nhấn Enter (hoặc bấm vào <code>/gen_call_note</code>)</td><td>List hiện <code>/gen_call_note</code> · Generate call note from template ngay trên con trỏ. Enter mở form <code>/gen_call_note</code>, Called at = giờ hiện tại của Philippines (UTC+8). Danh sách vẫn 3 note: chưa gửi gì.</td></tr>
+      <tr><td>2</td><td>Nhập Call attempt <code>1</code>, chọn Call result <b>No Answered</b>, nhấn Enter. Nhấn Enter lần nữa</td><td>Lần 1: form đóng, ô nhập = <code>1st call &lt;Called at&gt; no-answered</code>, danh sách vẫn 3 note. Lần 2: note đó được gửi, nằm cuối danh sách (You, 4 note), ô nhập trống.</td></tr>
+      <tr><td>3</td><td>Mở form, bấm Insert khi bỏ trống; nhập <code>0</code>; nhập <code>1.5</code></td><td>Bỏ trống: <code>Please enter call attempt</code> + <code>Please select call result</code>. <code>0</code> và <code>1.5</code>: <code>Call attempt must be a whole number from 1</code>. Form không đóng, chưa chèn note.</td></tr>
+      <tr><td>4</td><td>Gõ <code style="white-space:pre">AAA  BBB</code> (2 dấu cách), đặt con trỏ giữa 2 dấu cách, gõ <code>/gen</code>, Enter, nhập <code>11</code> + <b>Busy</b>, Insert</td><td>Ô nhập = <code>AAA 11th call &lt;Called at&gt; busy BBB</code>: <code>AAA</code> và <code>BBB</code> giữ nguyên.</td></tr>
+      <tr><td>5</td><td>Gõ <code>note /gen</code>, Enter mở form, bấm Cancel. Xoá chữ <code>n</code> cuối, gõ lại <code>n</code>, Enter, lần này nhấn Esc</td><td>Cả 2 lần ô nhập trở về <code>note /gen</code>, không có note mới.</td></tr>
+      <tr><td>6</td><td>Gõ <code>call back 16/10</code> rồi Enter. Sau đó nhấn Enter ở ô trống</td><td>Note <code>call back 16/10</code> được gửi ngay, list command không mở. Ô trống: báo <code>Note cannot be empty</code>, không gửi.</td></tr>
+      <tr><td>7</td><td>Gõ <code>/</code> rồi Esc. Xoá ô, nhấn Esc lần nữa. Mở form, bấm ô Called at để mở lịch, nhấn Esc</td><td>Esc 1: chỉ đóng list, ô vẫn là <code>/</code>. Esc 2: nhật ký ghi <code>Esc tới khung chi tiết đơn</code> (app đóng chi tiết đơn như trước giờ). Esc 3: chỉ đóng lịch, form vẫn mở.</td></tr>
+      <tr><td>8</td><td>Đổi Market sang <b>Myanmar (95) · UTC+6:30</b>, mở form</td><td>Called at mặc định = giờ Philippines lùi 1 giờ 30 phút.</td></tr>
+      <tr><td>9</td><td>Bấm ✎ ở note của You <code>2nd call 2026-10-16 17:05:12 answered</code>, bấm vào cuối ô sửa, gõ <code>/</code>, Enter</td><td>Ô sửa note cũ không mở list command. Enter lưu, note thành <code>2nd call 2026-10-16 17:05:12 answered/</code> kèm <code>(Edited)</code>.</td></tr>
+      <tr><td>10</td><td>Bấm nút <b>Chi tiết ticket</b> ở đầu màn: gõ <code>/gen</code>, Enter, nhập <code>22</code> + <b>Answered</b>, Enter. Shift+Enter, rồi bấm Send</td><td>Sidebar đổi sang app <b>Customer Service</b> (mục CSR Ticket). Ô nhập = <code>22nd call &lt;Called at&gt; answered</code>. Shift+Enter xuống dòng, không gửi. Send gửi note (bỏ dòng trống cuối), thành note thứ 3 của ticket. Bấm <b>Chi tiết đơn</b> → về đúng màn chi tiết đơn như lúc rời đi.</td></tr>
+    </table>
+  </div>
+
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span id="url">fulfillment.pancake.vn/admin/order/telesale</span></div>
+    <div class="app">
+      <div class="side" id="side"></div>
+      <div class="main">
+        <div class="ph"><div class="phl"><h3 id="scr-title">Telesale</h3><span class="explain">Chuyển màn (app không có):</span><button class="btn" data-go="order">Chi tiết đơn</button><button class="btn" data-go="ticket">Chi tiết ticket</button></div>
+          <div class="ctl">Market của đơn / ticket
+            <select class="tsel" id="market"></select>
+            <span>Giờ hiện tại ở market này: <b id="mclock"></b></span>
+          </div>
+        </div>
+        <div class="panel" id="screen"></div>
+      </div>
+    </div>
+    <div class="mmask" id="mmask"></div>
+    <div class="mdl" id="mdl" role="dialog" aria-label="/gen_call_note">
+      <button class="x" data-act="m-x" title="Close">×</button>
+      <h4>/gen_call_note</h4>
+      <div class="fld" id="fld-attempt"><label><em>*</em>Call attempt</label><input id="f-attempt" autocomplete="off" placeholder="1, 2, 3..."><div class="msg"></div></div>
+      <div class="fld" id="fld-called"><label><em>*</em>Called at</label>
+        <div class="inw"><input id="f-called" autocomplete="off" placeholder="Select date"><span class="sfx"><span class="clr" id="f-clear" title="Clear"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm2.8 9.1l-.7.7L8 8.7l-2.1 2.1-.7-.7L7.3 8 5.2 5.9l.7-.7L8 7.3l2.1-2.1.7.7L8.7 8z"/></svg></span><svg viewBox="0 0 16 16"><path d="M4 1h1v2h6V1h1v2h3v12H1V3h3zm-2 5v8h12V6zm0-2v1h12V4z"/></svg></span></div>
+        <div class="pk" id="pk"></div><div class="msg"></div></div>
+      <div class="fld" id="fld-result"><label><em>*</em>Call result</label><div class="rsel" id="f-result" tabindex="0"></div><div class="sdrop" id="sdrop"></div><div class="msg"></div></div>
+      <div class="ft"><button class="btn" data-act="m-cancel">Cancel</button><button class="btn pri" data-act="m-insert">Insert</button></div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="card" style="margin-top:14px;padding:14px 16px">
+    <b>Nhật ký thao tác</b> <span style="color:var(--ink2);font-size:13px">— mới nhất ở trên</span>
+    <pre class="log" id="log"></pre>
+  </div>
+  <p class="caption">Chỗ mới so với hiện tại: ô tạo note có list command (viền tím nét đứt) và form <code>/gen_call_note</code>; phần còn lại giữ như app. Logic chép từ code PR #533 tại <code>e6949931</code> (PR chưa merge), giữ tên hàm: <code>findSlashCommand</code> / <code>toOrdinal</code> / <code>genCallNote</code> của <code>utils/ity.js</code>, <code>handleSelectCommand</code> / <code>handleInsertNote</code> / <code>handleCancelCommand</code> của <code>NoteCommandInput.js</code>, xử lý Enter / Esc của <code>GenCallNoteModal.js</code>, phím Enter của <code>TelesaleNote.js</code> và <code>csr/TicketNote.js</code>. Sidebar theo app split #453 (<code>FFM_APPS</code> + <code>flattenAppMenu</code> của <code>utils/menu/apps.js</code>): chi tiết đơn nằm trong app Orders &amp; Telesale (mục Telesale và Order mở cùng đơn mẫu), chi tiết ticket nằm trong app Customer Service. Hai màn khác app nên chuyển bằng cặp nút ở đầu màn (app không có); nội dung đang gõ của mỗi màn giữ nguyên khi chuyển qua lại. Dữ liệu mẫu, không gọi API.</p>
+</section>
+
+<section id="quy-tac">
+  <div class="sec-h"><span class="n">02</span><h2>Business rules</h2></div>
+  <div class="card" style="padding:8px 12px">
+    <table class="t">
+      <tr><th style="width:170px">Nhóm</th><th>Quy tắc</th></tr>
+      <tr><td><b>Nơi có command</b></td><td>Ô tạo note mới ở <b>tab Conversation của chi tiết đơn</b> (mọi màn mở chi tiết đơn: Telesale, Order…) và <b>mục Conversations của chi tiết ticket CSR</b>. Ô sửa note cũ không có command.</td></tr>
+      <tr><td><b>Khi nào list mở</b></td><td>Chỉ khi <code>/</code> đứng đầu dòng hoặc sau khoảng trắng. Gõ ngày (<code>16/10</code>) hay link (<code>https://…</code>) không mở list và không ảnh hưởng phím Enter.</td></tr>
+      <tr><td><b>Call attempt</b></td><td>Bắt buộc, số nguyên từ 1 trở lên, không giới hạn trên. Người dùng tự chọn, hệ thống không tự đếm số lần gọi.</td></tr>
+      <tr><td><b>Called at</b></td><td>Mặc định là thời điểm mở command, theo timezone market của đơn (Telesale, Order) hoặc của ticket (CSR). Không xác định được market thì dùng timezone của user. Sửa được.</td></tr>
+      <tr><td><b>Call result</b></td><td>Bắt buộc, chọn từ 9 Call Status của ITY, cuối danh sách thêm 3 giá trị ITY không có (Callback, Change Order, Bank Transfer). Dropdown hiện tên, note ghi giá trị, để trùng format note ITY ở Philippines:
+        <div class="chipset"><span>Answered → <code>answered</code></span><span>No Answered → <code>no-answered</code></span><span>Not Available → <code>not-available</code></span><span>Cancel → <code>cancel</code></span><span>Busy → <code>busy</code></span><span>Failed → <code>failed</code></span><span>Congestion → <code>congestion</code></span><span>Drop → <code>drop</code></span><span>Invalid Number → <code>invalid-number</code></span><span>Callback → <code>callback</code></span><span>Change Order → <code>change-order</code></span><span>Bank Transfer → <code>bank-transfer</code></span></div></td></tr>
+      <tr><td><b>Ordinal</b></td><td>Tiếng Anh, giống note ITY: <code>1st</code> <code>2nd</code> <code>3rd</code> <code>4th</code> … <code>11th</code> <code>12th</code> <code>13th</code> … <code>21st</code> <code>22nd</code> <code>23rd</code>. Ví dụ: <code>1</code> + No Answered → <code>1st call … no-answered</code>; <code>11</code> + Busy → <code>11th call … busy</code>; <code>22</code> + Answered → <code>22nd call … answered</code>.</td></tr>
+      <tr><td><b>Chèn note</b></td><td>Chỉ thay đoạn command đã gõ (<code>/gen</code> hoặc <code>/gen_call_note</code>), nội dung trước và sau giữ nguyên. Sau khi chèn, sửa tự do.</td></tr>
+      <tr><td><b>Huỷ</b></td><td>Đóng form, bấm Cancel hoặc Esc → ô nhập trở về đúng nội dung trước khi chọn command.</td></tr>
+      <tr><td><b>Phím Enter</b></td><td>Giữ như cũ của từng nơi: chi tiết đơn nhấn Enter là gửi; CSR nhấn Enter là gửi, Shift+Enter xuống dòng. Khi list command hoặc form đang mở, Enter chỉ chọn command hoặc xác nhận form, <b>không gửi note</b>. Khi lịch Called at đang mở, Enter chỉ chốt ngày giờ.</td></tr>
+      <tr><td><b>Phím Esc</b></td><td>Khi list command hoặc lịch Called at đang mở, Esc chỉ đóng list/lịch đó; không đóng form, không đóng chi tiết đơn hay chi tiết ticket.</td></tr>
+      <tr><td><b>Lưu note</b></td><td>Qua API và luồng submit hiện tại của từng nơi. BE giữ kiểm tra như cũ (quyền thao tác, nội dung không rỗng), không kiểm tra format note.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="quyet-dinh">
+  <div class="sec-h"><span class="n">03</span><h2>Đã quyết định</h2></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Ô nhập</div><h4>List command dựng bằng gì?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Ô nhập dùng <code>Mentions</code> có sẵn của antd: list command hiện ngay tại con trỏ. Chọn sau khi thử prototype 2 cách; cách tự dựng TextArea + Dropdown bị loại.</div></div>
+      <div class="alt"><s>Tự dựng TextArea + Dropdown</s></div></div>
+    <div class="dcard"><div class="q">Tên command</div><h4>Gọi command là gì?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Tên command là <code>/gen_call_note</code> (ban đầu là <code>/gen_telesale_note</code>), vì dùng chung cho Telesale và CSR. Phần CSR làm trong cùng PR.</div></div>
+      <div class="alt"><s>/gen_telesale_note</s></div></div>
+    <div class="dcard"><div class="q">Timezone</div><h4>Called at theo timezone nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Timezone của Called at lấy theo thứ tự: market của đơn hoặc ticket → market đang chọn trên FFM → timezone của user. Offset khớp BE <code>Tools.timezone_by_currency</code>: Philippines, Malaysia, Singapore UTC+8; Thailand, Indonesia, Cambodia, Laos UTC+7; Myanmar UTC+6:30.</div></div></div>
+    <div class="dcard"><div class="q">Lịch Called at</div><h4>Có nút Now không?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Lịch Called at bỏ nút Now, vì nút này lấy giờ của máy chứ không theo market.</div></div></div>
+    <div class="dcard"><div class="q">Con trỏ giữa command</div><h4>Dời con trỏ vào giữa <code>/ge|n</code> rồi chọn?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Người dùng tự dời con trỏ vào giữa đoạn command đang gõ (<code>/ge|n</code>) rồi chọn command thì chữ còn lại (<code>n</code>) nằm cuối note. Chữ thừa hiện ngay trong ô để xoá trước khi gửi, nên không thêm logic cho trường hợp này.</div></div></div>
+    <div class="dcard"><div class="q">Dấu cách</div><h4><code>/</code> dính liền chữ phía sau?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Gõ <code>/</code> dính liền chữ phía sau (<code>đoạn đầu /đoạn cuối</code>) thì note dính liền <code>đoạn cuối</code>, không tự thêm dấu cách, vì nội dung phía sau phải giữ nguyên.</div></div></div>
+  </div>
+</section>
+
+<section id="ngoai-pham-vi">
+  <div class="sec-h"><span class="n">04</span><h2>Ngoài phạm vi</h2></div>
+  <div class="note n-info"><span class="ic">i</span><div>
+    <ul class="clean">
+      <li>Không tích hợp hay thay đổi logic của ITY.</li>
+      <li>Không tự xác định số lần gọi trước đó.</li>
+      <li>Không đổi Order Status, Call Status, Pending Reason của đơn, hay trạng thái ticket.</li>
+      <li>Không dùng nội dung note làm nguồn chính thức để đếm số lần tác động hay lập báo cáo.</li>
+      <li>Không thêm validation ở BE.</li>
+    </ul>
+  </div></div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">05</span><h2>Cho dev</h2></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th style="width:300px">File</th><th>Sửa gì</th></tr>
+      <tr><td><code>components/NoteCommandInput.js</code></td><td>Ô nhập dùng chung, bọc antd <code>Mentions prefix="/"</code>; nhận <code>countryCode</code> để tính timezone cho Called at.</td></tr>
+      <tr><td><code>components/GenCallNoteModal.js</code></td><td>Form 3 trường và xử lý Enter/Esc trong form.</td></tr>
+      <tr><td><code>utils/ity.js</code></td><td><code>noteCommands</code>, <code>toOrdinal</code> (cùng luật <code>convert_ordinal</code> bên BE), <code>genCallNote</code>, <code>findSlashCommand</code>.</td></tr>
+      <tr><td><code>utils/tools.js</code></td><td>Thêm field <code>timezone</code> vào <code>supportedCountries</code> và hàm <code>timezoneByCountry</code>.</td></tr>
+      <tr><td><code>components/TelesaleNote.js</code><br><code>components/csr/TicketNote.js</code></td><td>Nơi dùng: <code>components/TelesaleNote.js</code> (<code>countryCode={order.country_code}</code>) và <code>components/csr/TicketNote.js</code> (<code>countryCode={ticket?.country_code}</code>). Ô sửa note cũ vẫn là <code>Input.TextArea</code>.</td></tr>
+      <tr><td>API</td><td>Note vẫn lưu qua <code>updateOrder</code> (field <code>telesale_note</code>) và <code>createTicketNote</code>; không có API mới.</td></tr>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong biến, mỗi thao tác cập nhật rồi vẽ lại phần liên quan (list note, list command, form /gen_call_note).
+(() => {
+  const root = document.getElementById('proto');
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pad = (n) => String(n).padStart(2, '0');
+
+  // giống utils/ity.js ityStatus (bỏ description)
+  const ityStatus = [
+    { key: 'answered', name: 'Answered' },
+    { key: 'no-answered', name: 'No Answered' },
+    { key: 'not-available', name: 'Not Available' },
+    { key: 'cancel', name: 'Cancel' },
+    { key: 'busy', name: 'Busy' },
+    { key: 'failed', name: 'Failed' },
+    { key: 'congestion', name: 'Congestion' },
+    { key: 'drop', name: 'Drop' },
+    { key: 'invalid-number', name: 'Invalid Number' },
+  ];
+  // giống components/GenCallNoteModal.js callResults
+  const callResults = [...ityStatus, { key: 'callback', name: 'Callback' }, { key: 'change-order', name: 'Change Order' }, { key: 'bank-transfer', name: 'Bank Transfer' }];
+  // giống utils/ity.js noteCommands
+  const noteCommands = [{ key: 'gen_call_note', description: 'Generate call note from template' }];
+  // giống utils/tools.js supportedCountries (countryCode, name, timezone) + timezoneByCountry
+  const supportedCountries = [
+    { countryCode: '63', name: 'Philippines', timezone: 8 },
+    { countryCode: '66', name: 'Thailand', timezone: 7 },
+    { countryCode: '60', name: 'Malaysia', timezone: 8 },
+    { countryCode: '62', name: 'Indonesia', timezone: 7 },
+    { countryCode: '65', name: 'Singapore', timezone: 8 },
+    { countryCode: '855', name: 'Cambodia', timezone: 7 },
+    { countryCode: '856', name: 'Laos', timezone: 7 },
+    { countryCode: '95', name: 'Myanmar', timezone: 6.5 },
+  ];
+  const timezoneByCountry = (countryCode) => supportedCountries.find((item) => item.countryCode == countryCode)?.timezone;
+
+  // Giờ của market giữ dưới dạng ms đã cộng offset, đọc bằng getUTC* (thay cho moment().utcOffset(timezone)).
+  const nowInTimezone = (timezone) => Date.now() + Math.round(timezone * 60) * 60000;
+  const fmt = (ms) => {
+    const d = new Date(ms);
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  };
+  const parseFmt = (text) => {
+    const m = text.trim().match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+    if (!m) return null;
+    const ms = Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    return fmt(ms) === text.trim() ? ms : null;
+  };
+  const formatOffset = (timezone) => `UTC+${Math.trunc(timezone)}${timezone % 1 ? `:${pad(Math.round((timezone % 1) * 60))}` : ''}`;
+
+  // giống utils/ity.js toOrdinal
+  const toOrdinal = (n) => {
+    if ([11, 12, 13].includes(n % 100)) return `${n}th`;
+    return `${n}${{ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'}`;
+  };
+  // giống utils/ity.js genCallNote
+  const genCallNote = ({ attempt, called_at, result }) => `${toOrdinal(attempt)} call ${fmt(called_at)} ${result}`;
+  // giống utils/ity.js findSlashCommand
+  const findSlashCommand = (text, caret) => {
+    const match = text.slice(0, caret).match(/(^|\s)\/(\w*)$/);
+    if (!match) return null;
+    const commands = noteCommands.filter((command) => command.key.startsWith(match[2].toLowerCase()));
+    return commands.length ? { start: caret - match[2].length - 1, end: caret, commands } : null;
+  };
+
+  const SCREENS = {
+    telesale: { title: 'Telesale', url: 'fulfillment.pancake.vn/admin/order/telesale', app: 'order', ctx: 'order', open: 'chi tiết đơn 10231, tab Conversation' },
+    order: { title: 'Order', url: 'fulfillment.pancake.vn/admin/order', app: 'order', ctx: 'order', open: 'chi tiết đơn 10231, tab Conversation' },
+    ticket: { title: 'CSR Ticket', url: 'fulfillment.pancake.vn/admin/csr/ticket', app: 'csr', ctx: 'ticket', open: 'chi tiết ticket #503, mục Conversations' },
+  };
+  // giống utils/menu/apps.js FFM_APPS (tên app = navigation.appOrder / appCsr bản en, color) + flattenAppMenu:
+  // app order trải phẳng Telesale, Order; app csr chỉ có CSR Ticket. Ô chữ cái = ký tự đầu tên app (appBadge).
+  const APPS = {
+    order: { name: 'Orders & Telesale', color: '#0ea5e9', items: ['telesale', 'order'] },
+    csr: { name: 'Customer Service', color: '#ec4899', items: ['ticket'] },
+  };
+  const AVATAR = { ITY: 'var(--ffm)', 'Sale A': 'var(--pos)', 'CSR B': 'var(--crm)', You: 'var(--blue)' };
+  const ctxs = {
+    order: {
+      frame: 'chi tiết đơn',
+      value: '',
+      editingId: null,
+      notes: [
+        { id: 1, creator: 'ITY', note: '1st call 2026-10-16 09:52:56 no-answered', time: '09:53:01 16/10' },
+        { id: 2, creator: 'Sale A', note: 'Customer asked to call back after 5pm', time: '10:15:40 16/10' },
+        { id: 3, creator: 'You', mine: true, note: '2nd call 2026-10-16 17:05:12 answered', time: '17:06:02 16/10' },
+      ],
+    },
+    ticket: {
+      frame: 'chi tiết ticket',
+      value: '',
+      editingId: null,
+      notes: [
+        { id: 11, creator: 'CSR B', note: 'Customer reported a damaged item, waiting for photos', time: '09:10:22 17/10' },
+        { id: 12, creator: 'You', mine: true, note: '1st call 2026-10-17 10:20:00 busy', time: '10:21:05 17/10' },
+      ],
+    },
+  };
+
+  const SVG = {
+    edit: '<svg viewBox="0 0 16 16"><path d="M11.3 1.3l3.4 3.4-9.2 9.2H2.1v-3.4zM10 4l2 2"/></svg>',
+    del: '<svg viewBox="0 0 16 16"><path d="M5 1h6v2h4v2H1V3h4zM2 6h12l-1 9H3z"/></svg>',
+    pic: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14v12H1zm1 1v8.5l3.5-3.5 3 3 2-2 3.5 3.5V3zm8.5 1.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>',
+    send: '<svg viewBox="0 0 16 16"><path d="M1 14.5L15 8 1 1.5V6.5L10 8 1 9.5z"/></svg>',
+  };
+
+  let scr = 'telesale';
+  let lastOrderScr = 'telesale'; // màn chi tiết đơn đang mở trước khi sang chi tiết ticket
+  let countryCode = '63';
+  let menu = null; // list command đang mở (rc-mentions đang "measuring"): { active, start, commands }
+  let pending = null; // giống pendingCommand của NoteCommandInput: { text, start, end }
+  let caret = 0; // giống caretRef của NoteCommandInput
+  let form = null; // giá trị form /gen_call_note: { attemptText, attempt, calledAt, result, errors }
+  let picker = null; // lịch Called at đang mở: { draft, view }
+  let sel = null; // dropdown Call result đang mở: { active }
+  let editSlashLogged = false;
+  let logs = [];
+
+  const cur = () => ctxs[SCREENS[scr].ctx];
+  const curTz = () => timezoneByCountry(countryCode) ?? 7;
+  const market = () => supportedCountries.find((m) => m.countryCode === countryCode);
+  const marketLabel = () => `${market().name} (${countryCode}) · ${formatOffset(market().timezone)}`;
+  const nameOf = (key) => callResults.find((s) => s.key === key)?.name;
+  const nowLabel = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} Today`; };
+  const show = (v) => JSON.stringify(v).slice(1, -1);
+
+  const log = (line) => { logs.unshift(`[${SCREENS[scr].title}] ${line}`); logs = logs.slice(0, 40); $('log').textContent = logs.join('\n'); };
+  const toast = (text, bad) => { const el = $('toast'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => (el.className = 'toast'), 2000); };
+  const av = (name, lg) => `<span class="uav${lg ? ' lg' : ''}" style="background:${AVATAR[name] || 'var(--ink3)'}">${esc(name[0])}</span>`;
+
+  // ── Màn chi tiết đơn (OrderDetail → Note Information → TelesaleNote) và chi tiết ticket (TicketDetailView → Conversations → TicketNote) ──
+  function screenHtml() {
+    if (SCREENS[scr].ctx === 'order') {
+      return `<div class="scr">
+        <div class="ghost"><b>Chi tiết đơn 10231</b>Các khối khác của chi tiết đơn (thông tin đơn, sản phẩm, giao vận…) không vẽ trong prototype.</div>
+        <div class="box"><div class="lbl">Note Information</div><div class="in">
+          <div class="tabs"><a class="off" title="Không mô phỏng trong prototype">Note</a><a class="off" title="Không mô phỏng trong prototype">Note Print</a><a class="on">Conversation</a></div>
+          <div class="nlist" id="nlist"></div>
+          <div class="dv" style="margin:10px 0"></div>
+          <div class="ta-w changed" id="taw"><textarea class="ta" id="ta-create" rows="5" placeholder="Write a note (Press Enter to send)"></textarea><span class="upl" title="ImageUpload (không mô phỏng)">${SVG.pic}</span><div class="mdrop" id="mdrop"></div></div>
+        </div></div></div>`;
+    }
+    return `<div class="scr">
+      <div class="ghost"><b>Chi tiết ticket #503 · Order 10231</b>Các mục khác của chi tiết ticket (CSR Ticket Type, Reasons, Assigning Care…) không vẽ trong prototype.</div>
+      <div><div class="flbl">Conversations</div>
+        <div class="box"><div class="in" style="padding-top:4px">
+          <div class="tabs"><a class="on">Notes</a></div>
+          <div class="tlist" id="nlist"></div>
+          <div class="tk-form"><div class="ta-w changed" id="taw"><textarea class="ta bl" id="ta-create" rows="3" placeholder="Write a note"></textarea><div class="mdrop" id="mdrop"></div></div>
+            <div class="tk-ft"><span class="upl" title="ImageUpload (không mô phỏng)">${SVG.pic}</span><button class="btn pri" data-act="send">${SVG.send}Send</button></div></div>
+        </div></div></div></div>`;
+  }
+  function renderNotes() {
+    const c = cur();
+    const isOrder = SCREENS[scr].ctx === 'order';
+    const actions = (n) => `<span><button class="ico" data-act="edit" data-id="${n.id}" title="Edit">${SVG.edit}</button><button class="ico del" data-act="del" data-id="${n.id}" title="Delete (không mô phỏng)">${SVG.del}</button></span>`;
+    $('nlist').innerHTML = c.notes.map((n) => {
+      const editing = c.editingId === n.id;
+      const closeBtn = '<button class="ico" data-act="edit-close" title="Close" style="color:rgba(0,0,0,.65);font-size:15px;line-height:1">×</button>';
+      if (isOrder) {
+        const body = editing
+          ? `<div class="ta-w" style="margin-top:8px"><textarea class="ta" id="ta-edit" rows="5" placeholder="Write a note (Press Enter to send)">${esc(c.editDraft ?? n.note)}</textarea><span class="upl">${SVG.pic}</span></div>`
+          : `<div class="ni-b"><div><span class="ni-x">${esc(n.note)}</span>${n.edited ? '<span class="edited">(Edited)</span>' : ''}</div>${n.mine ? actions(n) : ''}</div>`;
+        return `<div class="ni" data-note="${n.id}"><div class="ni-h"><span class="ni-u">${av(n.creator)}${esc(n.creator)}</span>${editing ? closeBtn : `<span>${n.time}</span>`}</div>${body}<div class="dv"></div></div>`;
+      }
+      const body = editing
+        ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:4px"><textarea class="ta" id="ta-edit" rows="3" placeholder="Write a note">${esc(c.editDraft ?? n.note)}</textarea>
+            <div class="tk-ft"><span class="upl">${SVG.pic}</span><span style="display:flex;gap:8px"><button class="btn sm" data-act="edit-close">Cancel</button><button class="btn pri sm" data-act="edit-save">${SVG.send}Save</button></span></div></div>`
+        : `<p class="tn-x"><span class="ni-x">${esc(n.note)}</span>${n.edited ? '<i>(edited)</i>' : ''}</p>${n.mine ? `<div class="tn-f">${actions(n)}</div>` : ''}`;
+      return `<div class="tn" data-note="${n.id}">${av(n.creator, true)}<div class="tn-b"><div class="tn-m"><b>${esc(n.creator)}</b>${editing ? closeBtn : `<small>${n.time}</small>`}</div>${body}</div></div>`;
+    }).join('');
+  }
+  function renderScreen() {
+    const s = SCREENS[scr];
+    const app = APPS[s.app];
+    if (s.ctx === 'order') lastOrderScr = scr;
+    $('url').textContent = s.url;
+    $('scr-title').textContent = s.title;
+    $('side').innerHTML = `<div class="brand"><b style="background:${app.color}">${esc(app.name.charAt(0).toUpperCase())}</b>${esc(app.name)}</div>`
+      + app.items.map((k) => `<a data-scr="${k}" class="${k === scr ? 'on' : ''}">${SCREENS[k].title}</a>`).join('');
+    root.querySelectorAll('[data-go]').forEach((b) => b.classList.toggle('pri', b.dataset.go === s.ctx));
+    $('screen').innerHTML = screenHtml();
+    renderNotes();
+    $('ta-create').value = cur().value;
+    menu = null;
+    renderMenu();
+  }
+  const setValue = (v) => { cur().value = v; const ta = $('ta-create'); if (ta) ta.value = v; };
+  function addNote(note) {
+    const c = cur();
+    c.notes.push({ id: Date.now(), creator: 'You', mine: true, note, time: nowLabel() });
+    setValue('');
+    renderNotes();
+    $('nlist').scrollTop = $('nlist').scrollHeight;
+    toast('Created successfully');
+  }
+
+  // ── List command: thay cho list của antd Mentions (prefix "/", placement "top") ──
+  // Vị trí list = vị trí ký tự "/" trong ô (rc-mentions đo bằng 1 phần tử ẩn chép chữ trước "/").
+  function caretXY(ta, index) {
+    const cs = getComputedStyle(ta);
+    const m = document.createElement('div');
+    ['boxSizing', 'width', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderStyle', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing'].forEach((p) => (m.style[p] = cs[p]));
+    Object.assign(m.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'pre-wrap', wordWrap: 'break-word', top: '0', left: '0' });
+    m.textContent = ta.value.slice(0, index);
+    const mark = document.createElement('span');
+    mark.textContent = '/';
+    m.appendChild(mark);
+    ta.parentNode.appendChild(m);
+    const pos = { left: ta.offsetLeft + mark.offsetLeft, top: ta.offsetTop + mark.offsetTop - ta.scrollTop };
+    m.remove();
+    return pos;
+  }
+  function renderMenu() {
+    const el = $('mdrop');
+    if (!el) return;
+    if (!menu) { el.classList.remove('show'); el.innerHTML = ''; return; }
+    el.innerHTML = menu.commands.map((c, i) => `<div class="mopt${i === menu.active ? ' on' : ''}" data-cmd="${c.key}"><b>/${c.key}</b><small>${esc(c.description)}</small></div>`).join('');
+    const pos = caretXY($('ta-create'), menu.start);
+    el.style.left = Math.max(0, Math.min(pos.left, $('taw').clientWidth - 250)) + 'px';
+    el.style.top = pos.top - 4 + 'px';
+    el.classList.add('show');
+  }
+  // giống validateCommandSearch của NoteCommandInput: list chỉ mở khi findSlashCommand khớp (rc-mentions xét lại mỗi lần nhả phím)
+  function evalMenu(ta) {
+    const command = findSlashCommand(ta.value, ta.selectionStart);
+    if (command) {
+      const wasOpen = !!menu;
+      menu = { active: wasOpen ? menu.active : 0, start: command.start, commands: command.commands };
+      renderMenu();
+      if (!wasOpen) log(`Gõ "${ta.value.slice(command.start, command.end)}" → list command mở: /gen_call_note`);
+    } else if (menu) {
+      menu = null;
+      renderMenu();
+    }
+  }
+
+  // giống NoteCommandInput.js handleSelectCommand: đọc chữ + con trỏ TRƯỚC khi Mentions chèn command vào ô
+  function handleSelectCommand(via) {
+    const ta = $('ta-create');
+    const command = findSlashCommand(ta.value, ta.selectionStart);
+    menu = null;
+    renderMenu();
+    if (!command) { setValue(ta.value); return; }
+    pending = { text: ta.value, start: command.start, end: command.end };
+    // Mentions chèn "/gen_call_note " vào ô (nằm sau lớp phủ của form); Insert / Cancel đều tính từ pending.text
+    setValue(ta.value.slice(0, command.start) + '/gen_call_note ' + ta.value.slice(command.end).replace(/^ /, ''));
+    openModal();
+    log(`Chọn /gen_call_note (${via}) → mở form /gen_call_note, CHƯA gửi note; Called at mặc định ${fmt(form.calledAt)} theo ${marketLabel()}`);
+  }
+  // giống NoteCommandInput.js handleInsertNote
+  function handleInsertNote(note) {
+    if (!pending) return;
+    const { text, start, end } = pending;
+    caret = start + note.length;
+    setValue(text.slice(0, start) + note + text.slice(end));
+    pending = null;
+    closeModal();
+    log(`Insert → chèn "${note}" vào ô, CHƯA gửi; ô nhập = "${show(cur().value)}"`);
+  }
+  // giống NoteCommandInput.js handleCancelCommand
+  function handleCancelCommand(via) {
+    if (!pending) return;
+    caret = pending.end;
+    const text = pending.text;
+    setValue(text);
+    pending = null;
+    closeModal();
+    log(`${via} → đóng form, ô nhập trở về "${show(text)}" như trước khi chọn command`);
+  }
+
+  // ── Form /gen_call_note, giống components/GenCallNoteModal.js ──
+  const rules = {
+    attempt: (v) => (v == null ? 'Please enter call attempt' : Number.isInteger(v) && v >= 1 ? null : 'Call attempt must be a whole number from 1'),
+    calledAt: (v) => (v == null ? 'Please select called at' : null),
+    result: (v) => (v == null ? 'Please select call result' : null),
+  };
+  const FIELD_ID = { attempt: 'fld-attempt', calledAt: 'fld-called', result: 'fld-result' };
+  const parseAttempt = (text) => (/^\s*[+-]?\d+(\.\d+)?\s*$/.test(text) ? Number(text) : null);
+  function renderErrors() {
+    Object.keys(FIELD_ID).forEach((k) => {
+      const el = $(FIELD_ID[k]);
+      const msg = form && form.errors[k];
+      el.classList.toggle('err', !!msg);
+      el.querySelector('.msg').textContent = msg || '';
+    });
+  }
+  function validateField(k) { form.errors[k] = rules[k](form[k]); renderErrors(); }
+  function openModal() {
+    // giống NoteCommandInput: timezoneByCountry(countryCode || current?.country_code) ?? parseFloat(timezone ?? 7)
+    form = { attemptText: '', attempt: null, calledAt: nowInTimezone(curTz()), result: null, errors: {} };
+    picker = null;
+    sel = null;
+    $('f-attempt').value = '';
+    renderCalled();
+    renderPicker();
+    renderSelect();
+    renderErrors();
+    root.classList.add('mopen');
+    // giống GenCallNoteForm: focus ô Call attempt sau lần render đầu
+    setTimeout(() => $('f-attempt').focus({ preventScroll: true }));
+  }
+  function closeModal() {
+    root.classList.remove('mopen');
+    form = null;
+    picker = null;
+    sel = null;
+    renderPicker();
+    renderSelect();
+    renderErrors();
+    // giống afterClose → focusTextArea: đặt con trỏ ở caretRef
+    setTimeout(() => {
+      const ta = $('ta-create');
+      if (!ta) return;
+      ta.focus({ preventScroll: true });
+      ta.setSelectionRange(caret, caret);
+    });
+  }
+  function submit(via) {
+    Object.keys(rules).forEach((k) => (form.errors[k] = rules[k](form[k])));
+    renderErrors();
+    const errors = Object.values(form.errors).filter(Boolean);
+    if (errors.length) { log(`${via} → form báo lỗi: ${errors.join(' · ')}; chưa chèn note`); return; }
+    handleInsertNote(genCallNote({ attempt: form.attempt, called_at: form.calledAt, result: form.result }));
+  }
+
+  // Called at: thay cho DatePicker showTime showNow={false} format="YYYY-MM-DD HH:mm:ss" (cần bấm OK hoặc Enter mới chốt)
+  const monthStart = (ms) => { const d = new Date(ms); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1); };
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function renderCalled() {
+    const v = picker ? picker.draft : form && form.calledAt;
+    $('f-called').value = v != null ? fmt(v) : '';
+    $('f-clear').classList.toggle('has', !!(form && form.calledAt != null));
+  }
+  function renderPicker() {
+    const el = $('pk');
+    if (!picker) { el.classList.remove('show'); el.innerHTML = ''; return; }
+    const view = new Date(picker.view);
+    const y = view.getUTCFullYear();
+    const mo = view.getUTCMonth();
+    const first = new Date(Date.UTC(y, mo, 1)).getUTCDay();
+    const d0 = picker.draft != null ? new Date(picker.draft) : null;
+    let cells = '';
+    for (let i = 0; i < 42; i++) {
+      const day = new Date(Date.UTC(y, mo, 1 - first + i));
+      const isSel = d0 && day.getUTCFullYear() === d0.getUTCFullYear() && day.getUTCMonth() === d0.getUTCMonth() && day.getUTCDate() === d0.getUTCDate();
+      if (i % 7 === 0) cells += '<tr>';
+      cells += `<td class="${day.getUTCMonth() !== mo ? 'out' : ''}${isSel ? ' sel' : ''}"><span data-day="${day.getTime()}">${day.getUTCDate()}</span></td>`;
+      if (i % 7 === 6) cells += '</tr>';
+    }
+    const col = (unit, max, curV) => `<ul data-col="${unit}">${Array.from({ length: max }, (_, i) => `<li data-t="${unit}" data-v="${i}" class="${curV === i ? 'sel' : ''}">${pad(i)}</li>`).join('')}</ul>`;
+    el.innerHTML = `<div class="pk-in"><div class="cal">
+        <div class="cal-h"><span><button data-act="pk-py" title="Last year">«</button><button data-act="pk-pm" title="Previous month">‹</button></span><b>${MONTHS[mo]} ${y}</b><span><button data-act="pk-nm" title="Next month">›</button><button data-act="pk-ny" title="Next year">»</button></span></div>
+        <table><tr>${['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((w) => `<th>${w}</th>`).join('')}</tr>${cells}</table></div>
+      <div><div class="tcols">${col('h', 24, d0 && d0.getUTCHours())}${col('m', 60, d0 && d0.getUTCMinutes())}${col('s', 60, d0 && d0.getUTCSeconds())}</div></div></div>
+      <div class="pk-ft"><button class="btn pri sm" data-act="pk-ok" ${picker.draft == null ? 'disabled' : ''}>OK</button></div>`;
+    el.querySelectorAll('.tcols ul').forEach((ul) => { const s = ul.querySelector('.sel'); ul.scrollTop = s ? s.offsetTop - 4 : 0; });
+    el.classList.add('show');
+  }
+  function openPicker() {
+    if (picker || !form) return;
+    picker = { draft: form.calledAt, view: monthStart(form.calledAt ?? nowInTimezone(curTz())) };
+    renderPicker();
+    log('Bấm ô Called at → mở lịch (không có nút Now)');
+  }
+  function closePicker(commit, via) {
+    if (!picker) return;
+    const draft = picker.draft;
+    picker = null;
+    if (commit && draft != null) { form.calledAt = draft; validateField('calledAt'); }
+    renderPicker();
+    renderCalled();
+    log(commit ? `${via} khi lịch đang mở → chỉ chốt Called at = ${fmt(form.calledAt)}, form vẫn mở` : `${via} → chỉ đóng lịch, Called at giữ ${form.calledAt != null ? fmt(form.calledAt) : '(trống)'}, form vẫn mở`);
+  }
+  function pickPart(unit, v) {
+    const base = picker.draft ?? monthStart(nowInTimezone(curTz()));
+    const d = new Date(base);
+    if (unit === 'h') d.setUTCHours(v);
+    if (unit === 'm') d.setUTCMinutes(v);
+    if (unit === 's') d.setUTCSeconds(v);
+    picker.draft = d.getTime();
+    renderPicker();
+    renderCalled();
+  }
+
+  // Call result: thay cho Select placeholder="Select call result"
+  function renderSelect() {
+    $('f-result').innerHTML = form && form.result ? esc(nameOf(form.result)) : '<span class="ph0">Select call result</span>';
+    const d = $('sdrop');
+    if (!sel) { d.classList.remove('show'); d.innerHTML = ''; return; }
+    d.innerHTML = callResults.map((s, i) => `<div data-res="${s.key}" class="${i === sel.active ? 'on' : ''}${form.result === s.key ? ' cur' : ''}">${s.name}</div>`).join('');
+    d.classList.add('show');
+  }
+  function openSelect() { sel = { active: Math.max(0, callResults.findIndex((s) => s.key === form.result)) }; renderSelect(); }
+  function chooseResult(key, via) {
+    form.result = key;
+    sel = null;
+    renderSelect();
+    validateField('result');
+    log(`Call result → ${nameOf(key)} (${via}); note sẽ ghi "${key}"`);
+  }
+
+  // ── Phím trong ô nhập ──
+  function onPressEnter(e, ta) {
+    const key = e.shiftKey ? 'Shift+Enter' : 'Enter';
+    if (SCREENS[scr].ctx === 'order') {
+      // giống TelesaleNote.js: onPressEnter → validateAction(e.target.value, handleCreateTelesaleNote); Enter hay Shift+Enter đều vào đây
+      if (ta.value.trim() === '') {
+        toast('Note cannot be empty', true);
+        log(`${key} → note rỗng: báo "Note cannot be empty", không gửi (validateAction không chặn Enter nên ô xuống thêm 1 dòng, như app)`);
+        return;
+      }
+      e.preventDefault();
+      const text = ta.value;
+      addNote(text);
+      log(`${key} → GỬI note "${show(text)}" (updateOrder, field telesale_note)`);
+      return;
+    }
+    // giống csr/TicketNote.js: Shift+Enter xuống dòng, Enter gửi
+    if (e.shiftKey) { log('Shift+Enter → xuống dòng, không gửi'); return; }
+    e.preventDefault();
+    handleCreateNote('Enter');
+  }
+  // giống csr/TicketNote.js handleCreateNote
+  function handleCreateNote(via) {
+    const value = $('ta-create').value.trim();
+    if (!value) { toast('Note cannot be empty', true); log(`${via} → note rỗng: báo "Note cannot be empty", không gửi`); return; }
+    addNote(value);
+    log(`${via} → GỬI note "${show(value)}" (createTicketNote)`);
+  }
+  function saveEdit(ta, via) {
+    const c = cur();
+    const n = c.notes.find((x) => x.id === c.editingId);
+    const isOrder = SCREENS[scr].ctx === 'order';
+    // TelesaleNote gửi nguyên chữ, TicketNote handleUpdateNote trim trước khi gửi
+    const value = isOrder ? ta.value : ta.value.trim();
+    if (value.trim() === '') { toast('Note cannot be empty', true); log(`${via} ở ô sửa → note rỗng: báo "Note cannot be empty", không lưu`); return false; }
+    n.note = value;
+    n.edited = true;
+    c.editingId = null;
+    c.editDraft = null;
+    renderNotes();
+    toast('Updated successfully');
+    log(`${via} ở ô sửa → lưu note đã sửa "${show(value)}", hiện ${isOrder ? '(Edited)' : '(edited)'}`);
+    return true;
+  }
+
+  $('screen').addEventListener('keydown', (e) => {
+    const ta = e.target;
+    if (ta.id === 'ta-create') {
+      // giống handleKeyDown của NoteCommandInput + onKeyDown của rc-mentions khi list đang mở
+      if (menu) {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          menu.active = (menu.active + (e.key === 'ArrowDown' ? 1 : -1) + menu.commands.length) % menu.commands.length;
+          renderMenu();
+          return;
+        }
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          menu = null;
+          renderMenu();
+          log(`Esc khi list command đang mở → chỉ đóng list, không đóng ${cur().frame}`);
+          return;
+        }
+        // list đang mở: rc-mentions chọn command, không gọi onPressEnter
+        if (e.key === 'Enter') { e.preventDefault(); handleSelectCommand('Enter'); return; }
+      }
+      if (e.key === 'Enter') onPressEnter(e, ta);
+    } else if (ta.id === 'ta-edit') {
+      if (e.key === 'Enter') {
+        if (SCREENS[scr].ctx === 'order') {
+          // giống TelesaleNote.js: ô sửa note cũ là Input.TextArea, onPressEnter → validateAction → handleUpdateTelesaleNote
+          if (ta.value.trim() !== '') e.preventDefault();
+          saveEdit(ta, e.shiftKey ? 'Shift+Enter' : 'Enter');
+        } else if (!e.shiftKey) {
+          e.preventDefault();
+          saveEdit(ta, 'Enter');
+        }
+      }
+    }
+    // Esc không bị chặn ở trên thì lan tới modal chi tiết đơn / ticket: app đóng modal (hành vi sẵn có)
+    if (e.key === 'Escape' && !e.cancelBubble) log(`Esc tới khung ${cur().frame} → app thật sẽ đóng ${cur().frame} (như trước giờ)`);
+  });
+  $('screen').addEventListener('keyup', (e) => {
+    if (e.target.id !== 'ta-create') return;
+    if (['Escape', 'ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) return;
+    evalMenu(e.target);
+  });
+  $('screen').addEventListener('input', (e) => {
+    if (e.target.id === 'ta-create') cur().value = e.target.value;
+    if (e.target.id === 'ta-edit') cur().editDraft = e.target.value;
+    if (e.target.id === 'ta-edit' && e.data === '/' && !editSlashLogged) {
+      editSlashLogged = true;
+      log('Gõ "/" ở ô sửa note cũ → không mở list command (ô sửa không có command)');
+    }
+  });
+  // rc-mentions tắt list khi ô mất focus
+  $('screen').addEventListener('focusout', (e) => { if (e.target.id === 'ta-create' && menu) { menu = null; renderMenu(); } });
+  // Bấm vào list không làm ô nhập / ô Called at / ô Call result mất focus
+  root.addEventListener('mousedown', (e) => { if (e.target.closest('#mdrop, #pk, #sdrop')) e.preventDefault(); });
+
+  // ── Phím trong form /gen_call_note ──
+  // giống GenCallNoteForm handleKeyDownCapture: Enter (trừ khi đứng ở nút) không để form tự submit; lịch / dropdown đang mở thì để chúng xử lý Enter
+  $('mdl').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
+    e.preventDefault();
+    if (picker || sel) return;
+    e.stopPropagation();
+    submit('Enter');
+  }, true);
+  $('mdl').addEventListener('keydown', (e) => {
+    const id = e.target.id;
+    if (id === 'f-attempt' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      // InputNumber: ↑ / ↓ tăng giảm 1
+      e.preventDefault();
+      form.attempt = (Number.isFinite(form.attempt) ? form.attempt : 0) + (e.key === 'ArrowUp' ? 1 : -1);
+      form.attemptText = String(form.attempt);
+      e.target.value = form.attemptText;
+      validateField('attempt');
+      return;
+    }
+    if (id === 'f-called' && picker) {
+      if (e.key === 'Enter') { closePicker(true, 'Enter'); return; }
+      // giống GenCallNoteForm handleKeyDown: Esc khi lịch đang mở không lan tới Modal
+      if (e.key === 'Escape') { e.stopPropagation(); closePicker(false, 'Esc khi lịch đang mở'); return; }
+    }
+    if (id === 'f-result') {
+      if (sel) {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); sel.active = (sel.active + (e.key === 'ArrowDown' ? 1 : -1) + callResults.length) % callResults.length; renderSelect(); return; }
+        if (e.key === 'Enter') { chooseResult(callResults[sel.active].key, 'Enter'); return; }
+        // rc-select: Esc khi dropdown đang mở chỉ đóng dropdown
+        if (e.key === 'Escape') { e.stopPropagation(); sel = null; renderSelect(); log('Esc khi dropdown Call result đang mở → chỉ đóng dropdown, form vẫn mở'); return; }
+      } else if (['ArrowDown', 'ArrowUp', ' '].includes(e.key)) { e.preventDefault(); openSelect(); return; }
+    }
+    // rc-dialog: Esc đóng Modal → onCancel
+    if (e.key === 'Escape') handleCancelCommand('Esc');
+  });
+  $('f-attempt').addEventListener('input', (e) => {
+    form.attemptText = e.target.value;
+    form.attempt = parseAttempt(e.target.value);
+    validateField('attempt');
+  });
+  $('f-called').addEventListener('input', (e) => {
+    if (!picker) openPicker();
+    const ms = parseFmt(e.target.value);
+    if (ms != null) { picker.draft = ms; picker.view = monthStart(ms); renderPicker(); }
+  });
+
+  // ── Bấm chuột ──
+  root.addEventListener('click', (e) => {
+    const scrA = e.target.closest('[data-scr]');
+    if (scrA) {
+      if (scrA.dataset.scr === scr) return;
+      scr = scrA.dataset.scr;
+      renderScreen();
+      log(`Mở màn ${SCREENS[scr].title} → ${SCREENS[scr].open}`);
+      return;
+    }
+    const go = e.target.closest('[data-go]');
+    if (go) {
+      if (go.dataset.go === SCREENS[scr].ctx) return;
+      scr = go.dataset.go === 'ticket' ? 'ticket' : lastOrderScr;
+      renderScreen();
+      log(`Chuyển sang ${SCREENS[scr].open} → sidebar app ${APPS[SCREENS[scr].app].name}, mục ${SCREENS[scr].title}; chữ đang gõ giữ nguyên ("${show(cur().value)}")`);
+      return;
+    }
+    if (e.target.closest('[data-cmd]')) { handleSelectCommand('bấm chuột'); return; }
+    if (e.target.closest('#mmask')) { handleCancelCommand('Bấm ra ngoài form'); return; }
+    const resEl = e.target.closest('[data-res]');
+    if (resEl) { chooseResult(resEl.dataset.res, 'bấm chuột'); return; }
+    const dayEl = e.target.closest('[data-day]');
+    if (dayEl) {
+      const day = new Date(+dayEl.dataset.day);
+      const d = new Date(picker.draft ?? +dayEl.dataset.day);
+      d.setUTCFullYear(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate());
+      picker.draft = d.getTime();
+      picker.view = monthStart(picker.draft);
+      renderPicker();
+      renderCalled();
+      return;
+    }
+    const tEl = e.target.closest('[data-t]');
+    if (tEl) { pickPart(tEl.dataset.t, +tEl.dataset.v); return; }
+    if (e.target.closest('#f-clear')) {
+      form.calledAt = null;
+      picker = null;
+      renderPicker();
+      renderCalled();
+      validateField('calledAt');
+      log('Xoá Called at → báo "Please select called at"');
+      return;
+    }
+    if (e.target.closest('#f-called')) { openPicker(); return; }
+    if (e.target.closest('#f-result')) { if (sel) { sel = null; renderSelect(); } else openSelect(); return; }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (!act) return;
+    const c = cur();
+    if (act === 'send') handleCreateNote('Bấm Send');
+    if (act === 'm-insert') submit('Insert');
+    if (act === 'm-cancel') handleCancelCommand('Cancel');
+    if (act === 'm-x') handleCancelCommand('Bấm ×');
+    if (act === 'pk-ok') closePicker(true, 'OK');
+    if (act === 'pk-pm' || act === 'pk-nm' || act === 'pk-py' || act === 'pk-ny') {
+      const d = new Date(picker.view);
+      const step = { 'pk-pm': -1, 'pk-nm': 1, 'pk-py': -12, 'pk-ny': 12 }[act];
+      picker.view = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + step, 1);
+      renderPicker();
+    }
+    if (act === 'edit') {
+      c.editingId = +e.target.closest('[data-id]').dataset.id;
+      c.editDraft = null;
+      editSlashLogged = false;
+      renderNotes();
+      log(`✎ note "${c.notes.find((n) => n.id === c.editingId).note}" → mở ô sửa note cũ (Input.TextArea, không có command)`);
+    }
+    if (act === 'edit-close') { c.editingId = null; c.editDraft = null; renderNotes(); log('Đóng ô sửa → giữ note cũ'); }
+    if (act === 'edit-save') saveEdit($('ta-edit'), 'Bấm Save');
+    if (act === 'del') log('Bấm xoá note → không mô phỏng trong prototype');
+  });
+  // Bấm ra ngoài lịch / dropdown thì đóng. Phần tử vừa bị vẽ lại không còn trong trang thì bỏ qua.
+  document.addEventListener('click', (e) => {
+    if (!e.target.isConnected) return;
+    if (picker && !$('fld-called').contains(e.target)) closePicker(false, 'Bấm ra ngoài lịch');
+    if (sel && !$('fld-result').contains(e.target)) { sel = null; renderSelect(); }
+  });
+
+  // ── Market của đơn / ticket ──
+  $('market').innerHTML = supportedCountries.map((m) => `<option value="${m.countryCode}">${m.name} (${m.countryCode}) · ${formatOffset(m.timezone)}</option>`).join('');
+  $('market').value = countryCode;
+  $('market').addEventListener('change', (e) => {
+    countryCode = e.target.value;
+    tick();
+    log(`Market → ${marketLabel()}: Called at mặc định của form mở sau đây theo giờ ${market().name} (${fmt(nowInTimezone(curTz()))})`);
+  });
+  const tick = () => ($('mclock').textContent = fmt(nowInTimezone(curTz())));
+  setInterval(tick, 1000);
+  tick();
+
+  renderScreen();
+  log(`Mở màn Telesale (app ${APPS.order.name}) → ${SCREENS.telesale.open}; market ${marketLabel()}`);
+})();
+</script>
+</body>
+</html>

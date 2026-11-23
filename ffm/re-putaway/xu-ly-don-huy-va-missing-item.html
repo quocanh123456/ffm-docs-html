@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Re-putaway đơn hủy Outbound – Sơ đồ đánh giá & triển khai</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root { --bg:#f4f6fa; --card:#fff; --text:#1f2937; --muted:#6b7280; --line:#e5e7eb; --brand:#2563eb; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.55; font-size:15px; }
+  .wrap { max-width:1280px; margin:0 auto; padding:28px 24px 60px; }
+  header h1 { font-size:26px; margin:0 0 4px; }
+  header .meta { color:var(--muted); font-size:13px; margin-bottom:20px; }
+  nav { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; }
+  nav a { background:var(--card); border:1px solid var(--line); border-radius:999px; padding:6px 14px; color:var(--brand); text-decoration:none; font-size:14px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 24px; margin-bottom:22px; }
+  h2 { font-size:19px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:14px; margin:0 0 14px; }
+  .mermaid { text-align:center; overflow-x:auto; padding:6px 0; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-top:8px; }
+  .legend span::before { content:""; display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:6px; vertical-align:-1px; background:var(--c); border:1px solid var(--b); }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+  .card { border-radius:10px; padding:12px 14px; border:1px solid; font-size:14px; }
+  .card > b { display:block; margin-bottom:4px; font-size:14.5px; }
+  .red { background:#fef2f2; border-color:#fca5a5; }
+  .orange { background:#fffbeb; border-color:#fcd34d; }
+  .green { background:#ecfdf5; border-color:#6ee7b7; }
+  .yellow { background:#fefce8; border-color:#fde047; }
+  .lv { float:right; font-size:11px; font-weight:700; padding:1px 8px; border-radius:999px; background:#fff; }
+  code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; }
+  th { background:#f3f4f6; }
+  .src { font-size:12.5px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Re-putaway: đơn hủy &amp; đơn Missing item</h1>
+  <div class="meta">Sơ đồ đánh giá ảnh hưởng &amp; phương án triển khai · cập nhật 20/10/2026 theo chốt với dev (thêm Missing item, màn Re-putaway Management, đếm theo sản phẩm) · Căn cứ KB <code>pancake-vn/ffm-knowledge</code> (commit <code>1246e2e</code>)</div>
+</header>
+
+<nav>
+  <a href="#s1">① Hiện trạng</a>
+  <a href="#s2">② Luồng mới</a>
+  <a href="#s2b">②b Chi tiết từng bước</a>
+  <a href="#s2c">②c Màn Re-putaway Management</a>
+  <a href="#s3">③ Tồn kho</a>
+  <a href="#s4">④ Ảnh hưởng</a>
+  <a href="#s5">⑤ Lộ trình</a>
+  <a href="#s6">⑥ Cần chốt</a>
+</nav>
+
+<!-- ① HIỆN TRẠNG -->
+<section id="s1">
+  <h2>① Hiện trạng: đơn bị cancel giữa chừng thì đi đâu?</h2>
+  <p class="sub">Theo code hiện tại (KB). Ô đỏ là chỗ đang hở.</p>
+  <div class="mermaid">
+flowchart LR
+    P["Picking<br/>scan_pick<br/>trừ tồn kệ"] --> K["Packing<br/>pack_order"] --> H["Handover<br/>scan_waybill"] --> S["shipped"]
+
+    P -. "cancel" .-> P1["Hàng nằm trong Tote<br/>tồn kệ đã bị trừ"]
+    P1 --> K1["Packing: guard 3 REJECT<br/>đơn cancel không đóng gói được"]
+    K1 --> G1["Tote có thể bị FREE<br/>khi hàng hủy vẫn trong Tote"]
+    G1 --> G2["Không có luồng<br/>cất trả kệ"]
+
+    K -. "cancel sau packed" .-> H1["Handover: đếm riêng<br/>canceled_count, không ship"]
+    H1 --> G3["Kiện bị giữ lại<br/>không có luồng cất trả kệ"]
+
+    classDef ok fill:#e0ecff,stroke:#2563eb,color:#1e3a8a;
+    classDef gap fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,font-weight:bold;
+    classDef warn fill:#fef3c7,stroke:#d97706,color:#78350f;
+    classDef good fill:#d1fae5,stroke:#059669,color:#064e3b;
+    class P,K,H,S ok;
+    class K1,G1,G2,G3 gap;
+    class P1 warn;
+    class H1 good;
+  </div>
+  <div class="legend">
+    <span style="--c:#e0ecff;--b:#2563eb">Luồng chuẩn</span>
+    <span style="--c:#d1fae5;--b:#059669">Đã có sẵn</span>
+    <span style="--c:#fef3c7;--b:#d97706">Lệch tồn tạm thời</span>
+    <span style="--c:#fee2e2;--b:#dc2626">Đang hở / vướng</span>
+  </div>
+</section>
+
+<!-- ② LUỒNG MỚI -->
+<section id="s2">
+  <h2>② Luồng mới đã chốt (19/10)</h2>
+  <p class="sub">Có <b>3 nguồn</b> đưa hàng vào danh sách <b>chờ cất lại</b>. Tất cả dồn về màn <b>Re-putaway Management</b>, được gom thành lệnh <b>đếm theo sản phẩm</b>, rồi cất kệ bằng luồng Put-away hiện có.</p>
+  <h3 style="font-size:16px;margin:10px 0 4px">Bước 1 · Outbound: 3 nguồn hàng chờ cất lại</h3>
+  <div class="mermaid">
+flowchart LR
+    A1["(A) Huỷ lúc Picking<br/>NV vẫn nhặt<br/>bình thường"] --> A2["Packing: quét Tote<br/>đơn huỷ<br/>→ xuống cuối"]
+    M1["(M) Packing: thiếu hàng<br/>NV bấm<br/>Missing item"] --> M2["Đơn on_hold<br/>KHÔNG huỷ<br/>giữ mã vận đơn"]
+    A2 --> T["Đóng hết đơn còn lại<br/>⚠ Cảnh báo SKU + SL<br/>cần lấy ra → Tote FREE"]
+    M2 --> T
+    B1["(B) Huỷ sau khi<br/>đã đóng gói"] --> B2["Handover: quét waybill<br/>⚠ Đơn đã huỷ<br/>không cho vào phiên"]
+    T --> X(["Waiting List<br/>chờ cất lại<br/>Source: Cancel / Missing item"])
+    B2 --> X
+    classDef out fill:#e0ecff,stroke:#2563eb,color:#1e3a8a;
+    classDef mis fill:#fce7f3,stroke:#db2777,color:#831843;
+    classDef warn fill:#fef3c7,stroke:#d97706,color:#78350f,font-weight:bold;
+    classDef end1 fill:#f3f4f6,stroke:#6b7280,color:#111827,font-weight:bold;
+    class A1,A2,B1 out; class M1,M2 mis; class T,B2 warn; class X end1;
+  </div>
+  <h3 style="font-size:16px;margin:14px 0 4px">Bước 2 · Web Re-putaway Management → Bước 3 · Mobile cất kệ</h3>
+  <div class="mermaid">
+flowchart LR
+    X(["Waiting List<br/>kho chung theo kho<br/>gộp SKU · đếm theo SP"]) --> W1["💻 NV bấm Scan to tote<br/>quét Tote rỗng<br/>→ busy"]
+    W1 --> W2["💻 Danh sách gộp theo SKU<br/>Áo thun đỏ × 3<br/>Quạt đứng × 3<br/>(không hiện đơn)"]
+    W2 --> W3["💻 Quét SP vừa sức Tote<br/>Loaded +1<br/>không bắt quét hết"]
+    W3 --> W4["💻 Chọn Putaway staff<br/>→ Create Putaway<br/>→ sang tab Assigned"]
+    W4 -. "còn hàng → Tote tiếp theo" .-> X
+    W4 --> M1["📱 Quét Tote"] --> M2["📱 Quét Location"] --> M3["📱 Quét SP"] --> M4["📱 Complete<br/>+ tồn kệ<br/>Tote free"]
+    M4 --> R["Đơn Missing item<br/>→ chờ nhặt lại"]
+    classDef web fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    classDef mob fill:#d1fae5,stroke:#059669,color:#064e3b;
+    classDef end1 fill:#f3f4f6,stroke:#6b7280,color:#111827,font-weight:bold;
+    classDef mis fill:#fce7f3,stroke:#db2777,color:#831843;
+    class W1,W2,W3,W4 web; class M1,M2,M3,M4 mob; class X end1; class R mis;
+  </div>
+  <div class="legend">
+    <span style="--c:#e0ecff;--b:#2563eb">Đơn huỷ</span>
+    <span style="--c:#fce7f3;--b:#db2777">Missing item</span>
+    <span style="--c:#fef3c7;--b:#d97706">Điểm cảnh báo</span>
+    <span style="--c:#ede9fe;--b:#7c3aed">Web</span>
+    <span style="--c:#d1fae5;--b:#059669">Mobile</span>
+  </div>
+</section>
+
+<!-- ②b CHI TIẾT -->
+<section id="s2b">
+  <h2>②b Chi tiết từng bước</h2>
+  <p class="sub">Ai làm · ở đâu · thao tác · hệ thống ghi nhận gì</p>
+  <h3 style="font-size:16px;margin:10px 0 6px">(A) Đơn huỷ trong lúc Picking &amp; (M) đơn Missing item – cùng ở bàn Packing</h3>
+  <table>
+    <tr><th style="width:6%">Bước</th><th style="width:20%">Ai · ở đâu</th><th>Thao tác</th><th style="width:42%">Hệ thống</th></tr>
+    <tr><td>1</td><td>NV nhặt · APP Picking</td><td>Nhặt đủ hàng theo list như bình thường, kể cả đơn đã huỷ</td><td>Trừ tồn tại kệ khi quét (như hiện tại)</td></tr>
+    <tr><td>2</td><td>NV đóng gói · WEB Packing</td><td>Quét Tote</td><td>Đơn huỷ → <b>xuống cuối hàng đợi</b>, nhãn Canceled</td></tr>
+    <tr><td>3</td><td>NV đóng gói</td><td>Đóng gói đơn bình thường. Gặp đơn thiếu hàng → bấm <b>Missing item</b></td><td>Đơn thiếu hàng → <code>on_hold</code>, xuống cuối. Hàng đã nhặt của đơn → <b>chờ cất lại</b> (Missing item). Đơn <b>không huỷ</b>, giữ mã vận đơn</td></tr>
+    <tr><td>4</td><td>NV đóng gói</td><td>Đóng xong đơn cuối cùng có thể đóng</td><td>⚠ <i>"Các đơn còn lại đã huỷ hoặc thiếu hàng…"</i> + liệt kê <b>SKU × SL của toàn bộ hàng còn trong Tote</b> (gồm cả hàng đơn huỷ lẫn hàng đơn Missing item) cần lấy ra → <b>Tote free</b> → hàng đơn huỷ → <b>chờ cất lại</b> (Cancel)</td></tr>
+    <tr><td>5</td><td>NV đóng gói</td><td>Lấy hàng ra khỏi Tote, để vào khu chờ cất lại</td><td>—</td></tr>
+  </table>
+  <h3 style="font-size:16px;margin:16px 0 6px">(B) Đơn huỷ sau khi đã đóng gói</h3>
+  <table>
+    <tr><th style="width:6%">Bước</th><th style="width:20%">Ai · ở đâu</th><th>Thao tác</th><th style="width:42%">Hệ thống</th></tr>
+    <tr><td>1</td><td>NV bàn giao · WEB Handover</td><td>Quét waybill kiện hàng</td><td>⚠ <i>"Đơn đã huỷ – để riêng chờ cất lại"</i> → <b>không cho vào phiên</b> → <b>chờ cất lại</b> (Cancel)</td></tr>
+    <tr><td>2</td><td>NV bàn giao</td><td>Để kiện sang khu chờ cất lại</td><td>—</td></tr>
+  </table>
+  <h3 style="font-size:16px;margin:16px 0 6px">(C) Re-putaway – chung cho cả 3 nguồn</h3>
+  <table>
+    <tr><th style="width:6%">Bước</th><th style="width:20%">Ai · ở đâu</th><th>Thao tác</th><th style="width:42%">Hệ thống</th></tr>
+    <tr><td>C1</td><td>NV kho · WEB Re-putaway Management</td><td>Tab <b>Waiting List</b>: bấm <b>Scan to tote</b> ở dòng kho → quét Tote rỗng</td><td>Tote → busy. Hiện <b>toàn bộ SP trong kho chung, gộp theo SKU</b>: Waiting · Loaded. <b>Không hiện đơn</b></td></tr>
+    <tr><td>C2</td><td>NV kho</td><td>Quét barcode SP <b>vừa sức Tote</b> (hàng rời / mở kiện). Không quét waybill. Không bắt quét hết</td><td>Loaded +1. Chặn SP lạ / vượt Waiting</td></tr>
+    <tr><td>C3</td><td>NV kho</td><td>Chọn <b>Assign Putaway Staff</b> → bấm <b>Create Putaway</b></td><td>Sinh <b>1 lệnh Putaway</b> (Source Re-putaway) cho Tote → trừ khỏi Waiting List → lệnh sang tab <b>Assigned</b> + App</td></tr>
+    <tr><td>C4</td><td>NV kho</td><td>Kho chung còn hàng → lặp lại C1–C3 với <b>Tote khác</b></td><td>1 kho chung tách được <b>nhiều lệnh Putaway</b> (hàng cồng kềnh)</td></tr>
+    <tr><td>C5</td><td>NV cất hàng · APP Put-away</td><td>Quét Tote → Location → SP → hoàn tất</td><td>Cộng <b>tồn tại kệ</b>, không cộng VW. <b>Tote free</b>. Đơn Missing item → chờ nhặt lại</td></tr>
+  </table>
+</section>
+
+<!-- ②c MÀN QUẢN LÝ -->
+<section id="s2c">
+  <h2>②c Màn Re-putaway Management (bám khung Picking Management)</h2>
+  <p class="sub">Picking Management: <b>Picking List / Assigned</b> → Re-putaway Management: <b>Waiting List / Assigned</b>. Đếm theo <b>sản phẩm</b>, không đếm theo đơn.</p>
+  <div class="mermaid">
+flowchart LR
+    subgraph P["Picking Management (có sẵn)"]
+      direction TB
+      P1["Picking List<br/>Warehouse · Total orders · SKUs · Type"]
+      P2["Assigned<br/>các Picking list đã giao"]
+    end
+    subgraph R["Re-putaway Management (mới)"]
+      direction TB
+      R1["Waiting List<br/>kho chung: Warehouse · Total quantity · SKUs<br/>Source · nút Scan to tote"]
+      R2["Assigned<br/>Putaway ID · Tote · Quantity · SKUs<br/>Putaway staff · Status · Progress"]
+    end
+    P1 -. "dùng lại khung" .-> R1
+    P2 -. "dùng lại khung" .-> R2
+    R1 -- "quét Tote + SP<br/>→ Create Putaway<br/>(lặp nhiều lần)" --> R2
+    classDef old fill:#f3f4f6,stroke:#9ca3af,color:#374151;
+    classDef new fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,font-weight:bold;
+    class P1,P2 old; class R1,R2 new;
+  </div>
+  <h3 style="font-size:16px;margin:14px 0 6px">Màn quét sau khi quét Tote: chỉ hiện SP gộp theo SKU</h3>
+  <table>
+    <tr><th style="width:50%">❌ Không trình bày thế này (tách theo đơn)</th><th>✅ Trình bày thế này (gộp theo SKU)</th></tr>
+    <tr>
+      <td>
+        <table>
+          <tr><th>Order</th><th>SKU</th><th>Qty</th></tr>
+          <tr><td>ONXV8PO</td><td>Áo thun đỏ</td><td>1</td></tr>
+          <tr><td>ONXV8PO</td><td>Áo thun đỏ</td><td>1</td></tr>
+          <tr><td>KQLZN4L</td><td>Áo thun đỏ</td><td>1</td></tr>
+          <tr><td>PZ81KQ3</td><td>Quạt đứng</td><td>1</td></tr>
+          <tr><td>PZ81KQ3</td><td>Quạt đứng</td><td>1</td></tr>
+          <tr><td>PZ81KQ3</td><td>Quạt đứng</td><td>1</td></tr>
+        </table>
+      </td>
+      <td>
+        <table>
+          <tr><th>FFM SKU · Product</th><th>Waiting</th><th>Loaded</th></tr>
+          <tr><td>Áo thun đỏ</td><td>3</td><td>0</td></tr>
+          <tr><td>Quạt đứng</td><td>3</td><td>0</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <p class="src" style="margin-top:8px">Mockup chi tiết: <a href="mockup-re-putaway-management">Re-putaway Management (prototype bấm thử được)</a>.</p>
+</section>
+
+<!-- ③ TỒN KHO -->
+<section id="s3">
+  <h2>③ Tồn kho thay đổi thế nào? (bẫy chính)</h2>
+  <p class="sub">Đơn huỷ ở (A) và đơn Missing item ở (M) đều <b>không được đóng gói</b> nên không lên <code>pending</code>, không bị trừ tồn thực tế. Đơn Missing item còn sống nên phần tồn bán được đã giữ cho đơn <b>vẫn giữ</b>. Có 2 loại tồn: <b>tồn theo vị trí</b> (<code>location_inventories</code>) và <b>tồn tổng VW</b> (<code>variations_warehouses</code>). Re-putaway chỉ được đụng vào loại thứ nhất.</p>
+  <div class="mermaid">
+flowchart LR
+    S0["Kệ A01-02-03<br/>có 10 cái"] --> S1["① Picking nhặt 2<br/>Tồn kệ: 10 → 8<br/>VW: chưa đổi"]
+    S1 --> S2["② Đơn bị cancel<br/>Tồn kệ: vẫn 8 ❗<br/>VW: tự hoàn<br/>DEALLOC / RTN"]
+    S3["③ Re-putaway cất 2<br/>Tồn kệ: 8 → 10 ✅<br/>VW: KHÔNG cộng"]
+    S3 --> OK["Khớp thực tế"]
+
+    S2 --> S2b["Hàng nằm ở khu<br/>chờ cất lại<br/>(Tote đã free)"]
+    S2b --> S3
+    S2 -. "nếu dùng nhánh return<br/>(có cộng VW)" .-> BAD["VW cộng 2 lần ❌"]
+
+    classDef step fill:#e0ecff,stroke:#2563eb,color:#1e3a8a;
+    classDef warn fill:#fef3c7,stroke:#d97706,color:#78350f;
+    classDef good fill:#d1fae5,stroke:#059669,color:#064e3b,font-weight:bold;
+    classDef bad fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,font-weight:bold;
+    class S0,S1 step;
+    class S2,S2b warn;
+    class S3,OK good;
+    class BAD bad;
+  </div>
+  <div class="mermaid">
+flowchart LR
+    X{"Đơn cancel ở<br/>trạng thái nào?"} -- "trước pending<br/>(đang pick / packing)" --> D1["VW ghi DEALLOC<br/>hoàn salable"]
+    X -- "từ pending<br/>(đã packed, chờ lấy)" --> D2["VW ghi RTN<br/>hoàn salable + physical"]
+    X -- "≥ shipped" --> D3["Không cho cancel<br/>(trừ is_force)"]
+    D1 --> R["Re-putaway:<br/>chỉ + tồn kệ"]
+    D2 --> R
+
+    classDef q fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    classDef a fill:#e0ecff,stroke:#2563eb,color:#1e3a8a;
+    classDef no fill:#f3f4f6,stroke:#9ca3af,color:#4b5563;
+    classDef r fill:#d1fae5,stroke:#059669,color:#064e3b,font-weight:bold;
+    class X q; class D1,D2 a; class D3 no; class R r;
+  </div>
+</section>
+
+<!-- ④ ẢNH HƯỞNG -->
+<section id="s4">
+  <h2>④ Ảnh hưởng tới từng phần</h2>
+  <p class="sub">Màu theo mức độ: đỏ là phải xử lý, cam là cần build hoặc phối hợp, xanh là nhỏ hoặc không ảnh hưởng.</p>
+  <div class="cards">
+    <div class="card orange"><span class="lv">Build</span><b>Packing</b>Đơn huỷ <b>xuống cuối hàng đợi</b>. Bấm <b>Missing item</b> → hàng đã nhặt vào chờ cất lại. Đóng hết đơn còn lại → cảnh báo SKU × SL → free Tote. Không đóng gói đơn huỷ (khớp guard 3 hiện có).</div>
+    <div class="card orange"><span class="lv">Phải chốt</span><b>Đơn Missing item</b>Không huỷ, giữ mã vận đơn. Sau khi cất lại → <b>chờ nhặt lại</b>. Đề xuất chỉ đổi <code>sub_status</code> <code>on_hold</code> → <code>matched</code>; dev xác nhận Picking gom lại được.</div>
+    <div class="card red"><span class="lv">Vận hành</span><b>Tote &amp; hàng rời</b>Tote free khi còn hàng huỷ bên trong → phải lấy hàng ra khu chờ cất lại ngay, tránh lẫn hàng.</div>
+    <div class="card red"><span class="lv">Bẫy</span><b>Tồn tổng VW</b>Đã tự hoàn khi cancel. Re-putaway <b>không được cộng</b>.</div>
+    <div class="card orange"><span class="lv">Lý do làm</span><b>Tồn theo vị trí</b>Bị trừ lúc pick. Re-putaway bù đúng phần này.</div>
+    <div class="card orange"><span class="lv">Build</span><b>Re-putaway Management</b>Màn mới theo khung Picking Management: <b>Waiting List</b> là kho chung, quét Tote + SP ngay tại đây, chọn người cất rồi <b>Create Putaway</b>; 1 kho chung chia được nhiều lệnh. Danh sách chỉ hiện SP <b>gộp theo SKU</b>. BE vẫn phải giữ liên kết đơn ở phía sau.</div>
+    <div class="card orange"><span class="lv">Build</span><b>Putaway</b>Thêm type mới. Model <code>re_putaway</code> 1:1 picking list nên không hợp.</div>
+    <div class="card green"><span class="lv">Xác nhận</span><b>Picking</b>Nhặt bình thường kể cả đơn đã huỷ. Cần gom lại được đơn Missing item sau khi cất lại.</div>
+    <div class="card green"><span class="lv">Sửa nhỏ</span><b>Handover</b>Đang đếm cancel riêng. Đổi sang <b>chặn + cảnh báo</b>, đánh dấu "chờ cất lại".</div>
+    <div class="card green"><span class="lv">Không</span><b>POS sync</b>VW không đổi nên không đẩy gì sang POS.</div>
+    <div class="card green"><span class="lv">Ghi rõ</span><b>Shop chưa bật FFM inventory</b>Vẫn chạy được, chỉ đụng tồn vị trí.</div>
+    <div class="card green"><span class="lv">Nhỏ</span><b>Phân quyền</b>Thêm khóa cho màn Re-putaway web (#390).</div>
+    <div class="card yellow"><span class="lv">Backlog</span><b>Inventory History</b><code>RTN</code> gộp cả hủy tại kho lẫn khách hoàn.</div>
+  </div>
+</section>
+
+<!-- ⑤ LỘ TRÌNH -->
+<section id="s5">
+  <h2>⑤ Lộ trình triển khai</h2>
+  <p class="sub">Chạy <b>happy case</b> trước, chờ khách feedback. GĐ2 và GĐ3 làm song song được nếu chốt trước Putaway type mới.</p>
+  <div class="mermaid">
+flowchart LR
+    C0["⓪ Chốt câu còn mở<br/>với PM / dev"] --> G1
+
+    G1["<b>GĐ1</b><br/>Outbound<br/>─────────<br/>• Packing: đơn huỷ xuống cuối<br/>• Missing item → chờ cất lại<br/>• Cảnh báo SKU × SL + Tote free<br/>• Handover: chặn + cảnh báo"]
+
+    G1 --> G2["<b>GĐ2</b><br/>Re-putaway Management<br/>─────────<br/>• Waiting List = kho chung<br/>• Quét Tote → list gộp SKU<br/>• Quét vừa sức Tote<br/>• Assign staff → Create Putaway"]
+    G1 --> G3["<b>GĐ3</b><br/>Mobile Putaway<br/>─────────<br/>• Nhánh Source Re-putaway<br/>• + tồn kệ, KHÔNG cộng VW<br/>• Tote free<br/>• Đơn Missing → chờ nhặt lại"]
+
+    G2 --> BL
+    G3 --> BL
+    BL["<b>Backlog</b><br/>─────────<br/>• Lý do Missing item<br/>(nhặt sót / kệ hết hàng)<br/>• Hàng hỏng → damage<br/>• Tách RTN hủy tại kho"]
+
+    classDef c0 fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    classDef g1 fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+    classDef g2 fill:#e0ecff,stroke:#2563eb,color:#1e3a8a;
+    classDef g3 fill:#d1fae5,stroke:#059669,color:#064e3b;
+    classDef bl fill:#f3f4f6,stroke:#9ca3af,color:#374151,stroke-dasharray:5 4;
+    class C0 c0; class G1 g1; class G2 g2; class G3 g3; class BL bl;
+  </div>
+</section>
+
+<!-- ⑥ CẦN CHỐT -->
+<section id="s6">
+  <h2>⑥ Đã chốt &amp; còn mở</h2>
+  <h3 style="font-size:16px;margin:6px 0">✅ Đã chốt (17/10, sau trao đổi với dev)</h3>
+  <table>
+    <tr><th style="width:4%">#</th><th>Nội dung</th></tr>
+    <tr><td>1</td><td>Huỷ lúc Picking: <b>vẫn nhặt bình thường</b></td></tr>
+    <tr><td>2</td><td>Bàn Packing: <b>nhận diện đơn huỷ, đẩy xuống cuối</b>, đóng hết đơn thường rồi <b>cảnh báo</b>, <b>Tote free</b>. Không đóng gói đơn huỷ</td></tr>
+    <tr><td>3</td><td>Huỷ sau khi đã đóng gói: <b>phát hiện ở Handover</b>, cảnh báo, không cho vào phiên</td></tr>
+    <tr><td>4</td><td>Re-putaway: <b>chỉ quét barcode SP</b>, không quét waybill (cả hàng rời lẫn kiện kín)</td></tr>
+    <tr><td>5</td><td>Re-putaway hoàn tất: <b>chỉ cộng tồn tại kệ</b>, không cộng VW</td></tr>
+  </table>
+  <h3 style="font-size:16px;margin:16px 0 6px">✅ Chốt thêm (19/10, sau trao đổi với dev)</h3>
+  <table>
+    <tr><th style="width:4%">#</th><th>Nội dung</th></tr>
+    <tr><td>6</td><td>Bấm <b>Missing item</b> ở Packing → hàng của đơn <b>vào luồng Re-putaway</b> như đơn huỷ</td></tr>
+    <tr><td>7</td><td>Hàng chờ cất lại (huỷ + Missing item) gom thành <b>kho chung</b> theo kho, <b>không giới hạn</b> số sản phẩm</td></tr>
+    <tr><td>8</td><td>Lệnh Re-putaway <b>đếm theo sản phẩm</b>, không đếm theo đơn</td></tr>
+    <tr><td>9</td><td>Có màn <b>Re-putaway Management</b> dựa trên màn Picking Management</td></tr>
+    <tr><td>10</td><td>Luồng quét giữ như cũ. Sau khi quét Tote, màn chỉ hiện <b>danh sách SP gộp theo SKU</b> (vd Áo thun đỏ × 3), <b>không hiện đơn huỷ</b>, không tách từng cái</td></tr>
+    <tr><td>11</td><td><b>Quét ngay ở Waiting List</b>: quét Tote → quét SP vừa sức Tote → chọn người cất → <b>Create Putaway</b> → lệnh mới sang tab Assigned. Phần còn lại chờ Tote sau, <b>1 kho chung chia được nhiều lệnh</b> (hàng cồng kềnh). Hệ thống <b>không tự chia</b> SP vào Tote</td></tr>
+  </table>
+  <h3 style="font-size:16px;margin:16px 0 6px">❓ Còn mở</h3>
+  <p class="sub">Cột "Đề xuất" chỉ là ý kiến tham khảo, <b>chưa phải quyết định</b>.</p>
+  <table>
+    <tr><th style="width:4%">#</th><th>Câu hỏi</th><th style="width:40%">Đề xuất</th></tr>
+    <tr><td>1</td><td>Putaway type mới hay sửa model <code>re_putaway</code>?</td><td>Type mới (để dev chọn kỹ thuật)</td></tr>
+    <tr><td>2</td><td>Màn chỉ hiện SKU: BE gán hàng đã nạp về đơn nào (để gỡ "chờ cất lại", trả đơn Missing item về chờ nhặt lại)?</td><td>Vào chờ cất lại trước thì gỡ trước; dev quyết</td></tr>
+    <tr><td>2b</td><td>Đơn Missing item sau khi cất lại về trạng thái nào?</td><td>Giữ <code>status</code> chính + mã vận đơn, <code>sub_status</code> <code>on_hold</code> → <code>matched</code>; dev xác nhận Picking gom lại được</td></tr>
+    <tr><td>2c</td><td>2 NV cùng quét 1 kho chung một lúc</td><td>Giữ tạm số đã quét vào Tote đang mở; đóng màn không tạo thì trả lại. Dev chọn cách</td></tr>
+    <tr><td>3</td><td>Lô hàng (<code>purchase_item_id</code>) khi cất lại</td><td>Happy case: lô mặc định, ghi rõ trong issue</td></tr>
+    <tr><td>4</td><td>Location khi cất lại</td><td>Mọi Location <code>active</code>, có gợi ý kệ gốc</td></tr>
+    <tr><td>5</td><td>Thời hạn cất lại (giảm rủi ro nhặt thiếu cho đơn mới)</td><td>Cuối mỗi ca</td></tr>
+    <tr><td>6</td><td>Hàng hỏng khi mở kiện</td><td>Để backlog (cất kệ Damage)</td></tr>
+    <tr><td>7</td><td>Huỷ sau khi đã Confirm Handover (hàng đã lên xe)</td><td>Ngoài phạm vi, xử lý như hàng hoàn</td></tr>
+    <tr><td>8</td><td>Shop chưa bật <code>is_use_ffm_inventory</code></td><td>Vẫn áp dụng</td></tr>
+  </table>
+  <p class="src" style="margin-top:14px">Nguồn: <code>ffm-knowledge/10_Modules/wms-inbuild/logic.md</code> (A.2, A.6, BR-WMS-004/005/007/010/012, mục F) · <code>wms-inbuild/flows.md</code> §2–3 · <code>warehouse/logic.md</code> BR-WHS-001→004 · <code>order/logic.md</code> BR-ORD-007 · <code>INDEX.md</code> (#390)</p>
+</section>
+
+</div>
+<script>
+  mermaid.initialize({ startOnLoad:true, theme:'base', securityLevel:'loose',
+    themeVariables:{ fontSize:'15px', fontFamily:'-apple-system,Segoe UI,Roboto,sans-serif', lineColor:'#64748b' },
+    flowchart:{ useMaxWidth:true, htmlLabels:true, curve:'basis', nodeSpacing:40, rankSpacing:55 } });
+</script>
+</body>
+</html>

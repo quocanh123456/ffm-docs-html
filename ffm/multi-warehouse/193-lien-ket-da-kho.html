@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liên kết đa kho FFM – POS: mockup các màn thay đổi (#193)</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { height: auto; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  /* Bảng kế hoạch dự án + Gantt theo sprint: .filters lọc, table.plan, thanh .bar theo ưu tiên p0–p3, cột mốc .pilot */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .filters span { color: var(--ink2); font-size: 13px; margin-right: 4px; }
+  .fbtn { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink2); }
+  .fbtn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .plan-wrap { overflow-x: auto; }
+  table.plan { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  table.plan th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink3); font-weight: 700; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; background: #fff; }
+  table.plan td { padding: 8px 6px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+  table.plan td.no { color: var(--ink2); font-weight: 700; text-align: center; width: 28px; }
+  table.plan td.name { min-width: 220px; }
+  table.plan td.name b { display: block; font-size: 13px; }
+  table.plan td.name small { display: block; color: var(--ink2); font-size: 11.5px; line-height: 1.4; }
+  table.plan td.team, table.plan td.own { white-space: nowrap; color: var(--ink2); }
+  table.plan td.srcs { min-width: 92px; }
+  table.plan tr.grp td { background: var(--slate-bg); font-weight: 700; font-size: 12.5px; padding: 6px 10px; }
+  table.plan th.g, table.plan td.g { width: 31px; min-width: 31px; padding: 8px 0; text-align: center; }
+  table.plan td.g { border-left: 1px solid #f1f3f8; }
+  table.plan .pilot { border-right: 2px dashed var(--green) !important; }
+  table.plan th.later, table.plan td.later { width: 40px; min-width: 40px; padding-right: 4px; }
+  .bar { display: block; height: 14px; }
+  .bar.st { border-top-left-radius: 5px; border-bottom-left-radius: 5px; margin-left: 3px; }
+  .bar.en { border-top-right-radius: 5px; border-bottom-right-radius: 5px; margin-right: 3px; }
+  .bar.p0 { background: var(--ink3); } .bar.p1 { background: var(--blue); } .bar.p2 { background: var(--ffm); }
+  .bar.p3 { background: var(--violet-bg); border: 1px dashed var(--violet); }
+  .pri:not(.btn) { display: inline-block; font-weight: 700; font-size: 11.5px; padding: 1px 7px; border-radius: 6px; }
+  .pri.p0 { background: var(--slate-bg); color: var(--ink2); } .pri.p1 { background: var(--blue); color: #fff; }
+  .pri.p2 { background: #e0f2fe; color: #0369a1; } .pri.p3 { background: var(--violet-bg); color: var(--violet); }
+  .src { display: inline-block; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; margin: 1px 0; }
+  .src.d { background: var(--blue-bg); color: var(--blue); } .src.t { background: var(--green-bg); color: var(--green); }
+  .src.tn { background: var(--violet-bg); color: var(--violet); } .src.o { background: var(--slate-bg); color: var(--ink2); }
+  .muted { color: var(--ink3); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink2); margin-top: 12px; align-items: center; }
+  .legend .bar { display: inline-block; width: 26px; vertical-align: -2px; margin: 0 6px 0 0; border-radius: 5px; }
+  /* Lưới ánh xạ ngắn (vd take note → hạng mục) */
+  .tnmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tnmap div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; background: #fff; }
+  .tnmap div b { color: var(--violet); margin-right: 4px; }
+  .tnmap div span { display: block; color: var(--ink2); font-size: 12px; }
+
+  @media (max-width: 960px) {
+    .tnmap { grid-template-columns: 1fr 1fr; }
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+<style>
+  /* Riêng trang này: khung mockup POS (sáng) và FFM (antd, menu tối), modal, tag */
+  .pipe.p4 { grid-template-columns: repeat(4, 1fr); }
+  .proto .app { min-height: 620px; }
+  .proto { scroll-margin-top: 80px; }
+  /* POS */
+  .pos .app { grid-template-columns: 200px 1fr; min-height: 700px; }
+  .pside { background: #fff; border-right: 1px solid #eef0f4; padding: 12px 10px; }
+  .pside .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; padding: 4px 6px 12px; }
+  .pside .brand b { width: 24px; height: 24px; border-radius: 7px; background: var(--pos); color: #fff; display: grid; place-items: center; font-size: 12px; }
+  .pside select { width: 100%; border: 1px solid #d9d9d9; border-radius: 8px; padding: 6px 8px; font-size: 13px; margin-bottom: 10px; background: #fff; }
+  .pside a { display: block; padding: 8px 10px; border-radius: 8px; color: #334155; cursor: pointer; margin-bottom: 2px; }
+  .pside a:hover { background: #f1f5f9; }
+  .pside a.on { background: #e8f0ff; color: #1d4ed8; font-weight: 600; }
+  .pside a.dim { color: #94a3b8; cursor: default; } .pside a.dim:hover { background: none; }
+  .pmain { background: #f4f6fb; padding: 16px 18px; min-width: 0; }
+  .crumb { font-size: 12px; color: var(--ink2); margin-bottom: 8px; }
+  .pcard { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; padding: 14px; }
+  .pcard + .pcard { margin-top: 12px; }
+  .pcard > b { display: block; margin-bottom: 10px; }
+  .partner { display: flex; align-items: center; gap: 12px; border: 1px solid #e6e8f0; border-radius: 10px; padding: 12px; background: #fff; max-width: 520px; }
+  .partner.go { cursor: pointer; } .partner.go:hover { border-color: #93b4ff; }
+  .partner + .partner { margin-top: 8px; }
+  .partner .lg { width: 40px; height: 40px; border-radius: 10px; background: var(--ffm); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
+  .partner .lg.g { background: #cbd5e1; }
+  .partner .nm { flex: 1; min-width: 0; } .partner .nm small { display: block; color: var(--ink2); font-size: 12px; }
+  .ord { display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; align-items: start; }
+  .ord .pcard + .pcard { margin-top: 0; }
+  .ord .col > .pcard + .pcard { margin-top: 12px; }
+  .hd2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .hd2 b { margin: 0; }
+  .lkline { font-size: 12.5px; margin-top: 8px; padding: 6px 10px; border-radius: 6px; }
+  .lk-ok { background: #f6ffed; color: #389e0d; } .lk-wait { background: #fffbe6; color: #ad6800; } .lk-bad { background: #fff1f0; color: #cf1322; }
+  /* FFM */
+  .ffm .app { grid-template-columns: 200px 1fr; min-height: 900px; }
+  .side .grp { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #6b7a8c; padding: 12px 16px 4px; }
+  .side a.dim { color: #6b7a8c; cursor: default; }
+  .main { min-width: 0; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .lbl { display: block; font-size: 12.5px; margin-bottom: 4px; color: rgba(0,0,0,.88); }
+  .lbl em { color: #ff4d4f; font-style: normal; }
+  .in { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 9px; font-size: 13px; background: #fff; color: rgba(0,0,0,.88); max-width: 100%; }
+  .in.w { width: 100%; }
+  .in.err { border-color: #ff4d4f; }
+  .in[disabled], .in[readonly] { background: #f5f5f5; color: #595959; }
+  .ferr { color: #ff4d4f; font-size: 12px; margin-top: 3px; }
+  .hint { color: #8c8c8c; font-size: 12px; margin-top: 4px; }
+  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 10px 14px; align-items: center; }
+  .kv > .k { color: #595959; }
+  .tag { display: inline-block; font-size: 12px; padding: 0 7px; border-radius: 4px; border: 1px solid; line-height: 20px; white-space: nowrap; }
+  .t-green { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
+  .t-gold { color: #d48806; background: #fffbe6; border-color: #ffe58f; }
+  .t-blue { color: #0958d9; background: #e6f4ff; border-color: #91caff; }
+  .t-red { color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
+  .t-gray { color: #595959; background: #fafafa; border-color: #d9d9d9; }
+  .t-purple { color: #531dab; background: #f9f0ff; border-color: #d3adf7; }
+  .alert { border-radius: 8px; padding: 8px 12px; font-size: 12.5px; margin-bottom: 12px; border: 1px solid; }
+  .a-warn { background: #fffbe6; border-color: #ffe58f; color: #614700; }
+  .a-err { background: #fff2f0; border-color: #ffccc7; color: #a8071a; }
+  .a-info { background: #e6f4ff; border-color: #91caff; color: #003a8c; }
+  .btn.sm { padding: 2px 10px; font-size: 12px; }
+  .btn.danger { color: #ff4d4f; border-color: #ff4d4f; }
+  .btn.danger.fill { background: #ff4d4f; color: #fff; }
+  .lnk { color: #1677ff; cursor: pointer; white-space: nowrap; } .lnk.red { color: #ff4d4f; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid #91caff; border-top-color: #1677ff; border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  table.ant tr.dim td { color: #8c8c8c; }
+  table.ant td.num, table.ant th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.ant small { display: block; color: #8c8c8c; font-size: 11.5px; }
+  .mtabs { display: flex; gap: 20px; border-bottom: 1px solid #f0f0f0; margin: -4px 0 14px; }
+  .mtabs a { padding: 6px 0 8px; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .mtabs a.on { color: #1677ff; border-color: #1677ff; }
+  .blk { border: 1px solid #f0f0f0; border-radius: 8px; padding: 12px; margin-top: 14px; }
+  .blk > .hd2 b { font-size: 13.5px; }
+  .hist { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
+  .hist li { display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px dashed #f0f0f0; }
+  .hist li:last-child { border-bottom: 0; }
+  .hist time { color: #8c8c8c; width: 82px; flex: none; }
+  .hist b { font-weight: 600; width: 74px; flex: none; }
+  .rowadd { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  /* Modal nằm trong khung prototype */
+  .mwrap { position: absolute; inset: 0; z-index: 20; display: flex; justify-content: center; align-items: flex-start; padding: 46px 16px 16px; background: rgba(0,0,0,.42); visibility: hidden; opacity: 0; transition: opacity .2s, visibility .2s; overflow: auto; }
+  .mwrap.open { visibility: visible; opacity: 1; }
+  .mwrap.top { z-index: 30; padding-top: 120px; }
+  .mdl { background: #fff; border-radius: 10px; width: 780px; max-width: 100%; box-shadow: 0 12px 32px rgba(0,0,0,.2); font-size: 13px; }
+  .mdl.lg { width: 920px; } .mdl.sm { width: 460px; }
+  .mdl .mh { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid #f0f0f0; font-weight: 600; font-size: 15px; }
+  .mdl .mh .r { margin-left: auto; display: flex; gap: 8px; align-items: center; font-weight: 400; font-size: 13px; }
+  .mdl .mb { padding: 16px 18px; }
+  .mdl .mb p { margin: 0 0 8px; }
+  .mdl .mf { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid #f0f0f0; }
+  .mdl .mf .l { margin-right: auto; }
+  .x { cursor: pointer; color: #8c8c8c; font-size: 20px; line-height: 1; border: 0; background: none; padding: 0 2px; }
+  .seg { display: inline-flex; border: 1px solid #d9d9d9; border-radius: 6px; overflow: hidden; }
+  .seg span { padding: 4px 12px; font-size: 13px; color: #8c8c8c; background: #f5f5f5; }
+  .seg span.on { background: #e6f4ff; color: #0958d9; font-weight: 600; }
+  .toast { z-index: 40; top: 46px; max-width: 80%; }
+  /* P1 – POS theo màn thật: thanh biểu tượng, thanh trên, lưới thẻ đối tác, modal Cấu hình kết nối FFM */
+  .papp { display: grid; grid-template-columns: 52px minmax(0, 1fr); min-height: 860px; font-size: 13px; background: #f3f4f7; }
+  .prail { background: #fff; border-right: 1px solid #eceef3; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 4px; }
+  .prail .lg { width: 28px; height: 28px; border-radius: 50%; background: #1f4fae; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12px; margin-bottom: 8px; }
+  .prail a { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: #5b6475; }
+  .prail a.go { cursor: pointer; } .prail a.go:hover { background: #f1f3f8; } .prail a.on { background: #e8eefb; color: #1f4fae; }
+  .prail .sp { flex: 1; }
+  .pbody { min-width: 0; display: flex; flex-direction: column; }
+  .ptop { height: 52px; display: flex; align-items: center; gap: 16px; padding: 0 16px; background: #fff; border-bottom: 1px solid #eceef3; }
+  .ptop > b { font-size: 16px; white-space: nowrap; }
+  .psearch { width: 280px; height: 30px; border-radius: 6px; background: #f1f3f6; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; color: #9aa3b2; }
+  .ptop .r { margin-left: auto; display: flex; align-items: center; gap: 12px; color: #5b6475; }
+  .pwh { height: 30px; border-radius: 6px; background: #f1f3f6; padding: 0 10px; display: flex; align-items: center; gap: 22px; color: #334155; white-space: nowrap; }
+  .pbody .pmain { flex: 1; background: #f3f4f7; }
+  .pcrumb { font-size: 12.5px; color: #475569; margin-bottom: 10px; } .pcrumb a { color: #1f4fae; }
+  .pwrap { background: #fff; border-radius: 8px; padding: 16px 16px 20px; }
+  .pwrap > .h { font-size: 14.5px; font-weight: 600; } .pwrap .sub { color: #64748b; font-size: 12.5px; margin: 2px 0 12px; }
+  .pbanner { height: 92px; border-radius: 8px; background: linear-gradient(90deg, #1f3b2c, #3d5f45); color: #d9e6d3; display: grid; place-items: center; font-weight: 600; max-width: 780px; }
+  .ptools { display: flex; justify-content: space-between; max-width: 780px; margin: 14px 0 4px; }
+  .pin { height: 30px; border: 1px solid #e3e6ec; border-radius: 6px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; gap: 30px; color: #9aa3b2; min-width: 200px; }
+  .psec { margin: 14px 0 8px; } .psec b { display: block; font-size: 13.5px; } .psec small { color: #64748b; font-size: 12px; }
+  .pgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 188px)); gap: 10px; }
+  .ptile { display: flex; align-items: center; gap: 10px; border: 1px solid #eceef3; border-radius: 6px; padding: 10px; background: #fff; box-shadow: 0 1px 2px rgba(15,23,42,.05); min-height: 56px; }
+  .ptile.go { cursor: pointer; } .ptile.go:hover { border-color: #9db5e8; } .ptile.wide { grid-column: span 2; }
+  .ptile .lg { width: 34px; height: 34px; border-radius: 7px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 11px; flex: none; }
+  .ptile .nm { flex: 1; min-width: 0; } .ptile .nm b { display: block; font-weight: 600; font-size: 12.5px; } .ptile .nm small { display: block; color: #64748b; font-size: 11.5px; }
+  .okdot { width: 16px; height: 16px; border-radius: 50%; background: #16a34a; color: #fff; display: grid; place-items: center; flex: none; }
+  .mdl.pos-m { width: 900px; }
+  .plogo { width: 92px; height: 92px; border-radius: 50%; margin: 2px auto 14px; background: #fff1f2; color: #e11d48; display: grid; place-items: center; font-weight: 900; font-size: 26px; border: 4px solid #ffe4e6; }
+  .pnote { background: #fffbe6; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; font-size: 12.5px; color: #3f3f46; margin-bottom: 14px; }
+  .pnote.info { background: #eff6ff; border-color: #bfdbfe; }
+  .prow { display: grid; grid-template-columns: 140px 1fr auto; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .prow > .k { color: #334155; }
+  .rad { display: inline-flex; align-items: center; gap: 6px; margin-right: 18px; color: #94a3b8; white-space: nowrap; }
+  .rad i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1; display: inline-block; background: #f8fafc; position: relative; flex: none; }
+  .rad.on i::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: #94a3b8; }
+  .rad.act { color: #1f2937; cursor: pointer; } .rad.act i { background: #fff; } .rad.act.on i { border-color: #1677ff; } .rad.act.on i::after { background: #1677ff; }
+  .qm { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; border: 1px solid #f59e0b; color: #f59e0b; font-size: 9px; font-weight: 700; margin-left: 4px; vertical-align: 1px; }
+  .qm.b { border-color: #1677ff; color: #1677ff; }
+  .tagbox { min-height: 30px; border: 1px solid #e3e6ec; border-radius: 6px; background: #f5f6f8; padding: 3px 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .tagbox span { background: #fff; border: 1px solid #e3e6ec; border-radius: 4px; padding: 0 6px; font-size: 12px; color: #475569; }
+  .dlink { color: #dc2626; cursor: pointer; white-space: nowrap; }
+  .asw { display: inline-flex; align-items: center; justify-content: flex-end; width: 44px; height: 22px; border-radius: 11px; background: #d1d5db; position: relative; cursor: pointer; flex: none; font-size: 11px; color: #fff; padding: 0 7px 0 0; }
+  .asw::after { content: ""; position: absolute; left: 2px; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .2s; }
+  .asw.on { background: #1f4fae; justify-content: flex-start; padding: 0 0 0 8px; } .asw.on::after { left: 24px; }
+  .asw.lock { opacity: .5; cursor: not-allowed; }
+  .ffm .asw.on { background: #4e8ef7; }
+  .ptg { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+  .btn.pblue { background: #1f4fae; border-color: #1f4fae; color: #fff; }
+  /* F2 – FFM theo màn thật: header có nút trạng thái + lịch sử, các thẻ cài đặt, tab Sales… */
+  .mdl.xl { width: 1120px; }
+  .fx-h { display: flex; align-items: center; gap: 14px; padding: 16px 22px; border-bottom: 1px solid #f0f0f0; }
+  .fx-h .t { font-size: 18px; font-weight: 600; }
+  .fx-h .x { margin-left: auto; }
+  .sbtn { display: inline-flex; position: relative; }
+  .sbtn button { border: 0; color: #fff; font-size: 14px; padding: 6px 16px; cursor: pointer; }
+  .sbtn button + button { padding: 6px 10px; border-left: 1px solid rgba(255,255,255,.45); display: grid; place-items: center; }
+  .sbtn button:first-child { border-radius: 6px 0 0 6px; } .sbtn button:nth-child(2) { border-radius: 0 6px 6px 0; }
+  .sbtn.approved button { background: #1677ff; } .sbtn.pending button { background: #faad14; } .sbtn.removed button { background: #bfbfbf; }
+  .smenu { position: absolute; top: 38px; left: 0; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.14); padding: 4px; min-width: 170px; z-index: 5; }
+  .smenu a { display: block; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #1f2937; } .smenu a:hover { background: #f5f5f5; } .smenu a.red { color: #ff4d4f; }
+  .cbtn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #d9d9d9; display: grid; place-items: center; cursor: pointer; background: #fff; color: #333; }
+  .fbody { background: #f5f5f5; padding: 16px; display: grid; gap: 14px; border-radius: 0 0 10px 10px; }
+  .fcard { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; min-width: 0; }
+  .fcard > .ch { padding: 14px 18px; border-bottom: 1px solid #f0f0f0; font-size: 15px; font-weight: 600; }
+  .fcard > .cb { padding: 6px 18px 14px; }
+  .frow { display: grid; grid-template-columns: 170px 1fr; align-items: center; gap: 12px; padding: 8px 0; }
+  .fsw { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+  .fsw:last-child { border-bottom: 0; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fsel { border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; min-width: 420px; background: #fff; }
+  .fsel.dis { background: #f5f5f5; color: #555; min-width: 320px; display: inline-flex; justify-content: space-between; align-items: center; }
+  .ctabs { display: flex; gap: 28px; border-bottom: 1px solid #f0f0f0; padding: 0 18px; } .ctabs a { padding: 12px 0; color: #333; border-bottom: 2px solid transparent; } .ctabs a.on { color: #1677ff; border-color: #1677ff; }
+  .fchips { display: flex; gap: 6px; margin: 0 0 10px; flex-wrap: wrap; }
+  .fchips a { border: 1px solid #e5e7eb; border-radius: 999px; padding: 2px 10px; font-size: 12px; cursor: pointer; color: #475569; background: #fff; }
+  .fchips a.on { background: #e6f4ff; border-color: #91caff; color: #0958d9; }
+  .fchips sup { font-size: 10.5px; color: inherit; opacity: .8; }
+  .bulk { display: flex; align-items: center; gap: 10px; background: #e6f4ff; border: 1px solid #91caff; border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; font-size: 12.5px; }
+  table.ant tr.xrow td { background: #fafbfc; }
+  .ldet { display: grid; grid-template-columns: 1.1fr .9fr 1.4fr; gap: 16px; font-size: 12.5px; padding: 4px 0; }
+  .lmodal .ldet { grid-template-columns: 1fr 1fr; } .lmodal .ldet > div:first-child { display: none; }
+  .isteps { list-style: none; margin: 6px 0 0; padding: 0; }
+  .isteps li { display: flex; align-items: center; gap: 8px; padding: 3px 0; color: #94a3b8; }
+  .isteps li i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-style: normal; border: 1px solid #cbd5e1; flex: none; }
+  .isteps li.done { color: #1f2937; } .isteps li.done i { background: #52c41a; border-color: #52c41a; color: #fff; }
+  .isteps li.doing { color: #0958d9; } .isteps li.doing i { border-color: #91caff; }
+  .rlist { display: flex; flex-wrap: wrap; gap: 6px 0; margin: 4px 0 8px; }
+  .ack { display: flex; gap: 8px; align-items: center; margin-top: 10px; cursor: pointer; }
+  table.errtb { outline: 1px solid #ff4d4f; }
+  .impact { background: #fafafa; border: 1px solid #f0f0f0; border-radius: 6px; padding: 8px 12px; margin: 10px 0; }
+  .fsel.inv { border-color: #ff4d4f; }
+  .chg-list { margin: 0; padding-left: 18px; } .chg-list li { margin: 3px 0; }
+  table.t td .tag { margin: 1px 0; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>#193 Liên kết đa kho FFM – POS</div>
+  <nav class="nav">
+    <a href="#diem-chan">Điểm chặn</a><a href="#thay-doi">Thay đổi</a><a href="#trang-thai">Trạng thái</a><a href="#mockup-pos">Mockup POS</a><a href="#mockup-ffm">Mockup FFM</a><a href="#nhan">Nhãn, câu báo lỗi</a><a href="#cho-chot">Chờ chốt</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM ↔ POS · Mockup các màn thay đổi</div>
+  <h1>Liên kết đa kho FFM – POS</h1>
+  <p>Mỗi kho POS ghép với 1 kho FFM và có trạng thái riêng. Seller thêm hoặc ngừng từng kho trên POS. Admin FFM gán kho, duyệt, ngừng, đổi kho trên FFM mà không phải kết nối lại. Phiếu nhập, phiếu xuất, import đi theo đúng liên kết. Shop 1 kho chạy như hiện tại. Còn 2 câu lớn quyết định phạm vi: GIP có cần kho thứ 2 thật không, và PO có duyệt cho FFM giữ bảng liên kết không.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i193">ffm_dev #193</a></span>
+    <span class="chip">v0.4 · Cập nhật 12/11/2026</span>
+    <span class="chip">Theo issue v2 và bản BA trả lời dev 11/11/2026</span>
+    <span class="chip">Đối chiếu màn thật: POS Hoàtest ↔ PKE FFM (10/11/2026)</span>
+    <span class="chip">Bản nháp, chưa duyệt</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>18</b><span>điểm chặn và lưu ý, trong đó 2 điểm mới rà ngày 12/11</span></div>
+  <div class="kpi"><b>8</b><span>màn có thay đổi: 2 bên POS, 6 bên FFM</span></div>
+  <div class="kpi"><b>4</b><span>trạng thái của 1 liên kết kho</span></div>
+    <div class="kpi"><b>4</b><span>bên cần trả lời: GIP, PO, POS team, dev</span></div>
+</div>
+
+<section id="diem-chan">
+  <div class="sec-h"><span class="n">01</span><h2>Còn gì chặn Đa kho</h2><p>18 điểm chia 3 nhóm; số thứ tự giữ như file 16 điểm, thêm điểm 17 và 18</p></div>
+  <div class="card" style="padding:6px 10px"><table class="t"><thead><tr><th style="width:44px">#</th><th style="width:34%">Điểm</th><th>Xử lý trong #193</th><th style="width:22%">Trạng thái</th></tr></thead><tbody><tr><td colspan="4" style="background:var(--slate-bg);font-weight:700">A. Chặn trong code (9): code đang coi mỗi shop chỉ có 1 kho, không sửa thì kho thứ 2 chạy sai</td></tr><tr><td class="num" style="text-align:left">1</td><td>Shop chỉ có 1 ô kho FFM</td><td>Kiểu nối kho và bảng liên kết (F2)</td><td><span class="pill p-ok">Có mockup</span></td></tr><tr><td class="num" style="text-align:left">2</td><td>Duyệt là gán 1 kho FFM cho mọi kho POS</td><td>Gán kho và duyệt riêng từng liên kết (F2)</td><td><span class="pill p-ok">Có mockup</span></td></tr><tr><td class="num" style="text-align:left">4</td><td>Báo ngược về POS chỉ chứa 1 kho FFM</td><td>Gửi danh sách liên kết; POS xác nhận rồi mới nhận đơn</td><td><span class="pill p-mid">Dev xác nhận</span></td></tr><tr><td class="num" style="text-align:left">8</td><td>Nhận tồn từ POS tìm shop theo kho của shop</td><td>Tìm theo liên kết (shop POS + kho POS)</td><td><span class="pill p-mid">Dev xác nhận</span></td></tr><tr><td class="num" style="text-align:left">9</td><td>Khởi tạo dữ liệu chỉ chạy khi cả shop vừa duyệt</td><td>Khởi tạo riêng từng liên kết, trạng thái Đang khởi tạo (F2)</td><td><span class="pill p-ok">Có mockup</span> <span class="pill p-mid">Dev xác nhận</span></td></tr><tr><td class="num" style="text-align:left">11</td><td>Màn tạo phiếu nhập, phiếu xuất lấy kho của shop</td><td>Chọn kho POS trước, kho FFM tự điền (F3, F4)</td><td><span class="pill p-ok">Có mockup</span></td></tr><tr><td class="num" style="text-align:left">15</td><td>Import phiếu nhập kiểm kho POS theo kho của shop</td><td>Kiểm cặp kho theo bảng liên kết của FFM (F5)</td><td><span class="pill p-ok">Có mockup</span></td></tr><tr><td class="num" style="text-align:left">12</td><td>Phiếu xuất gửi sang SSC luôn ghi mã kho "GIP-PH"</td><td>Mã kho SSC theo từng kho FFM (F6)</td><td><span class="pill p-ok">Có mockup</span> <span class="pill p-bad">Chờ GIP: có dùng SSC?</span></td></tr><tr><td class="num" style="text-align:left">17</td><td>Đẩy số tồn FFM → POS theo từng cặp kho: lúc đổi kho, 1 kho POS nhận 2 số tồn ghi đè nhau</td><td>Số tồn gửi về kho POS lấy theo liên kết Đang chạy</td><td><span class="pill p-new">Mới</span> <span class="pill p-mid">Dev xác nhận</span></td></tr><tr><td colspan="4" style="background:var(--slate-bg);font-weight:700">B. Cần thiết kế thêm (5): code không sai, nhưng chưa có tính năng</td></tr><tr><td class="num" style="text-align:left">3</td><td>Bảng ghép kho nằm bên POS, FFM chỉ xem</td><td>FFM giữ bảng chuẩn, POS giữ bản sao</td><td><span class="pill p-bad">Chờ PO / tech lead</span></td></tr><tr><td class="num" style="text-align:left">5</td><td>Thêm, bớt kho phải ngắt rồi kết nối lại</td><td>+ Thêm kho, Ngừng từng liên kết (P1, F2)</td><td><span class="pill p-ok">Có mockup</span></td></tr><tr><td class="num" style="text-align:left">6</td><td>Trạng thái chỉ có ở cấp shop</td><td>4 trạng thái riêng cho từng liên kết</td><td><span class="pill p-ok">Có mockup</span></td></tr><tr><td class="num" style="text-align:left">7</td><td>FFM không kiểm kho của đơn</td><td>Shop Đa kho: từ chối theo liên kết, 3 câu báo lỗi (P2)</td><td><span class="pill p-ok">Có mockup</span></td></tr><tr><td class="num" style="text-align:left">10</td><td>Bản tin tồn không biết thuộc liên kết nào</td><td>Bản tin mang mã liên kết</td><td><span class="pill p-mid">Dev xác nhận</span></td></tr><tr><td colspan="4" style="background:var(--slate-bg);font-weight:700">C. Lưu ý nghiệp vụ (4): làm hay không tùy câu trả lời</td></tr><tr><td class="num" style="text-align:left">13</td><td>Tài khoản ĐVVC chọn theo shop</td><td>Địa chỉ người gửi theo kho của đơn; tài khoản ĐVVC theo kho tách issue riêng</td><td><span class="pill p-mid">Dev xác nhận</span> <span class="pill p-bad">Chờ GIP</span></td></tr><tr><td class="num" style="text-align:left">14</td><td>Giá ship thu seller và đối soát tính theo shop</td><td>Ngoài phạm vi; thêm cột Kho xuất nếu kế toán cần</td><td><span class="pill p-bad">Chờ GIP</span></td></tr><tr><td class="num" style="text-align:left">16</td><td>Nhân viên kho xem đơn theo shop, chưa theo kho</td><td>Ngoài phạm vi</td><td><span class="pill p-bad">Chờ vận hành GIP</span></td></tr><tr><td class="num" style="text-align:left">18</td><td>Phí dịch vụ FFM (Seller Service Fee) cài theo shop</td><td>Ngoài phạm vi nếu các kho cùng giá; khác giá thì tách issue</td><td><span class="pill p-new">Mới</span> <span class="pill p-bad">Chờ GIP</span></td></tr></tbody></table></div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="note n-red"><span class="ic">17</span><div><p><b>Mới: số tồn FFM đẩy về POS ghi đè nhau khi đổi kho</b></p>
+      <p>Khi shop bật dùng tồn FFM, FFM gửi về kho POS số tồn cuối cùng của từng cặp mẫu mã × kho POS × kho FFM. Đổi <b>Kho Nhà in</b> từ GIP Cebu sang GIP Davao: Cebu còn 40, Davao đang 0. Cả 2 số cùng gửi về Kho Nhà in, bản tới sau ghi đè bản trước, POS lúc thấy 40 lúc thấy 0.</p>
+      <p><b>Đề xuất:</b> số tồn gửi về 1 kho POS lấy theo liên kết Đang chạy; chưa có thì lấy liên kết Đã ngừng gần nhất. Tồn còn ở kho cũ không tính là bán được; vận hành tạo phiếu xuất để chuyển (F2 › Create export). Dev xác nhận trong code.</p></div></div>
+    <div class="note n-warn"><span class="ic">18</span><div><p><b>Mới: phí dịch vụ FFM cài theo shop</b></p>
+      <p>Seller Service Fee (phí xử lý đơn, lưu kho…) cài theo shop hoặc bảng giá dùng chung, không có điều kiện theo kho. Nếu GIP Manila và GIP Cebu tính phí khác nhau thì hiện không cài được.</p>
+      <p><b>Đề xuất:</b> hỏi GIP các kho có cùng biểu phí không. Cùng giá thì không cần làm gì; khác giá thì tách issue "phí theo kho".</p></div></div>
+  </div>
+  <p class="caption">Không chặn: tồn đã tách theo mẫu mã × kho POS × kho FFM; WMS (soạn, đóng gói, bàn giao) chạy theo kho của đơn; chứng từ đã tạo giữ kho riêng; mỗi đơn chỉ thuộc 1 kho POS nên chỉ vào 1 kho FFM. Nguồn: tài liệu ffm-knowledge bản 30/10/2026, góp ý của dev và agent FFM, màn thật ngày 10/11/2026.</p>
+</section>
+
+<section id="thay-doi">
+  <div class="sec-h"><span class="n">02</span><h2>Những gì thay đổi trên từng màn</h2><p>Shop 1 kho (<code>single</code>) giữ nguyên mọi màn, trừ nút Chuyển sang Đa kho</p></div>
+  <div class="card" style="padding:6px 10px">
+    <table class="t">
+      <thead><tr><th style="width:24%">Màn hình</th><th style="width:32%">Hiện tại</th><th>Thay đổi</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag t-green">POS</span> <b>Cấu hình › Giao vận › Đối tác Fulfillment</b><br><a href="#mockup-pos">Mockup P1</a></td>
+          <td>Thẻ đối tác chỉ có tên và trạng thái. Modal "Cấu hình kết nối FFM" có ô Kho hàng (nhiều kho hoặc All), bị khóa sau khi duyệt. Muốn đổi kho phải ngắt rồi kết nối lại.</td>
+          <td><ul class="chg-list"><li>Thẻ đối tác: thêm kiểu nối kho và tóm tắt liên kết.</li><li>Modal giữ bố cục màn thật (logo, thông báo, Loại kết nối, Kho hàng, các công tắc đồng bộ); thêm dòng <b>Kiểu nối kho</b>; với Đa kho, ô Kho hàng đổi thành bảng <b>Liên kết kho</b>: lọc theo trạng thái, địa chỉ kho, số đơn đang xử lý, tồn ở kho GIP, mở "Chi tiết" xem các bước khởi tạo và lịch sử.</li><li>Kết nối lần đầu và kết nối lại: chọn kiểu nối, chọn từng kho (kho cộng tác viên không chọn được); kết nối lại điền sẵn kho GIP cũ.</li><li>Kho bị GIP từ chối: hiện lý do và nút Gửi lại yêu cầu.</li><li>Thao tác <b>+ Thêm kho</b> (chọn nhiều kho), <b>Huỷ yêu cầu</b>, <b>Ngừng</b> (chọn lý do, tích xác nhận; hiện số đơn đang xử lý, số tồn), <b>Ngắt kết nối</b>.</li><li>Thông báo khóa: chỉ khóa loại kết nối và chế độ tồn, không khóa kho.</li><li>Shop 1 kho: hiện kho FFM nhận hàng và nút <b>Chuyển sang Đa kho</b>.</li></ul></td></tr>
+        <tr><td><span class="tag t-green">POS</span> <b>Bán hàng (Tạo đơn)</b><br><a href="#mockup-pos">Mockup P2</a></td>
+          <td>Chọn kho POS của đơn, tick "Gửi đơn sang {đối tác}". FFM ghi kho FFM theo giá trị POS gửi kèm.</td>
+          <td><ul class="chg-list"><li>Dưới ô tick: dòng trạng thái liên kết của kho đang chọn (kho FFM nhận hoặc lý do chưa gửi được).</li><li>Gửi lỗi: đơn vẫn lưu, báo "Chưa đẩy được đơn sang {đối tác}" kèm 1 trong 3 câu báo lỗi.</li></ul></td></tr>
+        <tr><td><span class="tag t-blue">FFM</span> <b>Setting › Shop</b> (danh sách)<br><a href="#mockup-ffm">Mockup F1</a></td>
+          <td>Cột Shop, Status, Courier Settings, Warehouse Staffs. Không thấy shop dùng kho nào.</td>
+          <td><ul class="chg-list"><li>Thêm cột <b>Warehouse link</b> (Single / Multiple) và <b>FFM warehouses</b> (các kho đang chạy, số liên kết chờ duyệt).</li></ul></td></tr>
+        <tr><td><span class="tag t-blue">FFM</span> <b>Chi tiết shop › Connection</b><br><a href="#mockup-ffm">Mockup F2</a></td>
+          <td>1 ô FFM warehouse, bắt buộc khi duyệt. Ô POS warehouse(s) chỉ xem. Duyệt là duyệt cả shop với 1 kho.</td>
+          <td><ul class="chg-list"><li>Shop Đa kho: bảng <b>Warehouse links</b> có lọc, tìm kiếm, cột người cập nhật; gán kho, <b>Approve</b>, <b>Reject</b> (có lý do) từng dòng; tích chọn nhiều dòng để gán kho và duyệt hàng loạt; bấm tên kho mở chi tiết liên kết.</li><li><b>Change warehouse</b>, <b>Stop</b>, <b>+ Add link</b> (thêm thay khách).</li><li>Duyệt shop phải có ít nhất 1 liên kết đã gán kho.</li><li>Giữ bố cục màn thật (Connection, Order sync, Inventory, Shipping &amp; returns, CSR &amp; conversation, tab Sales…). Trong thẻ Connection: thêm <b>Warehouse link</b> (Single / Multiple); shop Multiple thay 2 ô FFM warehouse, POS warehouse(s) bằng bảng liên kết.</li><li>Duyệt shop qua nút trạng thái (Pending › Approve) như hiện tại. Biểu tượng đồng hồ hiện thêm lịch sử liên kết kho. Shop 1 kho: thêm nút <b>Switch to multiple</b>.</li><li>Liên kết Stopped còn tồn: nút <b>Create export</b> mở sẵn phiếu xuất.</li></ul></td></tr>
+        <tr><td><span class="tag t-blue">FFM</span> <b>WMS › Purchase › New</b><br><a href="#mockup-ffm">Mockup F3</a></td>
+          <td>Chọn shop thì ô Warehouse tự điền kho của shop; POS Warehouse chọn trong mọi kho POS.</td>
+          <td><ul class="chg-list"><li>Chọn <b>POS warehouse trước</b>; Warehouse tự điền theo liên kết Active và khóa.</li><li>Chỉ liệt kê kho POS có liên kết Active.</li></ul></td></tr>
+        <tr><td><span class="tag t-blue">FFM</span> <b>WMS › Export › New</b><br><a href="#mockup-ffm">Mockup F4</a></td>
+          <td>Như phiếu nhập: kho FFM lấy theo kho của shop.</td>
+          <td><ul class="chg-list"><li>Như phiếu nhập, thêm: chọn được liên kết <b>Stopped còn tồn</b> để trả hàng, chuyển kho; không xuất quá số tồn còn lại.</li></ul></td></tr>
+        <tr><td><span class="tag t-blue">FFM</span> <b>Purchase › Import Excel</b><br><a href="#mockup-ffm">Mockup F5</a></td>
+          <td>Cột POS Warehouse ID được kiểm bằng cách hỏi POS danh sách kho POS theo kho của shop; kho thứ 2 báo "không tìm thấy".</td>
+          <td><ul class="chg-list"><li>Kiểm <b>cặp</b> kho POS ↔ kho FFM từng dòng theo bảng liên kết của FFM; sai báo lỗi ngay dòng đó.</li><li>Chỉ nhập các dòng hợp lệ.</li></ul></td></tr>
+        <tr><td><span class="tag t-blue">FFM</span> <b>Setting › Warehouse</b><br><a href="#mockup-ffm">Mockup F6</a></td>
+          <td>Không có mã kho SSC. Mọi phiếu xuất gửi sang SSC ghi "GIP-PH".</td>
+          <td><ul class="chg-list"><li>Thêm cột và ô nhập <b>SSC warehouse code</b> cho từng kho FFM; để trống thì dùng "GIP-PH" như cũ.</li><li>Chỉ làm nếu GIP xác nhận có dùng SSC (điểm 12).</li></ul></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">Không đổi giao diện: soạn hàng, đóng gói, bàn giao (chạy theo kho của đơn như hiện tại), đơn và chứng từ đã tạo. Import sản phẩm dùng cùng luật kiểm cặp kho như import phiếu nhập, không vẽ riêng.</p>
+</section>
+
+<section id="trang-thai">
+  <div class="sec-h"><span class="n">03</span><h2>Trạng thái của 1 liên kết kho</h2><p>Trạng thái shop giữ nguyên (Chờ duyệt / Đã duyệt / Đã gỡ), là trạng thái kết nối tổng</p></div>
+  <div class="pipe p4">
+    <div class="s"><b>1</b><br>Chờ duyệt <span class="tag t-gold">Pending</span><small>Seller hoặc Admin FFM vừa thêm; chưa gán kho FFM hoặc chưa duyệt</small></div>
+    <div class="s"><b>2</b><br>Đang khởi tạo <span class="tag t-blue">Initializing</span><small>Đã duyệt; chờ POS xác nhận, đẩy sản phẩm, tồn ban đầu, phiếu nhập chờ</small></div>
+    <div class="s"><b>3</b><br>Đang chạy <span class="tag t-green">Active</span><small>Nhận đơn, phiếu nhập, đồng bộ tồn</small></div>
+    <div class="s"><b>4</b><br>Đã ngừng <span class="tag t-gray">Stopped</span><small>Chặn đơn mới, phiếu nhập mới; đơn đang xử lý, hàng hoàn, tồn vẫn chạy</small></div>
+  </div>
+  <div class="card" style="margin-top:14px;padding:6px 10px">
+    <table class="t">
+      <thead><tr><th>Trạng thái</th><th>Nhận đơn mới, phiếu nhập mới</th><th>Tạo phiếu xuất</th><th>Đồng bộ tồn</th></tr></thead>
+      <tbody>
+        <tr><td>Chờ duyệt</td><td>Không</td><td>Không</td><td>Không</td></tr>
+        <tr><td>Đang khởi tạo</td><td>Không</td><td>Không</td><td>Chỉ dữ liệu khởi tạo</td></tr>
+        <tr><td>Đang chạy</td><td>Có</td><td>Có</td><td>Có</td></tr>
+        <tr><td>Đã ngừng</td><td>Không</td><td>Có, khi còn tồn</td><td>Có</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">Mỗi kho POS có tối đa 1 liên kết Đang chạy và 1 liên kết Chờ duyệt hoặc Đang khởi tạo. Nhờ vậy Đổi kho tạo được liên kết mới trong khi liên kết cũ vẫn chạy. Khi FFM quản tồn, số tồn gửi về kho POS lấy theo liên kết Đang chạy; chưa có thì theo liên kết Đã ngừng gần nhất (điểm 17).</p>
+</section>
+
+<section id="mockup-pos">
+  <div class="sec-h"><span class="n">04</span><h2>Mockup POS</h2><p>P1 Đối tác Fulfillment, P2 Bán hàng</p></div>
+  <p class="caption" style="margin:0 0 10px">Bấm thử theo từng shop (đổi shop ở góc phải trên): <b>An Nhiên</b> (Đa kho đang chạy): mở thẻ GIP Philippines, lọc theo trạng thái, bấm "Chi tiết" một dòng để xem các bước khởi tạo và lịch sử, + Thêm kho (chọn nhiều kho; Kho CTV không chọn được), Ngừng (phải chọn lý do và tích xác nhận), Ngắt kết nối rồi kết nối lại. <b>Hoa Mai</b> (chưa kết nối): bấm GIP Philippines ở mục Chưa kết nối, chọn kiểu nối và kho, Kết nối. <b>Bảo Ngọc</b> (1 kho): Chuyển sang Đa kho. <b>Gốm Xinh</b> (đã ngắt): kết nối lại. Bán hàng: đổi kho của đơn, bấm Lưu.</p>
+  <div class="proto pos" id="pPos">
+    <div class="bar"><i></i><i></i><i></i><span id="posUrl"></span></div>
+    <div class="papp">
+      <div class="prail" id="posRail"></div>
+      <div class="pbody">
+        <div class="ptop"><b id="posTitle">Đối tác Fulfillment</b><div class="psearch" id="posSearch">Tìm cấu hình</div>
+          <div class="r"><select class="in" id="posShopSel" aria-label="Mockup: đổi shop" title="Mockup: đổi shop"></select><span class="pwh" id="posWh">Tất cả các kho</span><span id="posIcons" style="display:flex;gap:12px"></span></div></div>
+        <div class="pmain" id="posMain"></div>
+      </div>
+    </div>
+    <div class="mwrap" id="posModal"><div class="mdl pos-m" id="posModalBox"></div></div>
+    <div class="mwrap top" id="posCfm"><div class="mdl sm" id="posCfmBox"></div></div>
+    <div class="toast" id="posToast"></div>
+  </div>
+  <p class="caption">P1 vẽ lại theo màn thật Cấu hình › Giao vận › Đối tác Fulfillment và modal "Cấu hình kết nối FFM" (POS, 10/11/2026); P2 là Bán hàng. Banner và logo đối tác chỉ là hình giữ chỗ. Viền tím nét đứt là phần mới. POS và FFM dùng chung dữ liệu: thêm kho ở đây thì sang FFM (mục 05) thấy liên kết Chờ duyệt, duyệt ở FFM thì POS cập nhật trạng thái.</p>
+</section>
+
+<section id="mockup-ffm">
+  <div class="sec-h"><span class="n">05</span><h2>Mockup FFM</h2><p>F1–F2 Setting › Shop, F3–F5 WMS, F6 Setting › Warehouse</p></div>
+  <p class="caption" style="margin:0 0 10px">Bấm thử: View An Nhiên › lọc trạng thái, tìm kho, bấm tên kho POS để xem chi tiết liên kết, gán kho rồi Approve, Reject (phải chọn lý do, seller thấy lý do trên POS), Change warehouse (xem trước điều sẽ xảy ra, có thể duyệt luôn), Stop (chọn lý do), + Add link (danh sách kho POS lấy từ POS, gán kho, duyệt luôn), biểu tượng đồng hồ (lọc lịch sử theo liên kết), nút Approved › Remove. Mộc Lan: tích chọn nhiều kho, gán kho hàng loạt, nút Pending › Approve. Bảo Ngọc: Switch to multiple. Shop do POS vừa kết nối hiện ở tab Pending. Purchase, Export, Import Excel, Warehouse như trước.</p>
+  <div class="proto ffm" id="pFfm">
+    <div class="bar"><i></i><i></i><i></i><span id="ffmUrl"></span></div>
+    <div class="app">
+      <div class="side">
+        <div class="brand"><b>F</b>Pancake FFM</div>
+        <div class="grp">Orders &amp; Telesale</div><a class="dim">Order</a>
+        <div class="grp">Warehouse (WMS)</div>
+        <a data-act="ffm-view" data-v="purchase" id="nav-purchase">Purchase</a>
+        <a data-act="ffm-view" data-v="import" id="nav-import">Purchase · Import Excel</a>
+        <a data-act="ffm-view" data-v="export" id="nav-export">Export</a>
+        <a class="dim">Inventory</a>
+        <div class="grp">Setting</div>
+        <a data-act="ffm-view" data-v="shop" id="nav-shop">Shop</a>
+        <a data-act="ffm-view" data-v="warehouse" id="nav-warehouse">Warehouse</a>
+        <a class="dim">Reconciliation Configuration</a>
+      </div>
+      <div class="main" id="ffmMain"></div>
+    </div>
+    <div class="mwrap" id="ffmModal"><div class="mdl xl" id="ffmModalBox"></div></div>
+    <div class="mwrap top" id="ffmCfm"><div class="mdl sm" id="ffmCfmBox"></div></div>
+    <div class="toast" id="ffmToast"></div>
+  </div>
+  <p class="caption">F1 là danh sách Shop, F2 vẽ lại theo màn thật chi tiết shop trên FFM (thẻ Connection, Order sync, Inventory, Shipping &amp; returns, CSR &amp; conversation, tab Sales…), F3 là Purchase › New, F4 là Export › New, F5 là Import Excel, F6 là Setting › Warehouse (chỉ làm nếu GIP dùng SSC). FFM giữ giao diện tiếng Anh như hiện tại; tên kho POS là tên seller đặt. Dữ liệu là dữ liệu mẫu.</p>
+</section>
+
+<section id="nhan">
+  <div class="sec-h"><span class="n">06</span><h2>Nhãn mới và câu báo lỗi</h2><p>Nhãn tiếng Anh trên FFM là đề xuất, cần người phụ trách UX writing FFM duyệt</p></div>
+  <div class="grid2">
+    <div class="card" style="padding:6px 10px">
+      <table class="t">
+        <thead><tr><th>Khái niệm</th><th>POS</th><th>FFM</th></tr></thead>
+        <tbody>
+          <tr><td>Kiểu nối</td><td>Kiểu nối kho: 1 kho / Đa kho</td><td>Warehouse link: Single / Multiple</td></tr>
+          <tr><td>Cặp kho</td><td>Liên kết kho</td><td>Warehouse links</td></tr>
+          <tr><td>Trạng thái</td><td>Chờ duyệt · Đang khởi tạo · Đang chạy · Đã ngừng</td><td>Pending · Initializing · Active · Stopped</td></tr>
+          <tr><td>Thêm</td><td>+ Thêm kho</td><td>+ Add link</td></tr>
+          <tr><td>Ngừng</td><td>Ngừng</td><td>Stop</td></tr>
+          <tr><td>Đổi kho FFM</td><td>—</td><td>Change warehouse</td></tr>
+          <tr><td>Chuyển kiểu nối</td><td>Chuyển sang Đa kho</td><td>Switch to multiple</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 8px"><b>Câu báo lỗi trên POS khi đơn không gửi được</b></p>
+      <ul class="clean">
+        <li><b>Chưa có liên kết:</b> "{Tên kho POS} chưa được liên kết với {đối tác}. Thêm kho trong cấu hình kết nối và chờ đối tác duyệt."</li>
+        <li><b>Chờ duyệt, Đang khởi tạo:</b> "{Tên kho POS} đang chờ {đối tác} duyệt liên kết. Đơn chưa gửi được."</li>
+        <li><b>Đã ngừng:</b> "{Tên kho POS} đã ngừng liên kết với {đối tác}. Đơn không được gửi sang fulfillment."</li>
+      </ul>
+      <p style="margin:12px 0 0;color:var(--ink2);font-size:13px">Shop Đa kho: FFM lấy kho FFM theo liên kết Đang chạy, không lấy kho của shop thay vào. Shop 1 kho: không chặn, FFM chỉ lưu log khi kho POS gửi kèm khác kho của shop.</p>
+    </div>
+  </div>
+</section>
+
+<section id="cho-chot">
+  <div class="sec-h"><span class="n">07</span><h2>Chờ chốt trước khi giao dev</h2><p>Mockup vẽ theo đề xuất của BA; đổi khi các câu dưới có câu trả lời khác</p></div>
+  <div class="grid2">
+    <div class="note n-warn"><span class="ic">!</span><div>
+      <p><b>GIP (câu 1):</b> kho POS nào nằm ở kho GIP nào; có dùng SSC không; các kho có khác vùng giao hàng, có hợp đồng ĐVVC riêng không; các kho có cùng biểu phí dịch vụ không. Mọi kho nằm chung 1 kho GIP thì dừng #193.</p>
+      <p><b>PO / tech lead (câu 3):</b> FFM giữ bảng liên kết chuẩn, POS giữ bản sao. <b>POS team (câu 12):</b> kho cộng tác viên có tham gia liên kết không.</p>
+    </div></div>
+    <div class="note n-info"><span class="ic">i</span><div>
+      <p><b>BA đề xuất, chờ dev đánh giá:</b></p>
+      <ul class="clean"><li>Đổi kho bằng liên kết mới chạy song song (F9 trong issue). Nếu khó: Ngừng rồi Thêm.</li><li>Shop 1 kho không chặn đơn, chỉ lưu log.</li><li>Phiếu xuất chọn được liên kết Đã ngừng còn tồn.</li><li>FFM lấy được toàn bộ kho POS của shop, để Admin FFM thêm liên kết thay khách.</li><li>Số tồn đẩy về POS lấy theo liên kết Đang chạy (điểm 17).</li></ul>
+    </div></div>
+  </div>
+</section>
+
+</div>
+<script>
+// Mockup: 1 bộ dữ liệu dùng chung cho POS (P1, P2) và FFM (F1–F5). Mỗi thao tác sửa dữ liệu rồi vẽ lại.
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const P = 'GIP Philippines';
+  const WH = { 'GIP Manila': 'MNL01', 'GIP Cebu': 'CEB01', 'GIP Davao': 'DVO01' };
+  const WHN = Object.keys(WH);
+  const PH = {"shopping-cart": "<path d=\"M230.14,58.87A8,8,0,0,0,224,56H62.68L56.6,22.57A8,8,0,0,0,48.73,16H24a8,8,0,0,0,0,16h18L67.56,172.29a24,24,0,0,0,5.33,11.27,28,28,0,1,0,44.4,8.44h45.42A27.75,27.75,0,0,0,160,204a28,28,0,1,0,28-28H91.17a8,8,0,0,1-7.87-6.57L80.13,152h116a24,24,0,0,0,23.61-19.71l12.16-66.86A8,8,0,0,0,230.14,58.87ZM104,204a12,12,0,1,1-12-12A12,12,0,0,1,104,204Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,200,204Zm4-74.57A8,8,0,0,1,196.1,136H77.22L65.59,72H214.41Z\"/>", "receipt": "<path d=\"M72,104a8,8,0,0,1,8-8h96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,104Zm8,40h96a8,8,0,0,0,0-16H80a8,8,0,0,0,0,16ZM232,56V208a8,8,0,0,1-11.58,7.15L192,200.94l-28.42,14.21a8,8,0,0,1-7.16,0L128,200.94,99.58,215.15a8,8,0,0,1-7.16,0L64,200.94,35.58,215.15A8,8,0,0,1,24,208V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Zm-16,0H40V195.06l20.42-10.22a8,8,0,0,1,7.16,0L96,199.06l28.42-14.22a8,8,0,0,1,7.16,0L160,199.06l28.42-14.22a8,8,0,0,1,7.16,0L216,195.06Z\"/>", "package": "<path d=\"M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z\"/>", "chart-bar": "<path d=\"M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z\"/>", "users": "<path d=\"M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z\"/>", "truck": "<path d=\"M255.42,117l-14-35A15.93,15.93,0,0,0,226.58,72H192V64a8,8,0,0,0-8-8H32A16,16,0,0,0,16,72V184a16,16,0,0,0,16,16H49a32,32,0,0,0,62,0h50a32,32,0,0,0,62,0h17a16,16,0,0,0,16-16V120A7.94,7.94,0,0,0,255.42,117ZM192,88h34.58l9.6,24H192ZM32,72H176v64H32ZM80,208a16,16,0,1,1,16-16A16,16,0,0,1,80,208Zm81-24H111a32,32,0,0,0-62,0H32V152H176v12.31A32.11,32.11,0,0,0,161,184Zm31,24a16,16,0,1,1,16-16A16,16,0,0,1,192,208Zm48-24H223a32.06,32.06,0,0,0-31-24V128h48Z\"/>", "gear": "<path d=\"M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z\"/>", "squares-four": "<path d=\"M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z\"/>", "bell": "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z\"/>", "clock-counter-clockwise": "<path d=\"M136,80v43.47l36.12,21.67a8,8,0,0,1-8.24,13.72l-40-24A8,8,0,0,1,120,128V80a8,8,0,0,1,16,0Zm-8-48A95.44,95.44,0,0,0,60.08,60.15C52.81,67.51,46.35,74.59,40,82V64a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H72a8,8,0,0,0,0-16H49c7.15-8.42,14.27-16.35,22.39-24.57a80,80,0,1,1,1.66,114.75,8,8,0,1,0-11,11.64A96,96,0,1,0,128,32Z\"/>", "user-circle": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z\"/>", "magnifying-glass": "<path d=\"M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z\"/>", "caret-down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z\"/>", "x": "<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "check": "<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>", "warning": "<path d=\"M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z\"/>", "storefront": "<path d=\"M232,96a7.89,7.89,0,0,0-.3-2.2L217.35,43.6A16.07,16.07,0,0,0,202,32H54A16.07,16.07,0,0,0,38.65,43.6L24.31,93.8A7.89,7.89,0,0,0,24,96h0v16a40,40,0,0,0,16,32v72a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V144a40,40,0,0,0,16-32V96ZM54,48H202l11.42,40H42.61Zm50,56h48v8a24,24,0,0,1-48,0Zm-16,0v8a24,24,0,0,1-35.12,21.26,7.88,7.88,0,0,0-1.82-1.06A24,24,0,0,1,40,112v-8ZM200,208H56V151.2a40.57,40.57,0,0,0,8,.8,40,40,0,0,0,32-16,40,40,0,0,0,64,0,40,40,0,0,0,32,16,40.57,40.57,0,0,0,8-.8Zm4.93-75.8a8.08,8.08,0,0,0-1.8,1.05A24,24,0,0,1,168,112v-8h48v8A24,24,0,0,1,204.93,132.2Z\"/>", "list-checks": "<path d=\"M224,128a8,8,0,0,1-8,8H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128ZM128,72h88a8,8,0,0,0,0-16H128a8,8,0,0,0,0,16Zm88,112H128a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16ZM82.34,42.34,56,68.69,45.66,58.34A8,8,0,0,0,34.34,69.66l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,82.34,42.34Zm0,64L56,132.69,45.66,122.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Zm0,64L56,196.69,45.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z\"/>", "arrows-left-right": "<path d=\"M213.66,181.66l-32,32a8,8,0,0,1-11.32-11.32L188.69,184H48a8,8,0,0,1,0-16H188.69l-18.35-18.34a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,213.66,181.66Zm-139.32-64a8,8,0,0,0,11.32-11.32L67.31,88H208a8,8,0,0,0,0-16H67.31L85.66,53.66A8,8,0,0,0,74.34,42.34l-32,32a8,8,0,0,0,0,11.32Z\"/>", "sidebar-simple": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,56H80V200H40ZM216,200H96V56H216V200Z\"/>", "info": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>"};
+  const ic = (n, z = 18) => `<svg viewBox="0 0 256 256" width="${z}" height="${z}" fill="currentColor" aria-hidden="true">${PH[n] || ''}</svg>`;
+  const qm = (b) => `<span class="qm${b ? ' b' : ''}">?</span>`;
+  const asw = (on, act, extra = '') => `<span class="asw${on ? ' on' : ''}${act ? '' : ' lock'}" role="switch" aria-checked="${!!on}"${act ? ` data-act="${act}" ${extra}` : ''}>${on ? 'On' : 'Off'}</span>`;
+  const rad = (on, label, act) => `<span class="rad${on ? ' on' : ''}${act ? ' act' : ''}"${act ? ` data-act="${act}"` : ''}><i></i>${label}</span>`;
+  const WHS = [{ n: 'GIP Manila', addr: 'Binondo, Metro Manila', ssc: 'GIP-PH' }, { n: 'GIP Cebu', addr: 'Mandaue, Cebu', ssc: '' }, { n: 'GIP Davao', addr: 'Davao City', ssc: '' }];
+  const whLabel = (w) => (w ? `${WH[w]} - ${w}` : '');
+  const escA = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let nid = 50, ordNo = 261101;
+  const shops = [
+    { key: 'an', name: 'An Nhiên', pos: '100245', ffm: '901', type: 'multiple', st: 'approved', inv: true,
+      posWhs: ['Kho Shopee', 'Kho TikTok', 'Kho Nhà in', 'Kho Hàng lỗi', 'Kho Lazada', 'Kho Sự kiện'],
+      links: [
+        { id: 1, pos: 'Kho Shopee', ffm: 'GIP Manila', st: 'active', open: 3, stock: 120 },
+        { id: 2, pos: 'Kho TikTok', ffm: 'GIP Manila', st: 'active', open: 1, stock: 80 },
+        { id: 3, pos: 'Kho Nhà in', ffm: 'GIP Cebu', st: 'active', open: 0, stock: 40 },
+        { id: 4, pos: 'Kho Hàng lỗi', ffm: '', st: 'pending', open: 0, stock: 0 },
+        { id: 5, pos: 'Kho Sự kiện', ffm: 'GIP Manila', st: 'stopped', open: 0, stock: 25 },
+      ],
+      hist: [['10/11 15:40', 'Admin GIP', 'Stopped Kho Sự kiện → GIP Manila'], ['08/11 10:12', 'Seller', 'Requested Kho Hàng lỗi'],
+        ['05/11 09:30', 'Admin GIP', 'Approved Kho Shopee, Kho TikTok → GIP Manila; Kho Nhà in → GIP Cebu']], orders: [] },
+    { key: 'moc', name: 'Mộc Lan', pos: '100512', ffm: '902', type: 'multiple', st: 'pending',
+      posWhs: ['Kho mặc định', 'Kho Shopee', 'Kho TikTok'],
+      links: [
+        { id: 6, pos: 'Kho mặc định', ffm: '', st: 'pending', open: 0, stock: 0 },
+        { id: 7, pos: 'Kho Shopee', ffm: '', st: 'pending', open: 0, stock: 0 },
+        { id: 8, pos: 'Kho TikTok', ffm: '', st: 'pending', open: 0, stock: 0 },
+      ],
+      hist: [['11/11 09:05', 'Seller', 'Requested connection: Multiple, 3 POS warehouses']], orders: [] },
+    { key: 'bao', name: 'Bảo Ngọc', pos: '100733', ffm: '903', type: 'single', st: 'approved', ffmWh: 'GIP Manila',
+      posWhs: ['Kho mặc định', 'Kho Online', 'Kho Sỉ'], links: [],
+      hist: [['02/11 14:20', 'Admin GIP', 'Approved connection, FFM warehouse GIP Manila']], orders: [] },
+    { key: 'gom', name: 'Gốm Xinh', pos: '100198', ffm: '880', type: 'single', st: 'removed', ffmWh: 'GIP Cebu',
+      posWhs: ['Kho mặc định'], links: [], hist: [['20/10 08:15', 'Seller', 'Disconnected']], orders: [] },
+  ];
+  const POSW = { 'Kho Shopee': ['PW-1021', 'Tondo, Manila'], 'Kho TikTok': ['PW-1022', 'Tondo, Manila'], 'Kho Nhà in': ['PW-1030', 'Mandaue, Cebu'], 'Kho Hàng lỗi': ['PW-1031', 'Tondo, Manila'],
+    'Kho Lazada': ['PW-1040', 'Pasig, Metro Manila'], 'Kho Sự kiện': ['PW-1041', 'Makati, Metro Manila'], 'Kho mặc định': ['PW-1001', 'Quezon City, Metro Manila'],
+    'Kho Online': ['PW-1002', 'Quezon City, Metro Manila'], 'Kho Sỉ': ['PW-1003', 'Caloocan, Metro Manila'], 'Kho Bán lẻ': ['PW-1004', 'Lapu-Lapu, Cebu'], 'Kho CTV': ['PW-1099', 'Kho của shop cộng tác viên', 1] };
+  const posw = (w) => { const x = POSW[w] || ['PW-0000', '—']; return { code: x[0], addr: x[1], ctv: !!x[2] }; };
+  const whAddr = (w) => (WHS.find((x) => x.n === w) || {}).addr || '';
+  const STEPS = [['POS xác nhận cấu hình', 'POS confirmed'], ['Đồng bộ sản phẩm', 'Products synced'], ['Tồn ban đầu', 'Initial stock'], ['Phiếu nhập đang chờ', 'Pending purchases']];
+  const STOPR = { pause: ['Tạm ngừng bán ở kho này', 'Seller paused'], count: ['Kiểm kê kho', 'Inventory count'], seller: ['Seller yêu cầu', 'Seller request'], move: ['Chuyển kho', 'Moving warehouse'],
+    conn: ['Ngắt kết nối', 'Connection removed'], repl: ['Đã có liên kết mới thay thế', 'Replaced by new link'], other: ['Khác', 'Other'] };
+  const REJR = { full: ['Kho GIP hết chỗ', 'Warehouse is full'], goods: ['Hàng không phù hợp với kho GIP', 'Goods not accepted at this warehouse'], info: ['Thiếu thông tin kho POS', 'Missing POS warehouse info'], other: ['Khác', 'Other'] };
+  const EV = { req: ['Seller yêu cầu liên kết', 'Requested by seller'], add: ['Admin GIP thêm thay seller', 'Added on behalf of seller'], appr: ['Duyệt, kho GIP: {x}', 'Approved to {x}'],
+    init: ['Khởi tạo xong, bắt đầu nhận đơn', 'Initialized, Active'], stop: ['Ngừng: {x}', 'Stopped: {x}'], assign: ['Điền sẵn kho GIP cũ: {x}', 'Prefilled previous warehouse {x}'],
+    repl: ['Đổi kho, thay cho liên kết → {x}', 'Change warehouse, replaces link to {x}'], conv: ['Tạo khi chuyển sang Đa kho', 'Created when switching to multiple'] };
+  const ADM = 'Admin GIP · Lan';
+  const evText = (e, lang) => { let v = e[3] || ''; if (e[2] === 'stop') v = (STOPR[v] || [v, v])[lang]; return EV[e[2]][lang].replace('{x}', v); };
+  const rad2 = (on, label, act, k) => `<span class="rad act${on ? ' on' : ''}" data-act="${act}" data-r="${k}"><i></i>${label}</span>`;
+  function seed(l, o) { return Object.assign(l, { by: 'Seller', at: '04/11 16:20', step: 4, h: [] }, o); }
+  {
+    const an = shops[0], L = an.links, A = { apBy: ADM, apAt: '05/11 09:30', actAt: '05/11 09:32' };
+    const done = (w) => [['05/11 09:32', 'System', 'init'], ['05/11 09:30', ADM, 'appr', w], ['04/11 16:20', 'Seller', 'req']];
+    seed(L[0], { ...A, h: done('GIP Manila') }); seed(L[1], { ...A, h: done('GIP Manila') }); seed(L[2], { ...A, h: done('GIP Cebu') });
+    seed(L[3], { at: '08/11 10:12', step: 0, h: [['08/11 10:12', 'Seller', 'req']] });
+    seed(L[4], { ...A, stBy: ADM, stAt: '10/11 15:40', reason: 'count', h: [['10/11 15:40', ADM, 'stop', 'count'], ...done('GIP Manila')] });
+    an.posWhs.push('Kho CTV'); an.rejects = [];
+    shops[1].links.forEach((l) => seed(l, { at: '11/11 09:05', step: 0, h: [['11/11 09:05', 'Seller', 'req']] }));
+    shops.forEach((s) => (s.rejects = s.rejects || []));
+    shops.push({ key: 'hoa', name: 'Hoa Mai', pos: '100861', ffm: '', type: 'multiple', st: 'none', posWhs: ['Kho mặc định', 'Kho Online', 'Kho Bán lẻ', 'Kho CTV'], links: [], hist: [], orders: [], rejects: [] });
+  }
+  const IMPORT = [
+    { pos: 'Kho Nhà in', ffm: 'GIP Cebu', sku: 'SO-TAY-A5', qty: 100 },
+    { pos: 'Kho Shopee', ffm: 'GIP Cebu', sku: 'AT-TRANG-M', qty: 50 },
+    { pos: 'Kho Lazada', ffm: 'GIP Manila', sku: 'TUI-CV-01', qty: 30 },
+    { pos: 'Kho TikTok', ffm: 'GIP Manila', sku: 'AT-DEN-L', qty: 40 },
+  ];
+  const ui = {
+    posConn: null, posFilter: 'all', posExp: [], ffmLF: 'all', ffmLQ: '', ffmSel: [],
+    posShop: 'an', posView: 'partner', posModal: false, posAdding: false, posAddErr: false, posCfm: null, posErr: '', ordWh: {}, ordSend: true,
+    posTg: { auto: true, mkt: true, conv: true }, ffmMenu: false, ffmTg: { auto: true, mkt: true, sort: 'new', ret: false, zero: false, csr: false, pconv: false, fconv: false },
+    ffmView: 'shop', ffmTab: 'all', ffmQ: '', ffmOpen: null, ffmAdding: false, ffmCfm: null,
+    purchase: { shop: 'an', pos: '', qty: '', err: {}, done: '' }, export: { shop: 'an', pos: '', qty: '', err: {}, done: '' },
+    imp: { checked: false, done: false },
+  };
+  const VI = { pending: ['Chờ duyệt', 't-gold'], init: ['Đang khởi tạo', 't-blue'], active: ['Đang chạy', 't-green'], stopped: ['Đã ngừng', 't-gray'] };
+  const EN = { pending: ['Pending', 't-gold'], init: ['Initializing', 't-blue'], active: ['Active', 't-green'], stopped: ['Stopped', 't-gray'] };
+  const tag = (m, st) => `<span class="tag ${m[st][1]}">${m[st][0]}</span>`;
+  const byKey = (k) => shops.find((s) => s.key === k);
+  const findLink = (id) => { for (const s of shops) { const l = s.links.find((x) => x.id === +id); if (l) return [s, l]; } return [null, null]; };
+  const activeOf = (s, w) => s.links.find((l) => l.pos === w && l.st === 'active');
+  const waitingOf = (s, w) => s.links.find((l) => l.pos === w && (l.st === 'pending' || l.st === 'init'));
+  const stoppedOf = (s, w) => s.links.find((l) => l.pos === w && l.st === 'stopped');
+  const free = (s) => s.posWhs.filter((w) => !activeOf(s, w) && !waitingOf(s, w));
+  const now = () => { const d = new Date(), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const log = (s, who, t) => s.hist.unshift([now(), who, t]);
+  const focusLater = (id) => setTimeout(() => { const e = $(id); if (e) e.focus({ preventScroll: true }); }, 230);
+  function toast(w, text, bad) { const el = $(w + 'Toast'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => (el.className = 'toast'), 3000); }
+
+  /* ---------- POS ---------- */
+  function posSummary(s) {
+    if (s.st === 'pending') return `${s.type === 'multiple' ? 'Đa kho' : '1 kho'} · Đang chờ ${P} duyệt`;
+    if (s.type === 'single') return `1 kho · Mọi kho POS về ${s.ffmWh}`;
+    const c = (st) => s.links.filter((l) => l.st === st).length, out = [`${c('active')} kho đang chạy`];
+    if (c('pending') + c('init')) out.push(`${c('pending') + c('init')} chờ duyệt`);
+    if (c('stopped')) out.push(`${c('stopped')} đã ngừng`);
+    return 'Đa kho · ' + out.join(' · ');
+  }
+  function sendCheck(s, w) {
+    if (s.st !== 'approved') return { ok: false, wait: true, msg: `Kết nối ${P} đang chờ duyệt. Đơn chưa gửi được.` };
+    if (s.type === 'single') return { ok: true, ffm: s.ffmWh };
+    const a = activeOf(s, w); if (a) return { ok: true, ffm: a.ffm, link: a };
+    if (waitingOf(s, w)) return { ok: false, wait: true, msg: `${w} đang chờ ${P} duyệt liên kết. Đơn chưa gửi được.` };
+    if (stoppedOf(s, w)) return { ok: false, msg: `${w} đã ngừng liên kết với ${P}. Đơn không được gửi sang fulfillment.` };
+    return { ok: false, msg: `${w} chưa được liên kết với ${P}. Thêm kho trong cấu hình kết nối và chờ đối tác duyệt.` };
+  }
+  const sinceVI = (l) => l.st === 'pending' ? `Gửi ${l.at}` : l.st === 'init' ? `Bước ${Math.min(l.step + 1, 4)}/4` : l.st === 'active' ? `Từ ${l.actAt || l.apAt || l.at}` : `Từ ${l.stAt || ''}`;
+  const sinceEN = (l) => l.st === 'pending' ? `Requested ${l.at}` : l.st === 'init' ? `Step ${Math.min(l.step + 1, 4)} of 4` : `Since ${l.st === 'active' ? (l.actAt || l.apAt || l.at) : (l.stAt || '')}`;
+  function stepsHtml(l, lang) {
+    return `<ol class="isteps">${STEPS.map((t, i) => {
+      const st = l.st === 'pending' ? 'todo' : i < l.step ? 'done' : (i === l.step && l.st === 'init') ? 'doing' : 'todo';
+      return `<li class="${st}"><i>${st === 'done' ? ic('check', 10) : st === 'doing' ? '<span class="spin" style="margin:0"></span>' : i + 1}</i>${t[lang]}</li>`; }).join('')}</ol>`;
+  }
+  function linkInfo(l, lang) {
+    const L = lang ? ['Link ID', 'Requested by', 'Approved by', 'Stopped by', 'Stop reason', 'Initialization', 'Link history']
+      : ['Mã liên kết', 'Người yêu cầu', 'Người duyệt', 'Người ngừng', 'Lý do ngừng', 'Khởi tạo', 'Lịch sử liên kết'];
+    const row = (k, v) => (v ? `<div class="k">${k}</div><div>${v}</div>` : '');
+    return `<div class="ldet"><div class="kv" style="grid-template-columns:110px 1fr;align-content:start">${row(L[0], 'L-' + String(l.id).padStart(4, '0'))}${row(L[1], `${l.by} · ${l.at}`)}${row(L[2], l.apBy ? `${l.apBy} · ${l.apAt}` : '')}${row(L[3], l.stBy ? `${l.stBy} · ${l.stAt}` : '')}${row(L[4], l.reason ? STOPR[l.reason][lang] + (l.note ? ' – ' + escA(l.note) : '') : '')}</div>
+      <div><b>${L[5]}</b>${stepsHtml(l, lang)}</div>
+      <div><b>${L[6]}</b><ul class="hist">${l.h.map((e) => `<li><time>${e[0]}</time><b>${e[1]}</b><span>${evText(e, lang)}</span></li>`).join('') || '<li>—</li>'}</ul></div></div>`;
+  }
+  function posPartner(s) {
+    const con = s.st === 'approved' || s.st === 'pending';
+    const others = [['GIP Thailand', 'GIP', '#e11d48'], ['GIP Indonesia', 'GIP', '#e11d48'], ['AFG FFM Philippines', 'AFG', '#2f7d4f'], ['Glogex Fulfillment', 'GL', '#65a30d'],
+      ['AFG FFM Indonesia', 'AFG', '#2f7d4f'], ['AFG FFM Thailand', 'AFG', '#2f7d4f'], ['IFG FFM Philippines', 'IFG', '#1d4ed8']];
+    const gipTile = con ? '' : `<div class="ptile go" data-act="pos-connect-open"><div class="lg" style="background:#e11d48">GIP</div><div class="nm"><b>${P}</b>${s.st === 'removed' ? '<small>Đã ngắt kết nối · bấm để kết nối lại</small>' : ''}</div></div>`;
+    return `<div class="pcrumb">Cấu hình / Giao vận / <a>Đối tác Fulfillment</a></div><div class="pwrap"><div class="h">Đối tác Fulfillment</div>
+      <div class="sub">Danh sách đối tác Fulfillment uy tín giúp bạn yên tâm giao nhận hàng hóa an toàn, đúng hẹn</div>
+      <div class="pbanner">Banner giới thiệu đối tác</div>
+      <div class="ptools"><div class="pin">Tìm đơn vị vận chuyển ${ic('magnifying-glass', 14)}</div><div class="pin">Tất cả quốc gia ${ic('caret-down', 12)}</div></div>
+      <div class="psec"><b>Đã kết nối</b><small>Đối tác vận chuyển đã kết nối</small></div>
+      ${con ? `<div class="pgrid"><div class="ptile go wide" data-act="pos-open"><div class="lg" style="background:#e11d48">GIP</div><div class="nm"><b>${P}</b><small>1 tài khoản</small>
+        <small class="changed" style="display:inline-block;margin-top:4px;padding:0 4px;color:#1f4fae">${posSummary(s)}</small>${s.rejects.length ? `<small style="color:#cf1322">${s.rejects.length} kho bị từ chối</small>` : ''}</div>${s.st === 'approved' ? `<span class="okdot" title="Đã kết nối">${ic('check', 10)}</span>` : '<span class="tag t-gold">Chờ duyệt</span>'}</div></div>`
+        : '<div class="hint" style="margin:0 0 6px">Chưa kết nối đối tác nào.</div>'}
+      <div class="psec"><b>Chưa kết nối</b><small>Kết nối để dùng mạng lưới đối tác vận chuyển uy tín.</small></div>
+      <div class="pgrid">${gipTile}${others.map(([n, l, c]) => `<div class="ptile"><div class="lg" style="background:${c}">${l}</div><div class="nm"><b>${n}</b></div></div>`).join('')}</div></div>`;
+  }
+  const inPF = (l, f) => f === 'all' || (f === 'wait' ? l.st === 'pending' || l.st === 'init' : l.st === f);
+  function posLinks(s) {
+    const f = ui.posFilter, n = (k) => s.links.filter((l) => inPF(l, k)).length, list = s.links.filter((l) => inPF(l, f));
+    const rej = s.rejects.map((r) => `<div class="alert a-err" style="margin:0 0 8px">${P} từ chối liên kết <b>${r.pos}</b>: ${REJR[r.code][0]}${r.note ? ' – ' + escA(r.note) : ''} (${r.at}). <a class="lnk" data-act="pos-resend" data-w="${escA(r.pos)}">Gửi lại yêu cầu</a> · <a class="lnk" data-act="pos-rej-hide" data-w="${escA(r.pos)}">Ẩn</a></div>`).join('');
+    const act = (l) => l.st === 'pending' ? `<a class="lnk" data-act="pos-cancel" data-id="${l.id}">Huỷ yêu cầu</a>`
+      : l.st === 'init' ? '<span class="hint" style="margin:0"><span class="spin"></span>GIP đang khởi tạo</span>'
+      : l.st === 'active' ? `<a class="lnk red" data-act="pos-stop-ask" data-id="${l.id}">Ngừng</a>` : '<span class="hint" style="margin:0">—</span>';
+    const rows = list.map((l) => { const p = posw(l.pos), ex = ui.posExp.includes(l.id);
+      return `<tr${l.st === 'stopped' ? ' class="dim"' : ''}><td>${l.pos}<small>${p.code} · ${p.addr}</small></td>
+        <td>${l.ffm ? `${l.ffm}<small>${whAddr(l.ffm)}</small>` : '<span style="color:#d48806">Chờ GIP gán kho</span>'}</td>
+        <td>${tag(VI, l.st)}<small>${sinceVI(l)}</small></td><td class="num">${l.open}</td><td class="num">${l.stock}</td>
+        <td>${act(l)}<br><a class="lnk" data-act="pos-exp" data-id="${l.id}" style="font-size:12px">${ex ? 'Thu gọn ▴' : 'Chi tiết ▾'}</a></td></tr>${ex ? `<tr class="xrow"><td colspan="6">${linkInfo(l, 0)}</td></tr>` : ''}`; }).join('');
+    return `<div class="blk changed" style="margin-top:0">${rej}<div class="hd2"><b>Liên kết kho (${s.links.filter((l) => l.st !== 'stopped').length})</b>${s.st === 'removed' ? '' : '<button class="btn pri sm" data-act="pos-add-open">+ Thêm kho</button>'}</div>
+      <div class="fchips">${[['all', 'Tất cả'], ['active', 'Đang chạy'], ['wait', 'Chờ duyệt'], ['stopped', 'Đã ngừng']].map(([k, t]) => `<a class="${f === k ? 'on' : ''}" data-act="pos-filter" data-f="${k}">${t} <sup>${n(k)}</sup></a>`).join('')}</div>
+      <table class="ant"><thead><tr><th>Kho POS</th><th>Kho FFM (GIP)</th><th>Trạng thái</th><th class="num">Đơn đang xử lý</th><th class="num">Tồn ở kho GIP</th><th>Thao tác</th></tr></thead><tbody>
+      ${rows || '<tr><td colspan="6" style="text-align:center;color:#8c8c8c;padding:18px">Không có liên kết ở trạng thái này</td></tr>'}</tbody></table>
+      <div class="hint">Kho mới thêm chờ GIP gán kho GIP và duyệt; các kho đang chạy không bị gián đoạn. Ngừng có hiệu lực ngay. Kho cộng tác viên chưa hỗ trợ.</div></div>`;
+  }
+  function posConfig(s) {
+    const ap = s.st === 'approved', T = ui.posTg;
+    let h = `<div class="mh">Cấu hình kết nối FFM<div class="r"><button class="x" data-act="pos-close" aria-label="Đóng">×</button></div></div><div class="mb"><div class="plogo">GIP</div>`;
+    h += ap ? `<div class="pnote changed">Kết nối đã được duyệt. Loại kết nối, kiểu nối kho và chế độ tồn kho đã bị khóa. ${s.type === 'multiple' ? 'Kho hàng thêm hoặc ngừng ở bảng Liên kết kho, không cần ngắt kết nối.' : 'Muốn gửi hàng ở nhiều kho GIP, chọn Chuyển sang Đa kho.'}</div>`
+      : `<div class="pnote info">Kết nối đang chờ ${P} duyệt. ${s.type === 'multiple' ? 'GIP gán kho GIP cho từng kho POS rồi duyệt; kho chưa được duyệt chưa nhận đơn.' : 'GIP chọn kho GIP rồi duyệt.'}</div>`;
+    h += `<div class="prow"><div class="k">Loại kết nối:</div><div>${rad(true, 'Fulfillment' + qm())}${rad(false, 'Vận chuyển' + qm())}</div><a class="dlink" data-act="pos-disconnect">↻ Ngắt kết nối</a></div>
+      <div class="prow changed" style="padding:2px 0"><div class="k">Kiểu nối kho:</div><div>${rad(s.type === 'single', '1 kho')}${rad(s.type === 'multiple', 'Đa kho')}${qm()}</div><div>${ap && s.type === 'single' ? '<button class="btn sm" data-act="pos-convert-ask">Chuyển sang Đa kho</button>' : ''}</div></div>`;
+    if (s.type === 'single') h += `<div class="prow"><div class="k">Kho hàng:</div><div class="tagbox"><span>All</span></div><div></div></div>
+      <div class="prow changed" style="padding:2px 0"><div class="k">Kho FFM nhận hàng:</div><div>${s.ffmWh ? `<b>${s.ffmWh}</b> <span class="hint" style="display:inline">${whAddr(s.ffmWh)} · GIP chọn lúc duyệt; mọi kho POS về kho này</span>` : '<span style="color:#d48806">Chờ GIP chọn kho</span>'}</div><div></div></div>`;
+    else h += `<div class="prow" style="align-items:start"><div class="k" style="padding-top:12px">Kho hàng:</div><div style="grid-column:span 2">${posLinks(s)}</div></div>`;
+    h += `<div class="ptg">${asw(T.auto, 'pos-tg', 'data-k="auto"')}Tự động đồng bộ đơn hàng ${qm()}</div>
+      <div class="ptg">${asw(T.mkt, 'pos-tg', 'data-k="mkt"')}Đồng bộ đơn sàn ${qm()}</div>
+      <div class="ptg">${asw(!!s.inv)}Sử dụng tồn kho trên FFM ${qm()}</div>
+      <div class="ptg">${asw(T.conv, 'pos-tg', 'data-k="conv"')}Cho phép đồng bộ hội thoại qua FFM ${qm()}<span style="width:28px"></span>${asw(false)}FFM cho phép POS đồng bộ hội thoại ${qm()}</div>`;
+    return h + `</div><div class="mf"><button class="btn" data-act="pos-close">Hủy</button><button class="btn pblue" data-act="pos-ok">Đồng ý</button></div>`;
+  }
+  function posConnect(s) {
+    const c = ui.posConn, re = s.st === 'removed';
+    const prev = (w) => { const l = s.links.filter((x) => x.pos === w && x.ffm).pop(); return l ? l.ffm : ''; };
+    const avail = s.posWhs.filter((w) => !posw(w).ctv), all = avail.length > 0 && avail.every((w) => c.sel.includes(w));
+    const rows = s.posWhs.map((w) => { const p = posw(w), on = c.sel.includes(w), pv = c.type === 'multiple' ? prev(w) : '';
+      return `<tr${p.ctv ? ' class="dim"' : ''}><td style="width:34px"><input type="checkbox" data-chg="conn-w" data-w="${escA(w)}"${on ? ' checked' : ''}${p.ctv ? ' disabled' : ''} aria-label="Chọn ${escA(w)}"></td>
+        <td>${w}<small>${p.code}</small></td><td>${p.addr}</td><td>${p.ctv ? '<span class="hint" style="margin:0">Kho cộng tác viên chưa hỗ trợ</span>' : pv ? `<span class="tag t-blue">Điền sẵn ${pv}</span>` : '—'}</td></tr>`; }).join('');
+    return `<div class="mh">Cấu hình kết nối FFM<div class="r"><button class="x" data-act="pos-close" aria-label="Đóng">×</button></div></div><div class="mb"><div class="plogo">GIP</div>
+      <div class="pnote info">${re ? `Shop đã ngắt kết nối ${P}. Kết nối lại phải chờ GIP duyệt lại.${c.type === 'multiple' ? ' Kho đã từng liên kết được điền sẵn kho GIP cũ để GIP duyệt nhanh.' : ''}` : `Sau khi bấm Kết nối, ${P} duyệt kết nối. Đơn chỉ gửi sang GIP sau khi được duyệt.`}</div>
+      <div class="prow"><div class="k">Loại kết nối:</div><div>${rad(true, 'Fulfillment' + qm(), 'pos-noop')}${rad(false, 'Vận chuyển' + qm())}</div><div></div></div>
+      <div class="prow changed" style="padding:2px 0"><div class="k">Kiểu nối kho:</div><div>${rad(c.type === 'single', '1 kho', 'pos-conn-single')}${rad(c.type === 'multiple', 'Đa kho', 'pos-conn-multi')}</div><div></div></div>
+      <div class="hint changed" style="margin:-4px 0 12px 150px;padding:4px 6px">${c.type === 'single' ? 'Mọi kho đã chọn gửi hàng về 1 kho GIP. GIP chọn kho lúc duyệt.' : 'Mỗi kho đã chọn là 1 liên kết riêng. GIP gán kho GIP cho từng kho và duyệt riêng; kho chưa duyệt chưa nhận đơn.'}</div>
+      <div class="prow" style="align-items:start"><div class="k" style="padding-top:8px">Kho hàng:</div><div style="grid-column:span 2">
+        <table class="ant${c.err ? ' errtb' : ''}"><thead><tr><th><input type="checkbox" data-chg="conn-all"${all ? ' checked' : ''} aria-label="Chọn tất cả"></th><th>Kho POS</th><th>Địa chỉ</th><th>Ghi chú</th></tr></thead><tbody>${rows}</tbody></table>
+        ${c.err ? '<div class="ferr">Chọn ít nhất 1 kho hàng</div>' : `<div class="hint">Đã chọn ${c.sel.length} kho.</div>`}</div></div>
+      <div class="ptg">${asw(ui.posTg.auto, 'pos-tg', 'data-k="auto"')}Tự động đồng bộ đơn hàng ${qm()}</div><div class="ptg">${asw(ui.posTg.mkt, 'pos-tg', 'data-k="mkt"')}Đồng bộ đơn sàn ${qm()}</div>
+      <div class="ptg">${asw(c.inv, 'pos-conn-inv')}Sử dụng tồn kho trên FFM ${qm()}</div></div>
+      <div class="mf"><button class="btn" data-act="pos-close">Hủy</button><button class="btn pblue" data-act="pos-connect">Kết nối</button></div>`;
+  }
+  function posConfirm(s) {
+    const c = ui.posCfm;
+    if (c.kind === 'stop') {
+      const [, l] = findLink(c.id);
+      return `<div class="mh">Ngừng liên kết ${l.pos} → ${l.ffm}?</div><div class="mb"><div class="impact">Còn <b>${l.open}</b> đơn đang xử lý và <b>${l.stock}</b> sản phẩm tồn ở ${l.ffm}.</div>
+        <ul class="chg-list"><li>Đơn mới và phiếu nhập mới từ ${l.pos} không gửi sang ${P} nữa.</li><li>Đơn đang xử lý chạy tiếp, hàng hoàn vẫn nhận, tồn vẫn đồng bộ.</li><li>Tồn còn lại: GIP tạo phiếu xuất để trả hàng hoặc chuyển kho.</li></ul>
+        <label class="lbl" style="margin-top:10px">Lý do <em>*</em></label><div class="rlist">${['pause', 'move', 'other'].map((k) => rad2(c.r === k, STOPR[k][0], 'pos-r', k)).join('')}</div>
+        <input class="in w" data-in="pos-note" placeholder="Ghi chú cho GIP (không bắt buộc)" value="${escA(c.note)}" aria-label="Ghi chú">
+        <label class="ack"><input type="checkbox" data-chg="pos-ack"${c.ack ? ' checked' : ''}> Tôi hiểu đơn mới từ ${l.pos} sẽ không gửi được sang ${P}</label>${c.err ? `<div class="ferr">${c.err}</div>` : ''}</div>
+        <div class="mf"><button class="btn" data-act="pos-cfm-cancel">Huỷ</button><button class="btn danger fill" data-act="pos-stop" data-id="${l.id}">Ngừng liên kết</button></div>`;
+    }
+    if (c.kind === 'add') {
+      const rows = s.posWhs.map((w) => { const p = posw(w), a = activeOf(s, w), wt = waitingOf(s, w), sp = stoppedOf(s, w), dis = p.ctv || a || wt, on = c.sel.includes(w);
+        const stt = p.ctv ? 'Kho cộng tác viên chưa hỗ trợ' : a ? `Đang chạy → ${a.ffm}` : wt ? 'Đang chờ duyệt' : sp ? `Đã ngừng (${sp.ffm}) · thêm lại sẽ chờ duyệt` : 'Chưa liên kết';
+        return `<tr${dis ? ' class="dim"' : ''}><td style="width:34px"><input type="checkbox" data-chg="pos-add-w" data-w="${escA(w)}"${on ? ' checked' : ''}${dis ? ' disabled' : ''} aria-label="Chọn ${escA(w)}"></td><td>${w}<small>${p.code}</small></td><td>${p.addr}</td><td>${stt}</td></tr>`; }).join('');
+      return `<div class="mh">Thêm kho vào kết nối ${P}</div><div class="mb"><p>Mỗi kho được gửi thành 1 yêu cầu liên kết. GIP gán kho GIP và duyệt; các kho đang chạy không bị ảnh hưởng.</p>
+        <table class="ant${c.err ? ' errtb' : ''}"><thead><tr><th></th><th>Kho POS</th><th>Địa chỉ</th><th>Tình trạng</th></tr></thead><tbody>${rows}</tbody></table>${c.err ? '<div class="ferr">Chọn kho POS cần thêm</div>' : ''}</div>
+        <div class="mf"><button class="btn" data-act="pos-cfm-cancel">Huỷ</button><button class="btn pblue" data-act="pos-add">Gửi yêu cầu${c.sel.length ? ` (${c.sel.length})` : ''}</button></div>`;
+    }
+    if (c.kind === 'disc') return `<div class="mh">Ngắt kết nối ${P}?</div><div class="mb"><ul class="chg-list"><li>Mọi kho đang chạy chuyển sang Đã ngừng; yêu cầu đang chờ duyệt bị huỷ.</li><li>Đơn mới không gửi sang ${P}; đơn đang xử lý chạy tiếp, hàng hoàn vẫn nhận.</li><li>Kết nối lại sau này phải chờ GIP duyệt lại.</li></ul></div>
+      <div class="mf"><button class="btn" data-act="pos-cfm-cancel">Huỷ</button><button class="btn danger fill" data-act="pos-disc">Ngắt kết nối</button></div>`;
+    return `<div class="mh">Chuyển sang Đa kho?</div><div class="mb"><p>Mỗi kho POS (${s.posWhs.filter((w) => !posw(w).ctv).length} kho) thành 1 liên kết Đang chạy, cùng về ${s.ffmWh}. Đơn và tồn chạy như cũ.</p><p>Sau đó GIP đổi được kho GIP cho từng kho POS. Không chuyển ngược về 1 kho được.</p></div>
+      <div class="mf"><button class="btn" data-act="pos-cfm-cancel">Huỷ</button><button class="btn pri" data-act="pos-convert">Chuyển sang Đa kho</button></div>`;
+  }
+  function posOrder(s) {
+    const w = ui.ordWh[s.key] || s.posWhs[0], r = sendCheck(s, w);
+    const line = !ui.ordSend || ui.posErr ? '' : r.ok ? `<div class="lkline lk-ok changed">${s.type === 'single' ? 'Mọi kho POS' : w} → ${r.ffm} (GIP)</div>`
+      : `<div class="lkline ${r.wait ? 'lk-wait' : 'lk-bad'} changed">${r.msg}</div>`;
+    const orders = s.orders.length ? `<div class="pcard" style="margin-top:12px"><b>Đơn vừa tạo</b><table class="ant"><thead><tr><th>Mã đơn</th><th>Kho POS</th><th>Gửi sang ${P}</th></tr></thead><tbody>
+      ${s.orders.map((o) => `<tr><td>#${o.no}</td><td>${o.wh}</td><td>${o.ok ? `<span class="tag t-green">Đã gửi · ${o.ffm}</span>` : o.skip ? '<span class="tag t-gray">Không gửi</span>' : '<span class="tag t-red">Chưa gửi được</span>'}</td></tr>`).join('')}</tbody></table></div>` : '';
+    return `<div class="crumb">Bán hàng › Tạo đơn</div><div class="ord"><div class="col">
+      <div class="pcard"><div class="hd2"><b>Sản phẩm</b><select class="in" id="ordWh" aria-label="Kho của đơn">${s.posWhs.map((x) => `<option${x === w ? ' selected' : ''}>${x}</option>`).join('')}</select></div>
+        <table class="ant"><thead><tr><th>Sản phẩm</th><th class="num">SL</th><th class="num">Thành tiền</th></tr></thead><tbody>
+        <tr><td>Áo thun basic trắng<small>AT-TRANG-M</small></td><td class="num">1</td><td class="num">₱350.00</td></tr>
+        <tr><td>Túi canvas<small>TUI-CV-01</small></td><td class="num">2</td><td class="num">₱240.00</td></tr></tbody></table>
+        <div style="text-align:right;margin-top:8px">Tổng tiền: <b>₱590.00</b></div></div>${orders}</div>
+      <div class="col"><div class="pcard"><b>Nhận hàng</b><div class="kv" style="grid-template-columns:80px 1fr">
+        <div class="k">Tên</div><div><input class="in w" readonly value="Juan Dela Cruz"></div><div class="k">SĐT</div><div><input class="in w" readonly value="0917 000 0000"></div>
+        <div class="k">Địa chỉ</div><div><input class="in w" readonly value="Barangay 282, Binondo, Metro Manila"></div></div></div>
+        <div class="pcard"><b>Vận chuyển</b><div class="kv" style="grid-template-columns:80px 1fr"><div class="k">ĐVVC</div><div><select class="in w" disabled><option>${P}</option></select></div></div>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer"><input type="checkbox" id="ordSend"${ui.ordSend ? ' checked' : ''}> Gửi đơn sang ${P}</label>${line}
+          ${ui.posErr ? `<div class="alert a-err changed" style="margin:10px 0 0">${ui.posErr}</div>` : ''}
+          <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn pri" data-act="pos-save">Lưu (F2)</button></div></div></div></div>`;
+  }
+  function renderPos() {
+    const s = byKey(ui.posShop);
+    $('posUrl').textContent = ui.posView === 'partner' ? `pos.pancake.vn/shop/${s.pos}/setting/fulfillment-partner` : `pos.pancake.vn/shop/${s.pos}/sale`;
+    $('posShopSel').innerHTML = shops.map((x) => `<option value="${x.key}"${x.key === s.key ? ' selected' : ''}>Shop ${x.name}</option>`).join('');
+    const rail = [['chart-bar'], ['shopping-cart', 'order', 'Bán hàng', 'posNavOrder'], ['receipt'], ['package'], ['storefront'], ['users'], ['truck'], ['gear', 'partner', 'Cấu hình', 'posNavPartner']];
+    $('posRail').innerHTML = '<div class="lg">P</div>' + rail.map(([n, v, t, id]) => v ? `<a class="go${ui.posView === v ? ' on' : ''}" id="${id}" data-act="pos-view" data-v="${v}" title="${t}" aria-label="${t}">${ic(n)}</a>` : `<a>${ic(n)}</a>`).join('') + `<div class="sp"></div><a>${ic('squares-four')}</a><a>${ic('sidebar-simple')}</a>`;
+    $('posTitle').textContent = ui.posView === 'partner' ? 'Đối tác Fulfillment' : 'Bán hàng';
+    $('posSearch').innerHTML = (ui.posView === 'partner' ? 'Tìm cấu hình' : 'Tìm sản phẩm') + ic('magnifying-glass', 14);
+    $('posWh').innerHTML = 'Tất cả các kho' + ic('caret-down', 12);
+    $('posIcons').innerHTML = ic('clock-counter-clockwise') + ic('bell') + ic('user-circle');
+    $('posMain').innerHTML = ui.posView === 'partner' ? posPartner(s) : posOrder(s);
+    $('posModal').classList.toggle('open', ui.posModal || !!ui.posConn);
+    $('posModalBox').innerHTML = ui.posConn ? posConnect(s) : ui.posModal ? posConfig(s) : '';
+    $('posCfm').classList.toggle('open', !!ui.posCfm);
+    $('posCfmBox').className = 'mdl' + (ui.posCfm && ui.posCfm.kind === 'add' ? '' : ' sm');
+    $('posCfmBox').innerHTML = ui.posCfm ? posConfirm(s) : '';
+  }
+
+  /* ---------- FFM ---------- */
+  const shopTag = (s) => s.st === 'approved' ? '<span class="tag t-green">Approved</span>' : s.st === 'pending' ? '<span class="tag t-gold">Pending</span>' : '<span class="tag t-gray">Removed</span>';
+  const typeTag = (s) => s.type === 'multiple' ? '<span class="tag t-purple">Multiple</span>' : '<span class="tag t-gray">Single</span>';
+  function whSummary(s) {
+    if (s.type === 'single') return s.ffmWh || '—';
+    const a = [...new Set(s.links.filter((l) => l.st === 'active').map((l) => l.ffm))], w = s.links.filter((l) => l.st === 'pending' || l.st === 'init').length;
+    return (a.join(', ') || '—') + (w ? `<small>${w} pending</small>` : '');
+  }
+  function ffmShopList() {
+    const cnt = (t) => shops.filter((s) => s.st !== 'none' && (t === 'all' || s.st === t)).length;
+    const tabs = [['all', 'All'], ['pending', 'Pending'], ['approved', 'Approved'], ['removed', 'Removed']];
+    return `<div class="ph"><h3>Shop</h3><input class="in" id="ffmQ" style="width:270px" placeholder="Search shop name or POS shop ID" value="${escA(ui.ffmQ)}" aria-label="Search shop"></div>
+      <div class="panel"><div class="tabs">${tabs.map(([k, t]) => `<a data-act="ffm-tab" data-t="${k}" class="${ui.ffmTab === k ? 'on' : ''}">${t}<sup>${cnt(k)}</sup></a>`).join('')}</div>
+      <table class="ant"><thead><tr><th>Shop</th><th>Status</th><th><span class="changed" style="padding:0 3px">Warehouse link</span></th><th><span class="changed" style="padding:0 3px">FFM warehouses</span></th><th>Courier Settings</th><th>Warehouse Staffs</th><th></th></tr></thead><tbody id="ffmRows"></tbody></table></div>`;
+  }
+  function renderShopRows() {
+    const tb = $('ffmRows'); if (!tb) return;
+    const q = ui.ffmQ.trim().toLowerCase();
+    const list = shops.filter((s) => s.st !== 'none' && (ui.ffmTab === 'all' || s.st === ui.ffmTab) && (!q || `${s.ffm} ${s.pos} ${s.name}`.toLowerCase().includes(q)));
+    tb.innerHTML = list.length ? list.map((s) => `<tr><td><a class="lnk" data-act="ffm-open" data-k="${s.key}">${s.ffm} - ${s.pos} - ${s.name}</a></td><td>${shopTag(s)}</td><td>${typeTag(s)}</td><td>${whSummary(s)}</td>
+        <td>${s.key === 'an' ? 'J&amp;T Express' : 'Not Set'}</td><td>${s.key === 'an' ? '2' : '—'}</td><td><a class="lnk" data-act="ffm-open" data-k="${s.key}">${s.st === 'pending' ? 'Review' : 'View'}</a></td></tr>`).join('')
+      : `<tr><td colspan="7" style="text-align:center;padding:28px;color:#8c8c8c">No shops found. <a class="lnk" data-act="ffm-clear">Clear search</a></td></tr>`;
+  }
+  const inF = (l, f) => f === 'all' || l.st === f;
+  function ffmLinkRows(s) {
+    const ro = s.st === 'removed', q = ui.ffmLQ.trim().toLowerCase();
+    const list = s.links.filter((l) => inF(l, ui.ffmLF) && (!q || `${l.pos} ${l.ffm} ${posw(l.pos).code}`.toLowerCase().includes(q)));
+    if (!list.length) return '<tr><td colspan="8" style="text-align:center;color:#8c8c8c;padding:18px">No warehouse links match. <a class="lnk" data-act="ffm-lf-clear">Clear filters</a></td></tr>';
+    const cellFfm = (l) => (l.st !== 'pending' || ro) ? (l.ffm ? `${whLabel(l.ffm)}<small>${whAddr(l.ffm)}</small>` : '—')
+      : `<select class="in${l.err ? ' err' : ''}" data-chg="assign" data-id="${l.id}" aria-label="FFM warehouse for ${escA(l.pos)}"><option value="">Select FFM warehouse</option>${WHN.map((w) => `<option value="${w}"${w === l.ffm ? ' selected' : ''}>${whLabel(w)} · ${whAddr(w)}</option>`).join('')}</select>${l.err ? '<div class="ferr">Select an FFM warehouse</div>' : ''}`;
+    const act = (l) => {
+      if (ro) return `<a class="lnk" data-act="ffm-link" data-id="${l.id}">Details</a>`;
+      if (l.st === 'pending') return s.st === 'pending' ? '<span class="hint" style="margin:0">Approve with connection</span>' : `<button class="btn pri sm" data-act="ffm-approve" data-id="${l.id}">Approve</button> <a class="lnk red" data-act="ffm-reject-ask" data-id="${l.id}">Reject</a>`;
+      if (l.st === 'init') return `<span class="hint" style="margin:0"><span class="spin"></span>${STEPS[Math.min(l.step, 3)][1]}…</span>`;
+      if (l.st === 'active') return `<a class="lnk" data-act="ffm-change-ask" data-id="${l.id}">Change warehouse</a> · <a class="lnk red" data-act="ffm-stop-ask" data-id="${l.id}">Stop</a>`;
+      const x = [l.stock > 0 ? `<a class="lnk" data-act="ffm-export-from" data-id="${l.id}">Create export</a>` : '', l.open ? `<a class="lnk" data-act="ffm-finish" data-id="${l.id}">Mô phỏng: xử lý xong đơn</a>` : ''].filter(Boolean);
+      return x.length ? x.join(' · ') : '—';
+    };
+    const sub = (l) => { if (!l.replaces) return ''; const [, o] = findLink(l.replaces); return o ? `<small style="color:#531dab">Replaces → ${o.ffm}</small>` : ''; };
+    const upd = (l) => l.st === 'stopped' ? [l.stBy, l.stAt] : l.apBy ? [l.apBy, l.apAt] : [l.by, l.at];
+    return list.map((l) => { const p = posw(l.pos), u = upd(l), canSel = l.st === 'pending' && !ro;
+      return `<tr${l.st === 'stopped' ? ' class="dim"' : ''}><td style="width:34px">${canSel ? `<input type="checkbox" data-chg="sel" data-id="${l.id}"${ui.ffmSel.includes(l.id) ? ' checked' : ''} aria-label="Select ${escA(l.pos)}">` : ''}</td>
+        <td><a class="lnk" data-act="ffm-link" data-id="${l.id}">${l.pos}</a><small>${p.code} · ${p.addr}</small>${sub(l)}</td><td>${cellFfm(l)}</td><td>${tag(EN, l.st)}<small>${sinceEN(l)}</small></td>
+        <td class="num">${l.open}</td><td class="num">${l.stock}</td><td>${u[0] || '—'}<small>${u[1] || ''}</small></td><td>${act(l)}</td></tr>`; }).join('');
+  }
+  function ffmLinks(s) {
+    const ro = s.st === 'removed', f = ui.ffmLF, cnt = (k) => s.links.filter((l) => inF(l, k)).length;
+    const pend = s.links.filter((l) => l.st === 'pending'), asg = pend.filter((l) => l.ffm).length, sel = ui.ffmSel.filter((id) => pend.some((l) => l.id === id));
+    let h = s.st === 'pending' ? `<div class="alert a-info" style="margin:8px 0 0">Assign an FFM warehouse to at least 1 POS warehouse, then approve the connection from the status button. <b>${asg} of ${pend.length}</b> assigned. Unassigned warehouses stay Pending.</div>` : '';
+    if (ro) h += '<div class="alert a-warn" style="margin:8px 0 0">Connection removed. Links are read-only; the seller reconnects from POS.</div>';
+    h += `<div class="blk changed"><div class="hd2"><b>Warehouse links</b><span style="display:flex;gap:8px;align-items:center"><input class="in" id="ffmLQ" style="width:220px" placeholder="Search POS or FFM warehouse" value="${escA(ui.ffmLQ)}" aria-label="Search warehouse links">${ro ? '' : '<button class="btn sm" data-act="ffm-add-open">+ Add link</button>'}</span></div>
+      <div class="fchips">${[['all', 'All'], ['pending', 'Pending'], ['init', 'Initializing'], ['active', 'Active'], ['stopped', 'Stopped']].map(([k, t]) => `<a class="${f === k ? 'on' : ''}" data-act="ffm-lf" data-f="${k}">${t} <sup>${cnt(k)}</sup></a>`).join('')}</div>
+      ${sel.length ? `<div class="bulk"><b>${sel.length} selected</b><select class="in" data-chg="bulk-wh" aria-label="FFM warehouse for selected"><option value="">Assign FFM warehouse</option>${WHN.map((w) => `<option value="${w}">${whLabel(w)}</option>`).join('')}</select>${s.st === 'approved' ? '<button class="btn pri sm" data-act="ffm-bulk-approve">Approve selected</button>' : ''}<a class="lnk" data-act="ffm-sel-clear">Clear selection</a></div>` : ''}
+      <table class="ant lk"><thead><tr><th>${pend.length && !ro ? `<input type="checkbox" data-chg="sel-all"${sel.length && sel.length === pend.length ? ' checked' : ''} aria-label="Select all pending">` : ''}</th><th>POS warehouse</th><th>FFM warehouse</th><th>Status</th><th class="num">Open orders</th><th class="num">Stock</th><th>Updated by</th><th>Action</th></tr></thead><tbody id="ffmLinkRows">${ffmLinkRows(s)}</tbody></table>
+      <div class="hint">Only warehouses in Philippines are listed. Each POS warehouse has at most 1 Active link and 1 Pending or Initializing link. Collaborator (CTV) warehouses are not supported yet.</div></div>`;
+    return h;
+  }
+  function ffmDetail(s) {
+    const st = s.st, ro = st === 'removed', T = ui.ffmTg, lab = { approved: 'Approved', pending: 'Pending', removed: 'Removed' }[st];
+    const menu = st === 'pending' ? '<a data-act="ffm-approve-shop">Approve</a><a class="red" data-act="ffm-remove">Remove</a>' : st === 'approved' ? '<a class="red" data-act="ffm-remove">Remove</a>' : '<a style="color:#8c8c8c;cursor:default">Seller reconnects from POS</a>';
+    let h = `<div class="fx-h"><span style="color:#555;font-size:18px">✎</span><span class="t">${s.ffm} - ${s.pos} - ${s.name}</span>
+      <span class="sbtn ${st}"><button data-act="ffm-menu">${lab}</button><button data-act="ffm-menu" aria-label="Change status">${ic('caret-down', 14)}</button>${ui.ffmMenu ? `<div class="smenu">${menu}</div>` : ''}</span>
+      <span class="cbtn changed" data-act="ffm-hist" role="button" title="Connection history" aria-label="Connection history">${ic('clock-counter-clockwise')}</span>
+      <button class="x" data-act="ffm-close" aria-label="Close">×</button></div>
+      <div class="fbody"><div class="fcard"><div class="ch">Connection</div><div class="cb">
+        <div class="frow"><div class="k">Connect type</div><div>${rad(true, 'Fulfillment' + qm(1))}${rad(false, 'Shipping Courier' + qm(1))}</div></div>
+        <div class="frow changed"><div class="k">Warehouse link</div><div style="display:flex;align-items:center">${rad(s.type === 'single', 'Single' + qm(1))}${rad(s.type === 'multiple', 'Multiple' + qm(1))}${s.type === 'single' && st === 'approved' ? '<button class="btn sm" data-act="ffm-convert-ask">Switch to multiple</button>' : ''}</div></div>`;
+    if (s.type === 'single') h += `<div class="frow"><div class="k">FFM warehouse</div><div><select class="fsel${s.err ? ' inv' : ''}" data-chg="single-wh"${ro ? ' disabled' : ''} aria-label="FFM warehouse">${s.ffmWh ? '' : '<option value="">Select FFM warehouse</option>'}${WHN.map((w) => `<option value="${w}"${w === s.ffmWh ? ' selected' : ''}>${WH[w]} - ${whAddr(w)}</option>`).join('')}</select>${s.err ? '<div class="ferr">Warehouse is required when approve connection</div>' : ''}</div></div>
+        <div class="frow"><div class="k">POS warehouse(s)</div><div><span class="fsel dis"><span class="tagbox" style="border:0;padding:0;background:none;min-height:0"><span>All</span></span>${ic('caret-down', 12)}</span></div></div>`;
+    else h += ffmLinks(s);
+    const sw = (k, label, q = true) => `<div class="fsw"><span>${label}${q ? ' ' + qm(1) : ''}</span>${asw(T[k], 'ffm-tg', `data-k="${k}"`)}</div>`;
+    h += `</div></div>
+      <div class="g2"><div class="fcard"><div class="ch">Order sync</div><div class="cb">${sw('auto', 'Auto Sync Order')}${sw('mkt', 'Auto Sync Marketplace Order')}
+          <div class="fsw"><span>Sort products by ${qm(1)}</span><span>${rad(T.sort === 'new', 'Newest to oldest', 'ffm-sort-new')}${rad(T.sort === 'old', 'Oldest to newest', 'ffm-sort-old')}</span></div></div></div>
+        <div class="fcard"><div class="ch">Inventory</div><div class="cb"><div class="fsw"><span>Use FFM warehouse as inventory source ${qm(1)}</span>${asw(!!s.inv, ro ? '' : 'ffm-inv')}</div>
+          ${s.type === 'multiple' ? '<div class="hint changed" style="padding:4px 6px">Applies to every Active and Stopped warehouse link of this shop. POS gets the stock of the Active link.</div>' : ''}</div></div></div>
+      <div class="g2"><div class="fcard"><div class="ch">Shipping &amp; returns</div><div class="cb">${sw('ret', 'Return manually')}${sw('zero', 'Allow send order to courier without value', false)}</div></div>
+        <div class="fcard"><div class="ch">CSR &amp; conversation</div><div class="cb">${sw('csr', 'Auto create CSR ticket')}${sw('pconv', 'Allow POS sync conversation')}${sw('fconv', 'POS allow FFM sync conversation')}</div></div></div>
+      <div class="fcard"><div class="ctabs"><a class="on">Sales</a><a>Warehouse Staffs</a><a>Connect SSC</a><a>Courier</a><a>Reconciliation</a></div><div class="cb" style="padding-top:14px">
+        <button class="btn">Add Sale</button><table class="ant" style="max-width:640px;margin-top:10px"><thead><tr><th>ID</th><th>Sale</th><th>High Priority</th><th>Action</th></tr></thead><tbody>
+        ${[[2302, 'sale.minhanh'], [2290, 'sale.quocbao'], [2285, 'sale.thuha']].map(([i, n]) => `<tr><td>${i}</td><td><span class="tag t-gray">${n}</span></td><td><input type="checkbox" checked disabled aria-label="High priority"></td><td><span style="color:#ff4d4f">Delete</span></td></tr>`).join('')}
+        </tbody></table></div></div></div>`;
+    return h;
+  }
+  const BIG = ['hist', 'link', 'change', 'add'];
+  function ffmConfirm() {
+    const c = ui.ffmCfm, s = byKey(ui.ffmOpen);
+    if (c.kind === 'convert') return `<div class="mh">Switch to multiple warehouses?</div><div class="mb"><p>Each POS warehouse (${s.posWhs.filter((w) => !posw(w).ctv).length}) becomes an Active link to ${s.ffmWh}. Orders and stock keep running as now.</p><p>You can't switch back to single.</p></div>
+        <div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Cancel</button><button class="btn pri" data-act="ffm-convert">Switch</button></div>`;
+    if (c.kind === 'remove') return `<div class="mh">Remove connection ${s.ffm} - ${s.name}?</div><div class="mb"><ul class="chg-list"><li>Active links become Stopped; pending requests are cancelled.</li><li>New orders from POS are rejected. Open orders continue, returns are received.</li><li>The seller reconnects from POS and waits for approval.</li></ul></div>
+        <div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Cancel</button><button class="btn danger fill" data-act="ffm-remove-do">Remove</button></div>`;
+    if (c.kind === 'hist') {
+      const opts = `<option value="">All warehouse links</option>${s.links.map((l) => `<option value="${l.id}"${String(l.id) === c.lid ? ' selected' : ''}>${l.pos} → ${l.ffm || '—'} (${EN[l.st][0]})</option>`).join('')}`;
+      const l = c.lid ? findLink(c.lid)[1] : null, list = l ? l.h.map((e) => [e[0], e[1], evText(e, 1)]) : s.hist;
+      return `<div class="mh">Connection history</div><div class="mb">${s.links.length ? `<select class="in" data-chg="hist-l" style="width:340px;margin-bottom:10px" aria-label="Filter by warehouse link">${opts}</select>` : ''}
+        <ul class="hist">${list.map(([t, w, x]) => `<li><time>${t}</time><b>${w}</b><span>${x}</span></li>`).join('') || '<li>—</li>'}</ul></div><div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Close</button></div>`;
+    }
+    if (c.kind === 'wh') {
+      const w = WHS.find((x) => x.n === c.n);
+      return `<div class="mh">Edit warehouse ${w.n}</div><div class="mb"><div class="kv" style="grid-template-columns:150px 1fr"><div class="k">Code</div><div>${WH[w.n]}</div><div class="k">Address</div><div>${w.addr}</div>
+        <label class="k" for="sscIn">SSC warehouse code</label><div><input class="in w${c.err ? ' err' : ''}" id="sscIn" value="${escA(c.val)}" placeholder="GIP-PH" maxlength="20">${c.err ? `<div class="ferr">${c.err}</div>` : ''}</div></div>
+        <div class="hint" style="margin-top:10px">Sent to SSC with orders from this warehouse. Leave empty to use GIP-PH.</div></div>
+        <div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Cancel</button><button class="btn pri" data-act="wh-save">Save</button></div>`;
+    }
+    if (c.kind === 'add') {
+      const ok = s.st === 'approved', now = c.now && ok;
+      const rows = s.posWhs.map((w) => { const p = posw(w), a = activeOf(s, w), wt = waitingOf(s, w), sp = stoppedOf(s, w), dis = p.ctv || a || wt, on = c.sel.includes(w);
+        const stt = p.ctv ? '<span class="tag t-gray">Not supported (CTV)</span>' : a ? `<span class="tag t-green">Active → ${a.ffm}</span>` : wt ? '<span class="tag t-gold">Pending</span>' : sp ? `<span class="tag t-gray">Stopped → ${sp.ffm}</span>` : '<span class="tag t-blue">Not linked</span>';
+        return `<tr${dis ? ' class="dim"' : ''}><td style="width:34px"><input type="checkbox" data-chg="add-w" data-w="${escA(w)}"${on ? ' checked' : ''}${dis ? ' disabled' : ''} aria-label="Select ${escA(w)}"></td><td>${w}<small>${p.code} · ${p.addr}</small></td><td>${stt}</td>
+          <td>${on ? `<select class="in${c.err && now && !c.wh[w] ? ' err' : ''}" data-chg="add-wh" data-w="${escA(w)}" aria-label="FFM warehouse for ${escA(w)}"><option value="">Select FFM warehouse</option>${WHN.map((x) => `<option value="${x}"${c.wh[w] === x ? ' selected' : ''}>${whLabel(x)}</option>`).join('')}</select>` : '<span class="hint" style="margin:0">—</span>'}</td></tr>`; }).join('');
+      return `<div class="mh">Add warehouse links for ${s.name}</div><div class="mb"><p>POS warehouses of shop ${s.pos}, loaded from POS. Use this when the seller can't use POS.</p>
+        <table class="ant"><thead><tr><th></th><th>POS warehouse</th><th>Current link</th><th>FFM warehouse</th></tr></thead><tbody>${rows}</tbody></table>
+        <label class="ack"><input type="checkbox" data-chg="add-now"${now ? ' checked' : ''}${ok ? '' : ' disabled'}> Approve now${ok ? '' : ' (available after the connection is approved)'}</label>
+        ${c.err ? `<div class="ferr">${c.err}</div>` : ''}</div>
+        <div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Cancel</button><button class="btn pri" data-act="ffm-add">${now ? 'Add and approve' : 'Add'}</button></div>`;
+    }
+    const [ls, l] = findLink(c.id);
+    if (c.kind === 'link') {
+      const acts = [], p = posw(l.pos);
+      if (l.st === 'pending' && ls.st === 'approved') acts.push(`<button class="btn pri" data-act="ffm-approve" data-id="${l.id}">Approve</button>`, `<button class="btn danger" data-act="ffm-reject-ask" data-id="${l.id}">Reject</button>`);
+      if (l.st === 'active') acts.push(`<button class="btn" data-act="ffm-change-ask" data-id="${l.id}">Change warehouse</button>`, `<button class="btn danger" data-act="ffm-stop-ask" data-id="${l.id}">Stop</button>`);
+      if (l.st === 'stopped' && l.stock > 0 && ls.st !== 'removed') acts.push(`<button class="btn" data-act="ffm-export-from" data-id="${l.id}">Create export</button>`);
+      return `<div class="mh">${l.pos} → ${l.ffm || 'Not assigned'} ${tag(EN, l.st)}</div><div class="mb">
+        <div class="kv" style="grid-template-columns:130px 1fr;margin-bottom:12px"><div class="k">POS warehouse</div><div>${l.pos} · ${p.code}<small style="display:block;color:#8c8c8c">${p.addr}</small></div>
+          <div class="k">FFM warehouse</div><div>${l.ffm ? `${whLabel(l.ffm)}<small style="display:block;color:#8c8c8c">${whAddr(l.ffm)}</small>` : '—'}</div><div class="k">Open orders · Stock</div><div>${l.open} · ${l.stock}</div><div class="k">Link ID</div><div>L-${String(l.id).padStart(4, '0')}</div><div class="k">Requested by</div><div>${l.by} · ${l.at}</div>${l.apBy ? `<div class="k">Approved by</div><div>${l.apBy} · ${l.apAt}</div>` : ''}${l.stBy ? `<div class="k">Stopped by</div><div>${l.stBy} · ${l.stAt} · ${STOPR[l.reason][1]}${l.note ? ' – ' + escA(l.note) : ''}</div>` : ''}</div><div class="lmodal">${linkInfo(l, 1)}</div></div>
+        <div class="mf">${acts.join('')}<button class="btn" data-act="ffm-cfm-cancel">Close</button></div>`;
+    }
+    if (c.kind === 'stop') return `<div class="mh">Stop link ${l.pos} → ${l.ffm}?</div><div class="mb"><div class="impact"><b>${l.open}</b> open orders · <b>${l.stock}</b> items in stock at ${l.ffm}</div>
+      <ul class="chg-list"><li>New orders and purchases from ${l.pos} will be rejected.</li><li>Open orders continue, returns are received, stock keeps syncing.</li><li>Create an export to return or move the remaining stock.</li></ul>
+      <label class="lbl" style="margin-top:10px">Reason <em>*</em></label><div class="rlist">${['count', 'seller', 'move', 'other'].map((k) => rad2(c.r === k, STOPR[k][1], 'ffm-r', k)).join('')}</div>
+      <input class="in w" data-in="ffm-note" placeholder="Note (optional)" value="${escA(c.note)}" aria-label="Note">${c.err ? `<div class="ferr">${c.err}</div>` : ''}</div>
+      <div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Cancel</button><button class="btn danger fill" data-act="ffm-stop" data-id="${l.id}">Stop link</button></div>`;
+    if (c.kind === 'reject') return `<div class="mh">Reject ${l.pos}?</div><div class="mb"><p>The request is removed. The seller sees the reason on POS and can send it again.</p>
+      <label class="lbl">Reason <em>*</em></label><div class="rlist">${Object.keys(REJR).map((k) => rad2(c.r === k, REJR[k][1], 'ffm-r', k)).join('')}</div>
+      <input class="in w" data-in="ffm-note" placeholder="Note to seller (optional)" value="${escA(c.note)}" aria-label="Note">${c.err ? `<div class="ferr">${c.err}</div>` : ''}</div>
+      <div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Cancel</button><button class="btn danger fill" data-act="ffm-reject" data-id="${l.id}">Reject</button></div>`;
+    return `<div class="mh">Change warehouse for ${l.pos}</div><div class="mb"><div class="kv" style="grid-template-columns:130px 1fr"><div class="k">Current</div><div>${whLabel(l.ffm)} · ${whAddr(l.ffm)}</div>
+      <label class="k" for="chgTo">New warehouse <em style="color:#ff4d4f;font-style:normal">*</em></label><div><select class="in w${c.err ? ' err' : ''}" id="chgTo" data-chg="chg-to"><option value="">Select FFM warehouse</option>${WHN.filter((w) => w !== l.ffm).map((w) => `<option value="${w}"${c.to === w ? ' selected' : ''}>${whLabel(w)} · ${whAddr(w)}</option>`).join('')}</select>${c.err ? '<div class="ferr">Select a new FFM warehouse</div>' : ''}</div></div>
+      <div class="impact"><b>What happens</b><ul class="chg-list"><li>A new link ${l.pos} → ${c.to || '…'} is created as Pending. ${l.pos} keeps sending orders to ${l.ffm} until the new link is Active.</li>
+        <li>Then the current link stops automatically. ${l.open} open orders stay at ${l.ffm}.</li><li>${l.stock} items stay at ${l.ffm}. Create an export at ${l.ffm} and a purchase at ${c.to || 'the new warehouse'} to move them.</li></ul></div>
+      <label class="ack"><input type="checkbox" data-chg="chg-now"${c.now ? ' checked' : ''}> Approve the new link now</label></div>
+      <div class="mf"><button class="btn" data-act="ffm-cfm-cancel">Cancel</button><button class="btn pri" data-act="ffm-change" data-id="${l.id}">Create link</button></div>`;
+  }
+  function docOpts(s, kind) {
+    if (s.type === 'single') return s.posWhs.map((w) => ({ key: 'w:' + w, pos: w, ffm: s.ffmWh, label: w, stock: null }));
+    const out = s.links.filter((l) => l.st === 'active').map((l) => ({ key: String(l.id), id: l.id, pos: l.pos, ffm: l.ffm, label: l.pos, stock: l.stock }));
+    if (kind === 'export') s.links.filter((l) => l.st === 'stopped' && l.stock > 0).forEach((l) => out.push({ key: String(l.id), id: l.id, pos: l.pos, ffm: l.ffm, label: `${l.pos} (Stopped · ${l.stock} left)`, stock: l.stock }));
+    return out;
+  }
+  function ffmDoc(kind) {
+    const d = ui[kind], ap = shops.filter((s) => s.st === 'approved');
+    if (!ap.some((s) => s.key === d.shop)) d.shop = ap[0].key;
+    const s = byKey(d.shop), opts = docOpts(s, kind);
+    if (!opts.some((o) => o.key === d.pos)) d.pos = '';
+    const hit = opts.find((o) => o.key === d.pos), title = kind === 'purchase' ? 'Purchase' : 'Export';
+    const hint = s.type === 'single' ? 'Single: every POS warehouse goes to the shop warehouse.' : kind === 'purchase' ? 'Only POS warehouses with an Active link.' : 'Active links, and Stopped links that still have stock.';
+    return `<div class="ph"><h3>${title} / New</h3><div style="display:flex;gap:8px"><button class="btn" data-act="doc-reset" data-k="${kind}">Cancel</button><button class="btn pri" data-act="doc-save" data-k="${kind}">Save</button></div></div>
+      <div class="panel"><div class="grid3">
+        <div><label class="lbl">Shop <em>*</em></label><select class="in w" data-chg="doc-shop" data-k="${kind}" aria-label="Shop">${ap.map((x) => `<option value="${x.key}"${x.key === s.key ? ' selected' : ''}>${x.ffm} - ${x.pos} - ${x.name}</option>`).join('')}</select></div>
+        <div class="changed" style="padding:4px"><label class="lbl">POS warehouse <em>*</em></label><select class="in w${d.err.pos ? ' err' : ''}" data-chg="doc-pos" data-k="${kind}" aria-label="POS warehouse"><option value="">Select POS warehouse</option>${opts.map((o) => `<option value="${o.key}"${o.key === d.pos ? ' selected' : ''}>${o.label}</option>`).join('')}</select>${d.err.pos ? '<div class="ferr">Select a POS warehouse</div>' : ''}<div class="hint">${hint}</div></div>
+        <div class="changed" style="padding:4px"><label class="lbl">Warehouse</label><input class="in w" readonly value="${hit ? whLabel(hit.ffm) : ''}" placeholder="Filled from the POS warehouse" aria-label="Warehouse"><div class="hint">${s.type === 'single' ? 'Shop warehouse' : 'From the warehouse link, can’t be edited'}</div></div>
+      </div>
+      <table class="ant" style="margin-top:14px"><thead><tr><th>Product</th><th>SKU</th>${kind === 'export' ? '<th class="num">Available</th>' : ''}<th class="num" style="width:150px">Quantity</th></tr></thead><tbody><tr><td>Áo thun basic trắng</td><td>AT-TRANG-M</td>
+        ${kind === 'export' ? `<td class="num">${hit && hit.stock != null ? hit.stock : '—'}</td>` : ''}<td class="num"><input class="in${d.err.qty ? ' err' : ''}" type="number" min="1" style="width:110px;text-align:right" data-chg="doc-qty" data-k="${kind}" value="${escA(d.qty)}" aria-label="Quantity">${d.err.qty ? `<div class="ferr">${d.err.qty}</div>` : ''}</td></tr></tbody></table>
+      ${d.done ? `<div class="alert a-info" style="margin:12px 0 0">${d.done}</div>` : ''}</div>`;
+  }
+  function impCheck(s, r) {
+    const a = activeOf(s, r.pos);
+    if (!a) return { ok: false, msg: `${r.pos} has no Active link` };
+    if (a.ffm !== r.ffm) return { ok: false, msg: `${r.pos} is linked to ${a.ffm}, file has ${r.ffm}` };
+    return { ok: true };
+  }
+  function ffmImport() {
+    const s = byKey('an'), res = IMPORT.map((r) => impCheck(s, r)), okN = res.filter((x) => x.ok).length;
+    return `<div class="ph"><h3>Purchase / Import Excel</h3><button class="btn" data-act="imp-check">Check file</button></div>
+      <div class="panel"><div class="kv" style="margin-bottom:12px"><div class="k">Shop</div><div>${s.ffm} - ${s.pos} - ${s.name}</div><div class="k">File</div><div><span class="tag t-gray">purchase_import_an-nhien.xlsx · ${IMPORT.length} rows</span></div></div>
+      ${ui.imp.checked ? `<div class="hd2" style="margin-bottom:10px"><div><span class="tag t-green">${okN} valid</span> <span class="tag t-red">${IMPORT.length - okN} errors</span></div><button class="btn pri sm" data-act="imp-do"${ui.imp.done || !okN ? ' disabled' : ''}>Import ${okN} valid rows</button></div>` : ''}
+      <table class="ant"><thead><tr><th>Row</th><th>POS warehouse</th><th>FFM warehouse in file</th><th>SKU</th><th class="num">Qty</th><th><span class="changed" style="padding:0 3px">Result</span></th></tr></thead><tbody>
+      ${IMPORT.map((r, i) => `<tr><td>${i + 2}</td><td>${r.pos}</td><td>${r.ffm}</td><td>${r.sku}</td><td class="num">${r.qty}</td><td>${!ui.imp.checked ? '<span style="color:#8c8c8c">—</span>' : res[i].ok ? '<span class="tag t-green">Valid</span>' : `<span class="tag t-red">${res[i].msg}</span>`}</td></tr>`).join('')}
+      </tbody></table><div class="hint">Each row is checked against the shop's warehouse links on FFM, not against the shop warehouse.</div></div>`;
+  }
+  function ffmWarehouse() {
+    return `<div class="ph"><h3>Warehouse</h3></div><div class="alert a-warn">Chỉ làm khi GIP xác nhận có dùng SSC (điểm 12). Mã SSC để trống thì dùng "GIP-PH" như hiện tại.</div>
+      <div class="panel"><table class="ant"><thead><tr><th>Code</th><th>Name</th><th>Country</th><th>Address</th><th><span class="changed" style="padding:0 3px">SSC warehouse code</span></th><th></th></tr></thead><tbody>
+      ${WHS.map((w) => `<tr><td>${WH[w.n]}</td><td>${w.n}</td><td>Philippines</td><td>${w.addr}</td><td>${w.ssc || '<span style="color:#8c8c8c">— (GIP-PH)</span>'}</td><td><a class="lnk" data-act="wh-edit" data-n="${w.n}">Edit</a></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+  function renderFfm() {
+    const v = ui.ffmView;
+    $('ffmUrl').textContent = { shop: 'fulfillment.pancake.vn/admin/setting/shop', purchase: 'fulfillment.pancake.vn/admin/wms/purchase/new', export: 'fulfillment.pancake.vn/admin/wms/export/new', import: 'fulfillment.pancake.vn/admin/wms/purchase/import', warehouse: 'fulfillment.pancake.vn/admin/setting/warehouse' }[v];
+    ['shop', 'purchase', 'export', 'import', 'warehouse'].forEach((k) => ($('nav-' + k).className = k === v ? 'on' : ''));
+    $('ffmMain').innerHTML = v === 'shop' ? ffmShopList() : v === 'import' ? ffmImport() : v === 'warehouse' ? ffmWarehouse() : ffmDoc(v);
+    renderShopRows();
+    $('ffmModal').classList.toggle('open', !!ui.ffmOpen);
+    $('ffmModalBox').innerHTML = ui.ffmOpen ? ffmDetail(byKey(ui.ffmOpen)) : '';
+    $('ffmCfm').classList.toggle('open', !!ui.ffmCfm);
+    $('ffmCfmBox').className = 'mdl' + (ui.ffmCfm && BIG.includes(ui.ffmCfm.kind) ? '' : ' sm');
+    $('ffmCfmBox').innerHTML = ui.ffmCfm ? ffmConfirm() : '';
+  }
+  function renderAll() { renderPos(); renderFfm(); }
+
+  /* ---------- Thao tác dùng chung ---------- */
+  function goActive(s, l) {
+    l.st = 'init'; l.err = false; l.step = 0;
+    const t = setInterval(() => {
+      if (l.st !== 'init') return clearInterval(t);
+      l.step++;
+      if (l.step >= 4) {
+        clearInterval(t); l.st = 'active'; l.actAt = now(); l.h.unshift([now(), 'System', 'init']);
+        if (l.replaces) { const [, o] = findLink(l.replaces); if (o && o.st === 'active') stopLink(s, o, 'System', 'repl'); }
+        log(s, 'System', `${l.pos} → ${l.ffm} initialized, Active`); toast('ffm', `${l.pos} is Active at ${l.ffm}.`);
+      }
+      renderAll();
+    }, 450);
+  }
+  function approveLink(s, l) { l.apBy = ADM; l.apAt = now(); l.err = false; l.h.unshift([now(), ADM, 'appr', l.ffm]); log(s, ADM, `Approved ${l.pos} → ${l.ffm}`); goActive(s, l); }
+  function stopLink(s, l, who, r, note) { l.st = 'stopped'; l.stBy = who; l.stAt = now(); l.reason = r; l.note = note || ''; l.h.unshift([now(), who, 'stop', r]); log(s, who, `Stopped ${l.pos} → ${l.ffm} (${STOPR[r][1]})`); }
+  function newLink(s, w, ffm, who, code, x, extra) { const l = seed({ id: nid++, pos: w, ffm: ffm || '', st: 'pending', open: 0, stock: 0 }, { by: who, at: now(), step: 0, ...extra }); l.h.unshift([now(), who, code, x]); s.links.push(l); return l; }
+  function disconnect(s, who) {
+    s.links = s.links.filter((l) => l.st !== 'pending');
+    s.links.forEach((l) => { if (l.st === 'active' || l.st === 'init') stopLink(s, l, who, 'conn'); });
+    s.st = 'removed'; s.rejects = []; log(s, who, 'Connection removed');
+  }
+  function connect(s, c) {
+    s.ffm = s.ffm || '904'; s.st = 'pending'; s.type = c.type; s.rejects = []; s.inv = c.inv;
+    if (c.type === 'single') s.ffmWh = '';
+    else c.sel.forEach((w) => { const old = s.links.filter((x) => x.pos === w && x.ffm).pop(); const l = newLink(s, w, old ? old.ffm : '', 'Seller', 'req'); if (old) l.h.unshift([now(), 'System', 'assign', old.ffm]); });
+    log(s, 'Seller', `Requested connection: ${c.type === 'multiple' ? 'Multiple' : 'Single'}, ${c.sel.length} POS warehouse(s)`);
+  }
+  function convert(s, who, side) {
+    s.type = 'multiple';
+    s.posWhs.filter((w) => !posw(w).ctv).forEach((w) => { const l = newLink(s, w, s.ffmWh, who, 'conv', '', { apBy: who, apAt: now(), actAt: now(), step: 4 }); l.st = 'active'; l.stock = 30; });
+    log(s, who, `Switched to multiple: ${s.links.length} links → ${s.ffmWh}`);
+    toast(side, side === 'pos' ? `Đã chuyển sang Đa kho: ${s.links.length} liên kết Đang chạy, cùng về ${s.ffmWh}.` : `Switched to multiple: ${s.links.length} Active links to ${s.ffmWh}.`);
+  }
+  const tog = (arr, v) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+
+  document.addEventListener('click', (e) => {
+    const box = e.target.closest('.proto'); if (!box) return;
+    if (e.target.classList.contains('mwrap')) {
+      if (e.target.id === 'posModal') { ui.posModal = false; ui.posConn = null; } if (e.target.id === 'posCfm') ui.posCfm = null;
+      if (e.target.id === 'ffmModal') { ui.ffmOpen = null; ui.ffmCfm = null; ui.ffmMenu = false; } if (e.target.id === 'ffmCfm') ui.ffmCfm = null;
+      return renderAll();
+    }
+    const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+    const a = el.dataset.act, [ls, l] = el.dataset.id ? findLink(el.dataset.id) : [null, null];
+    const ps = byKey(ui.posShop), fs = ui.ffmOpen ? byKey(ui.ffmOpen) : null;
+    switch (a) {
+      // POS
+      case 'pos-noop': return;
+      case 'pos-view': ui.posView = el.dataset.v; ui.posErr = ''; break;
+      case 'pos-open': ui.posModal = true; ui.posFilter = 'all'; break;
+      case 'pos-close': ui.posModal = false; ui.posConn = null; break;
+      case 'pos-tg': ui.posTg[el.dataset.k] = !ui.posTg[el.dataset.k]; break;
+      case 'pos-ok': ui.posModal = false; toast('pos', 'Đã lưu cấu hình kết nối.'); break;
+      case 'pos-connect-open': {
+        const re = ps.st === 'removed', ok = ps.posWhs.filter((w) => !posw(w).ctv);
+        ui.posConn = { type: re ? ps.type : 'multiple', sel: re ? (ps.type === 'multiple' ? [...new Set(ps.links.map((x) => x.pos))].filter((w) => ok.includes(w)) : ok) : [], err: false, inv: false }; break;
+      }
+      case 'pos-conn-single': ui.posConn.type = 'single'; break;
+      case 'pos-conn-multi': ui.posConn.type = 'multiple'; break;
+      case 'pos-conn-inv': ui.posConn.inv = !ui.posConn.inv; break;
+      case 'pos-connect': {
+        const c = ui.posConn; if (!c.sel.length) { c.err = true; renderAll(); return toast('pos', 'Chọn ít nhất 1 kho hàng', true); }
+        connect(ps, c); ui.posConn = null; ui.posModal = false; toast('pos', `Đã gửi yêu cầu kết nối. Chờ ${P} duyệt.`); break;
+      }
+      case 'pos-filter': ui.posFilter = el.dataset.f; break;
+      case 'pos-exp': ui.posExp = tog(ui.posExp, +el.dataset.id); break;
+      case 'pos-add-open': ui.posCfm = { kind: 'add', sel: [], err: false }; break;
+      case 'pos-add': {
+        const c = ui.posCfm; if (!c.sel.length) { c.err = true; renderAll(); return toast('pos', 'Chọn kho POS cần thêm', true); }
+        c.sel.forEach((w) => { newLink(ps, w, '', 'Seller', 'req'); log(ps, 'Seller', `Requested ${w}`); });
+        ps.rejects = ps.rejects.filter((r) => !c.sel.includes(r.pos)); ui.posFilter = 'all';
+        toast('pos', `Đã gửi ${c.sel.length} yêu cầu thêm kho. Chờ GIP gán kho và duyệt.`); ui.posCfm = null; break;
+      }
+      case 'pos-resend': { const w = el.dataset.w; if (!activeOf(ps, w) && !waitingOf(ps, w)) { newLink(ps, w, '', 'Seller', 'req'); log(ps, 'Seller', `Requested ${w} again`); } ps.rejects = ps.rejects.filter((r) => r.pos !== w); toast('pos', `Đã gửi lại yêu cầu thêm ${w}.`); break; }
+      case 'pos-rej-hide': ps.rejects = ps.rejects.filter((r) => r.pos !== el.dataset.w); break;
+      case 'pos-cancel': ls.links = ls.links.filter((x) => x !== l); log(ls, 'Seller', `Cancelled request ${l.pos}`); toast('pos', `Đã huỷ yêu cầu thêm ${l.pos}.`); break;
+      case 'pos-stop-ask': ui.posCfm = { kind: 'stop', id: l.id, r: '', note: '', ack: false, err: '' }; break;
+      case 'pos-r': ui.posCfm.r = el.dataset.r; ui.posCfm.err = ''; break;
+      case 'pos-stop': {
+        const c = ui.posCfm; c.err = !c.r ? 'Chọn lý do ngừng' : !c.ack ? 'Đánh dấu ô xác nhận để ngừng liên kết' : '';
+        if (c.err) { renderAll(); return toast('pos', c.err, true); }
+        stopLink(ls, l, 'Seller', c.r, c.note); ui.posCfm = null; toast('pos', `Đã ngừng ${l.pos}. Các kho khác không đổi.`); break;
+      }
+      case 'pos-convert-ask': ui.posCfm = { kind: 'convert' }; break;
+      case 'pos-cfm-cancel': ui.posCfm = null; break;
+      case 'pos-convert': convert(ps, 'Seller', 'pos'); ui.posCfm = null; break;
+      case 'pos-disconnect': ui.posCfm = { kind: 'disc' }; break;
+      case 'pos-disc': disconnect(ps, 'Seller'); ui.posCfm = null; ui.posModal = false; toast('pos', `Đã ngắt kết nối ${P}.`); break;
+      case 'pos-save': {
+        const w = ui.ordWh[ps.key] || ps.posWhs[0], no = ordNo++;
+        if (!ui.ordSend) { ps.orders.unshift({ no, wh: w, skip: true }); ui.posErr = ''; toast('pos', `Đã tạo đơn #${no}.`); break; }
+        const r = sendCheck(ps, w);
+        if (r.ok) { if (r.link) r.link.open++; ps.orders.unshift({ no, wh: w, ok: true, ffm: r.ffm }); ui.posErr = ''; toast('pos', `Đã tạo đơn #${no} và gửi sang ${P} · ${r.ffm}.`); }
+        else { ps.orders.unshift({ no, wh: w, ok: false }); ui.posErr = `Đã lưu đơn #${no}. Chưa đẩy được đơn sang ${P} (${r.msg})`; toast('pos', 'Chưa đẩy được đơn sang đơn vị vận chuyển', true); }
+        break;
+      }
+      // FFM
+      case 'ffm-view': ui.ffmView = el.dataset.v; break;
+      case 'ffm-tab': ui.ffmTab = el.dataset.t; break;
+      case 'ffm-clear': ui.ffmQ = ''; ui.ffmTab = 'all'; break;
+      case 'ffm-open': ui.ffmOpen = el.dataset.k; ui.ffmCfm = null; ui.ffmMenu = false; ui.ffmLF = 'all'; ui.ffmLQ = ''; ui.ffmSel = []; break;
+      case 'ffm-close': ui.ffmOpen = null; ui.ffmCfm = null; ui.ffmMenu = false; break;
+      case 'ffm-menu': ui.ffmMenu = !ui.ffmMenu; break;
+      case 'ffm-hist': ui.ffmMenu = false; ui.ffmCfm = { kind: 'hist', lid: '' }; break;
+      case 'ffm-tg': ui.ffmTg[el.dataset.k] = !ui.ffmTg[el.dataset.k]; break;
+      case 'ffm-sort-new': ui.ffmTg.sort = 'new'; break;
+      case 'ffm-sort-old': ui.ffmTg.sort = 'old'; break;
+      case 'ffm-inv': fs.inv = !fs.inv; log(fs, ADM, `Use FFM warehouse as inventory source: ${fs.inv ? 'On' : 'Off'}`); break;
+      case 'ffm-remove': ui.ffmMenu = false; ui.ffmCfm = { kind: 'remove' }; break;
+      case 'ffm-remove-do': disconnect(fs, ADM); ui.ffmCfm = null; ui.ffmSel = []; toast('ffm', 'Connection removed. Active links are Stopped.'); break;
+      case 'ffm-lf': ui.ffmLF = el.dataset.f; break;
+      case 'ffm-lf-clear': ui.ffmLF = 'all'; ui.ffmLQ = ''; break;
+      case 'ffm-sel-clear': ui.ffmSel = []; break;
+      case 'ffm-link': ui.ffmCfm = { kind: 'link', id: l.id }; break;
+      case 'ffm-add-open': ui.ffmCfm = { kind: 'add', sel: [], wh: {}, now: fs.st === 'approved', err: '' }; break;
+      case 'ffm-add': {
+        const c = ui.ffmCfm, nowA = c.now && fs.st === 'approved';
+        c.err = !c.sel.length ? 'Select at least 1 POS warehouse' : (nowA && c.sel.some((w) => !c.wh[w])) ? 'Select an FFM warehouse for each selected POS warehouse, or turn off Approve now' : '';
+        if (c.err) { renderAll(); return toast('ffm', c.err, true); }
+        c.sel.forEach((w) => { const nl = newLink(fs, w, c.wh[w], ADM, 'add'); log(fs, ADM, `Added ${w} for the seller`); if (nowA) approveLink(fs, nl); });
+        ui.ffmCfm = null; ui.ffmLF = 'all'; toast('ffm', nowA ? `Added and approved ${c.sel.length} link(s).` : `Added ${c.sel.length} link(s) as Pending.`); break;
+      }
+      case 'ffm-approve':
+        if (!l.ffm) { l.err = true; ui.ffmCfm = null; renderAll(); return toast('ffm', `Select an FFM warehouse for ${l.pos} first.`, true); }
+        approveLink(ls, l); ui.ffmCfm = null; ui.ffmSel = ui.ffmSel.filter((x) => x !== l.id); toast('ffm', `Approved. Initializing ${l.pos} at ${l.ffm}…`); break;
+      case 'ffm-bulk-approve': {
+        const list = fs.links.filter((x) => ui.ffmSel.includes(x.id) && x.st === 'pending'), miss = list.filter((x) => !x.ffm);
+        if (miss.length) { miss.forEach((x) => (x.err = true)); renderAll(); return toast('ffm', `Select an FFM warehouse for ${miss.length} warehouse(s) first.`, true); }
+        list.forEach((x) => approveLink(fs, x)); ui.ffmSel = []; toast('ffm', `Approved ${list.length} warehouse link(s).`); break;
+      }
+      case 'ffm-reject-ask': ui.ffmCfm = { kind: 'reject', id: l.id, r: '', note: '', err: '' }; break;
+      case 'ffm-r': ui.ffmCfm.r = el.dataset.r; ui.ffmCfm.err = ''; break;
+      case 'ffm-reject': {
+        const c = ui.ffmCfm; if (!c.r) { c.err = 'Select a reason'; renderAll(); return toast('ffm', c.err, true); }
+        ls.links = ls.links.filter((x) => x !== l); ls.rejects.push({ pos: l.pos, code: c.r, note: c.note, at: now() });
+        log(ls, ADM, `Rejected ${l.pos}: ${REJR[c.r][1]}`); ui.ffmCfm = null; toast('ffm', `Rejected ${l.pos}. The seller sees the reason on POS.`); break;
+      }
+      case 'ffm-approve-shop': {
+        ui.ffmMenu = false;
+        if (fs.type === 'single') {
+          if (!fs.ffmWh) { fs.err = true; renderAll(); return toast('ffm', 'Warehouse is required when approve connection', true); }
+          fs.st = 'approved'; fs.err = false; log(fs, ADM, `Approved connection, FFM warehouse ${fs.ffmWh}`); toast('ffm', `Connection approved. All POS warehouses go to ${fs.ffmWh}.`); break;
+        }
+        const ok = fs.links.filter((x) => x.st === 'pending' && x.ffm);
+        if (!ok.length) { fs.links.forEach((x) => (x.err = x.st === 'pending')); renderAll(); return toast('ffm', 'Assign an FFM warehouse to at least 1 POS warehouse.', true); }
+        fs.st = 'approved'; log(fs, ADM, 'Approved connection');
+        toast('ffm', `Connection approved with ${ok.length} warehouse(s). Unassigned warehouses stay Pending.`); ok.forEach((x) => approveLink(fs, x)); break;
+      }
+      case 'ffm-change-ask':
+        if (waitingOf(ls, l.pos)) return toast('ffm', `${l.pos} already has a pending link.`, true);
+        ui.ffmCfm = { kind: 'change', id: l.id, to: '', now: false, err: false }; renderAll(); return focusLater('chgTo');
+      case 'ffm-change': {
+        const c = ui.ffmCfm; if (!c.to) { c.err = true; renderAll(); return focusLater('chgTo'); }
+        const nl = newLink(ls, l.pos, c.to, ADM, 'repl', l.ffm, { replaces: l.id }); log(ls, ADM, `Created new link ${l.pos} → ${c.to} (change warehouse)`); ui.ffmCfm = null;
+        if (c.now) { approveLink(ls, nl); toast('ffm', `New link approved. ${l.pos} switches to ${c.to} after initialization.`); }
+        else toast('ffm', `New link ${l.pos} → ${c.to} is Pending. Approve it to switch.`); break;
+      }
+      case 'ffm-stop-ask': ui.ffmCfm = { kind: 'stop', id: l.id, r: '', note: '', err: '' }; break;
+      case 'ffm-stop': {
+        const c = ui.ffmCfm; if (!c.r) { c.err = 'Select a reason'; renderAll(); return toast('ffm', c.err, true); }
+        stopLink(ls, l, ADM, c.r, c.note); ui.ffmCfm = null; toast('ffm', `Stopped ${l.pos}. Other links are not affected.`); break;
+      }
+      case 'ffm-cfm-cancel': ui.ffmCfm = null; break;
+      case 'ffm-finish': l.open = 0; log(ls, 'System', `${l.pos} → ${l.ffm}: all open orders done`); break;
+      case 'ffm-export-from': { const d = ui.export; ui.ffmOpen = null; ui.ffmCfm = null; ui.ffmView = 'export'; d.shop = ls.key; d.pos = String(l.id); d.qty = ''; d.err = {}; d.done = ''; renderAll(); return document.getElementById('pFfm').scrollIntoView({ block: 'nearest' }); }
+      case 'wh-edit': { const w = WHS.find((x) => x.n === el.dataset.n); ui.ffmCfm = { kind: 'wh', n: w.n, val: w.ssc, err: '' }; renderAll(); return focusLater('sscIn'); }
+      case 'wh-save': {
+        const c = ui.ffmCfm, v = $('sscIn').value.trim().toUpperCase(); c.val = v; c.err = '';
+        if (v && !/^[A-Z0-9-]{3,20}$/.test(v)) c.err = 'Use 3–20 letters, digits or -';
+        else if (v) { const dup = WHS.find((x) => x.n !== c.n && x.ssc === v); if (dup) c.err = `Code already used by ${dup.n}`; }
+        if (c.err) { renderAll(); return focusLater('sscIn'); }
+        WHS.find((x) => x.n === c.n).ssc = v; ui.ffmCfm = null; toast('ffm', `Saved. Orders from ${c.n} go to SSC with code ${v || 'GIP-PH'}.`); break;
+      }
+      case 'ffm-convert-ask': ui.ffmCfm = { kind: 'convert' }; break;
+      case 'ffm-convert': convert(fs, ADM, 'ffm'); ui.ffmCfm = null; break;
+      case 'doc-reset': { const d = ui[el.dataset.k]; d.pos = ''; d.qty = ''; d.err = {}; d.done = ''; break; }
+      case 'doc-save': {
+        const k = el.dataset.k, d = ui[k], s = byKey(d.shop), o = docOpts(s, k).find((x) => x.key === d.pos), q = parseInt(d.qty, 10);
+        d.err = {}; d.done = '';
+        if (!o) d.err.pos = 1;
+        if (!(q > 0)) d.err.qty = 'Enter a quantity greater than 0';
+        else if (k === 'export' && o && o.stock != null && q > o.stock) d.err.qty = `Only ${o.stock} available at ${o.ffm}`;
+        if (d.err.pos || d.err.qty) { renderAll(); return toast('ffm', 'Check the highlighted fields', true); }
+        if (o.id) { const [, lk] = findLink(o.id); lk.stock += k === 'purchase' ? q : -q; }
+        d.done = k === 'purchase' ? `Purchase created: ${q} items into ${o.ffm} for ${o.pos}.` : `Export created: ${q} items out of ${o.ffm} for ${o.pos}.`;
+        d.qty = ''; toast('ffm', d.done); break;
+      }
+      case 'imp-check': ui.imp.checked = true; ui.imp.done = false; toast('ffm', 'File checked. Rows with errors will be skipped.'); break;
+      case 'imp-do': {
+        const s = byKey('an'), n = IMPORT.filter((r) => impCheck(s, r).ok).length;
+        ui.imp.done = true; toast('ffm', `Imported ${n} rows. ${IMPORT.length - n} rows with errors were skipped.`); break;
+      }
+      default: return;
+    }
+    renderAll();
+  });
+
+  document.addEventListener('change', (e) => {
+    const t = e.target; if (!t.closest('.proto')) return;
+    const k = t.dataset ? t.dataset.chg : '', pc = ui.posCfm, fc = ui.ffmCfm;
+    if (t.id === 'posShopSel') { ui.posShop = t.value; ui.posErr = ''; ui.posModal = false; ui.posConn = null; ui.posCfm = null; ui.posFilter = 'all'; ui.posExp = []; }
+    else if (t.id === 'ordWh') { ui.ordWh[ui.posShop] = t.value; ui.posErr = ''; }
+    else if (t.id === 'ordSend') { ui.ordSend = t.checked; ui.posErr = ''; }
+    else if (k === 'conn-w') { ui.posConn.sel = tog(ui.posConn.sel, t.dataset.w); ui.posConn.err = false; }
+    else if (k === 'conn-all') { const s = byKey(ui.posShop); ui.posConn.sel = t.checked ? s.posWhs.filter((w) => !posw(w).ctv) : []; ui.posConn.err = false; }
+    else if (k === 'pos-add-w') { pc.sel = tog(pc.sel, t.dataset.w); pc.err = false; }
+    else if (k === 'pos-ack') { pc.ack = t.checked; pc.err = ''; }
+    else if (k === 'assign') { const [, l] = findLink(t.dataset.id); l.ffm = t.value; l.err = false; }
+    else if (k === 'sel') ui.ffmSel = tog(ui.ffmSel, +t.dataset.id);
+    else if (k === 'sel-all') { const s = byKey(ui.ffmOpen); ui.ffmSel = t.checked ? s.links.filter((l) => l.st === 'pending').map((l) => l.id) : []; }
+    else if (k === 'bulk-wh') { const s = byKey(ui.ffmOpen); if (t.value) s.links.forEach((l) => { if (ui.ffmSel.includes(l.id) && l.st === 'pending') { l.ffm = t.value; l.err = false; } }); toast('ffm', `Assigned ${t.value} to ${ui.ffmSel.length} warehouse(s).`); }
+    else if (k === 'add-w') { fc.sel = tog(fc.sel, t.dataset.w); fc.err = ''; }
+    else if (k === 'add-wh') { fc.wh[t.dataset.w] = t.value; fc.err = ''; }
+    else if (k === 'add-now') fc.now = t.checked;
+    else if (k === 'chg-to') { fc.to = t.value; fc.err = false; }
+    else if (k === 'chg-now') fc.now = t.checked;
+    else if (k === 'hist-l') fc.lid = t.value;
+    else if (k === 'single-wh') { const s = byKey(ui.ffmOpen); s.ffmWh = t.value; s.err = false; log(s, ADM, `FFM warehouse set to ${t.value}`); if (s.st === 'approved') toast('ffm', 'Saved. POS receives the new FFM warehouse.'); }
+    else if (k === 'doc-shop') { const d = ui[t.dataset.k]; d.shop = t.value; d.pos = ''; d.err = {}; d.done = ''; }
+    else if (k === 'doc-pos') { const d = ui[t.dataset.k]; d.pos = t.value; d.err.pos = 0; }
+    else return;
+    renderAll();
+  });
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.id === 'ffmQ') { ui.ffmQ = t.value; renderShopRows(); }
+    if (t.id === 'ffmLQ') { ui.ffmLQ = t.value; const tb = $('ffmLinkRows'); if (tb) tb.innerHTML = ffmLinkRows(byKey(ui.ffmOpen)); }
+    if (t.dataset && t.dataset.in === 'pos-note' && ui.posCfm) ui.posCfm.note = t.value;
+    if (t.dataset && t.dataset.in === 'ffm-note' && ui.ffmCfm) ui.ffmCfm.note = t.value;
+    if (t.dataset && t.dataset.chg === 'doc-qty') ui[t.dataset.k].qty = t.value.replace(/[^0-9]/g, '');
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

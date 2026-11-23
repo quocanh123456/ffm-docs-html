@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tổng hợp WMS v1 · v2: tính năng FFM hiện có và sắp tới</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>Tổng hợp WMS</div>
+  <nav class="nav">
+    <a href="#v1">WMS v1 · hiện có</a><a href="#khao-sat">Khảo sát GIP</a><a href="#v2">WMS v2 · sắp tới</a><a href="#cau-hoi">Câu hỏi cần chốt</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+<aside class="roadmap" aria-label="Việc chờ">
+  <div class="rm-h"><b>Việc chờ</b><span>3 câu cần chốt</span></div>
+  <div class="rm-sum"><a class="ok" href="#cau-hoi"><b>0</b>Đã xử lý</a><a class="bad" href="#cau-hoi"><b>3</b>Chưa xử lý</a></div>
+  <ul class="rm-todo"><li><a href="#cau-hoi">Pick theo phiếu: trừ tồn vị trí lúc nào?</a></li><li><a href="#cau-hoi">Bật chế độ pick theo kho hay theo từng danh sách?</a></li><li><a href="#cau-hoi">Gộp còn 3 loại vị trí?</a></li></ul>
+</aside>
+
+
+<header class="hero">
+  <div class="eyebrow">FFM · Tổng hợp WMS</div>
+  <h1>Tổng hợp WMS v1 · v2</h1>
+  <p><b>WMS v1</b> là các tính năng kho FFM đang có. <b>WMS v2</b> là các tính năng đề xuất làm tiếp sau khi khảo sát kho GIP: giữ khả năng truy vết của FFM, lấy thêm tốc độ và sự linh hoạt của cách GIP vận hành. Trang này là bản rút gọn; luồng chi tiết, so sánh từng khâu và prototype ở trang báo cáo khảo sát.</p>
+  <div class="meta">
+    <span class="chip">Bản đầy đủ <a href="quy-trinh-kho-gip-va-ffm">Báo cáo khảo sát kho GIP và đề xuất cho FFM</a></span>
+    <span class="chip">Cập nhật 04/11/2026</span>
+    <span class="chip">Code: sea-fulfillment develop 8e50107a · sea-fulfillment-web develop 625549da</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>8 khâu</b><span>WMS v1 đã có luồng, từ nhập hàng tới hàng hoàn</span></div>
+  <div class="kpi"><b>14 đề xuất</b><span>WMS v2: 9 về quy trình, 5 về vị trí kho</span></div>
+  <div class="kpi"><b>4 làm trước</b><span>chế độ pick, tote bàn giao, sơ đồ kho, gợi ý vị trí cất</span></div>
+  <div class="kpi"><b>3 câu hỏi</b><span>chờ BA và vận hành GIP chốt</span></div>
+</div>
+
+<section id="v1">
+  <div class="sec-h"><span class="n">01</span><h2>WMS v1 — FFM hiện có</h2><p>Tính năng đang chạy, so với cách kho GIP làm</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th style="width:130px">Khâu</th><th>FFM đang có</th><th style="width:260px">So với GIP</th></tr>
+      <tr><td><b>1. Nhập hàng</b></td><td>Kiểm tra QC: quét phiếu nhập → tote → từng sản phẩm. Tồn chỉ cộng khi Xếp kệ xong.</td><td><span class="pill p-bad">Thiếu</span> nhận hàng theo thùng</td></tr>
+      <tr><td><b>2. Thùng</b></td><td>Chưa có thùng. FFM chỉ có lô = từng dòng phiếu nhập, có hạn dùng; cấp hàng cho đơn theo FIFO / LIFO / FEFO.</td><td><span class="pill p-bad">Thiếu</span> GIP nhập và lưu theo thùng</td></tr>
+      <tr><td><b>3. Vị trí kho</b></td><td>5 loại vị trí, chỉ <code>pick</code> và <code>damage</code> có luồng dùng. Xếp kệ gợi ý vị trí đang chứa đúng SKU. Xem dạng bảng.</td><td><span class="pill p-mid">Một phần</span> thiếu bổ sung hàng từ vị trí lưu trữ sang vị trí pick</td></tr>
+      <tr><td><b>4. Pick hàng</b></td><td>Tự gom đơn theo Marketplace / SKU, tối đa 20 đơn mỗi danh sách. Mobile quét tote → vị trí → sản phẩm, ghi sổ công việc.</td><td><span class="pill p-mid">Đánh đổi</span> truy vết được nhưng chậm hơn; thiếu lọc theo số SP, chọn đơn</td></tr>
+      <tr><td><b>5. Đóng gói</b></td><td>Pack WMS: quét tote → sản phẩm → mã vận đơn, có quay video.</td><td><span class="pill p-ok">Tương đương</span> GIP có thêm đóng gói theo SKU</td></tr>
+      <tr><td><b>6. Bàn giao</b></td><td>Phiên theo 1 ĐVVC, quét mã vận đơn từng kiện, kiện sai ĐVVC bị chặn.</td><td><span class="pill p-ok">FFM tốt hơn</span> GIP chia kiện theo ĐVVC bằng tay</td></tr>
+      <tr><td><b>7. Kiểm hàng</b></td><td>Phiếu kiểm kê <a href="https://pancakework.vn/issues/w4/c5024/i468">#468</a>: khoá kệ, đếm, duyệt chênh lệch, đồng bộ POS.</td><td><span class="pill p-mid">Đang làm</span> GIP đếm tay, bù bằng phiếu xuất / nhập</td></tr>
+      <tr><td><b>8. Hàng hoàn</b></td><td>Hoàn &amp; QC: phiếu hoàn gắn đơn gốc, tách Good / Not good, hàng hỏng vào vị trí <code>damage</code>.</td><td><span class="pill p-ok">FFM tốt hơn</span> GIP nhập hàng hoàn như hàng mới</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="khao-sat">
+  <div class="sec-h"><span class="n">02</span><h2>Khảo sát kho GIP — điểm chính</h2><p>Lý do của các đề xuất v2</p></div>
+  <div class="grid2" style="align-items:stretch">
+    <div class="card"><h4 style="margin:0 0 8px">Vấn đề ở GIP <span class="pill p-bad">FFM v2 phải tránh</span></h4>
+      <ul class="clean">
+        <li><b>Pick hàng làm tay</b>, không quét: thiếu, thừa phát hiện ở bàn đóng gói nhưng không biết lỗi ở đâu, ai làm.</li>
+        <li><b>Chia kiện theo ĐVVC bằng tay</b>: bỏ nhầm tote là đơn đi sai ĐVVC.</li>
+        <li><b>Kiểm hàng không có luồng riêng</b>: chênh lệch bù bằng phiếu xuất / nhập, số nhập xuất bị lẫn.</li>
+        <li><b>Gom đơn dựa vào kinh nghiệm</b>: không có gợi ý sản phẩm nằm gần nhau.</li>
+      </ul></div>
+    <div class="card"><h4 style="margin:0 0 8px">Ưu điểm của GIP <span class="pill p-ok">FFM v2 nên học</span></h4>
+      <ul class="clean">
+        <li><b>Pick hàng nhanh</b>: không dừng quét ở mỗi vị trí.</li>
+        <li><b>Lọc đơn 1 SP / 2 SP / mix</b> khi tạo danh sách pick hàng.</li>
+        <li><b>Người quản lý chọn đơn</b> và số đơn mỗi danh sách cho vừa người pick.</li>
+        <li><b>Tách vị trí pick và vị trí lưu trữ</b>, nhận hàng theo thùng, đóng gói theo SKU.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section id="v2">
+  <div class="sec-h"><span class="n">03</span><h2>WMS v2 — tính năng đề xuất</h2><p>Xếp theo ưu tiên ước lượng, chờ Lead và BA chốt phạm vi</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th>#</th><th>Tính năng</th><th>Giải quyết</th><th>Ưu tiên</th><th>Prototype</th></tr>
+      <tr><td class="num">1</td><td><b>Chế độ pick hàng theo kho</b>: Quét đầy đủ hoặc Pick theo phiếu; đóng gói thiếu hàng phải chọn lý do</td><td>Pick nhanh như GIP mà vẫn biết ai pick thiếu</td><td><span class="pill p-bad">Làm trước</span></td><td><a href="quy-trinh-kho-gip-va-ffm#prototype">Xem</a></td></tr>
+      <tr><td class="num">2</td><td><b>Gợi ý tote bàn giao theo ĐVVC</b> ngay khi đóng gói xong</td><td>Chặn chia nhầm kiện giữa các ĐVVC từ lúc bỏ kiện</td><td><span class="pill p-bad">Làm trước</span></td><td>—</td></tr>
+      <tr><td class="num">3</td><td><b>Sơ đồ kho dạng map</b>: người dùng tự vẽ vị trí trên lưới</td><td>Nền để tính khoảng cách cho các gợi ý vị trí</td><td><span class="pill p-bad">Làm trước</span></td><td><a href="quy-trinh-kho-gip-va-ffm#proto-vi-tri">Xem</a></td></tr>
+      <tr><td class="num">4</td><td><b>Gợi ý vị trí cất khi Xếp kệ</b> theo độ bán chạy</td><td>Hàng bán chạy nằm gần khu đóng gói; SKU mới cũng có gợi ý</td><td><span class="pill p-bad">Làm trước</span></td><td><a href="quy-trinh-kho-gip-va-ffm#proto-vi-tri">Xem</a></td></tr>
+      <tr><td class="num">5</td><td><b>Tạo danh sách pick linh hoạt</b>: lọc theo 5 loại đơn (1 SP · 1 SKU nhiều cái · Bộ · Đơn giống nhau · Lung tung), gom theo shop, chỉnh số đơn tối đa, bỏ / thêm đơn</td><td>Mỗi loại đơn pick theo cách nhanh nhất riêng; danh sách vừa sức người pick</td><td><span class="pill p-mid">Nên làm</span></td><td><a href="quy-trinh-kho-gip-va-ffm#loai-don">Bảng loại đơn</a> · <a href="quy-trinh-kho-gip-va-ffm#proto-pick">Xem</a></td></tr>
+      <tr><td class="num">6</td><td><b>Gợi ý gom đơn theo vị trí gần nhau</b> + thứ tự đi pick một vòng</td><td>Không phải dựa vào trí nhớ người quản lý</td><td><span class="pill p-mid">Nên làm</span></td><td><a href="quy-trinh-kho-gip-va-ffm#proto-pick">Xem</a></td></tr>
+      <tr><td class="num">7</td><td><b>Gợi ý vị trí pick theo đơn</b>, tính theo tồn lúc bắt đầu pick</td><td>Lấy ở vị trí đủ hàng và gần nhất</td><td><span class="pill p-mid">Nên làm</span></td><td><a href="quy-trinh-kho-gip-va-ffm#proto-vi-tri">Xem</a></td></tr>
+      <tr><td class="num">8</td><td><b>Gọn còn 3 loại vị trí</b>: Pick / Storage / Damage</td><td>Bỏ các loại vị trí không có luồng dùng</td><td><span class="pill p-mid">Nên làm</span></td><td>—</td></tr>
+      <tr><td class="num">9</td><td><b>Gợi ý bổ sung hàng khi vị trí Pick sắp hết</b>: dưới mức tối thiểu thì gợi ý lấy bao nhiêu từ Storage nào xuống, tạo việc chuyển kệ làm trước ca pick</td><td>Hàng ở Storage khó lấy, người pick không phải tự lấy giữa ca</td><td><span class="pill p-mid">Nên làm</span></td><td><a href="quy-trinh-kho-gip-va-ffm#proto-vi-tri">Xem</a></td></tr>
+      <tr><td class="num">10</td><td><b>Danh sách sản phẩm bán chạy</b> + cảnh báo đặt sai chỗ</td><td>Chuyển hàng bán chạy về gần khu đóng gói</td><td><span class="pill p-mid">Nên làm</span></td><td><a href="quy-trinh-kho-gip-va-ffm#proto-vi-tri">Xem</a></td></tr>
+      <tr><td class="num">11</td><td><b>Cập nhật tồn bằng file thành phiếu chờ duyệt</b>, dùng lại luồng duyệt của #468</td><td>Vận hành tự nắn tồn mà vẫn giữ dấu vết</td><td><span class="pill p-mid">Nên làm</span></td><td>—</td></tr>
+      <tr><td class="num">12</td><td><b>Nhận hàng theo thùng</b>: quét mã thùng = cộng cả thùng</td><td>Nhập hàng số lượng lớn nhanh, ít sai đếm</td><td><span class="pill p-mid">Nên làm</span></td><td>—</td></tr>
+      <tr><td class="num">13</td><td><b>Đóng gói nhanh khi có sự cố</b> (mất điện, hỏng thiết bị): ghi nhận đơn đóng ngoài luồng WMS theo danh sách mã đơn, tự trừ tồn vị trí. GIP / SSC mỗi sản phẩm 1 vị trí nên trừ thẳng; FFM nhiều vị trí nên cần quy tắc chọn vị trí</td><td>Vẫn đẩy đơn ra khi thiết bị hỏng mà tồn vị trí không lệch (Pack Order (cũ) hiện không trừ tồn vị trí)</td><td><span class="pill p-mid">Nên làm</span></td><td><a href="quy-trinh-kho-gip-va-ffm#dong-goi-nhanh">Chi tiết</a></td></tr>
+      <tr><td class="num">14</td><td><b>Đóng gói theo SKU</b> cho danh sách toàn đơn 1 sản phẩm</td><td>Nhanh hơn ở đóng gói, nhất là đơn sàn</td><td><span class="pill p-info">Xem xét sau</span></td><td>—</td></tr>
+    </table>
+  </div>
+  <p class="caption">Ưu tiên là ước lượng sơ bộ để xếp thứ tự, chưa phải estimate của dev. Phiếu kiểm kê #468 đang làm nên xếp vào v1, không tính trong v2.</p>
+</section>
+
+<section id="cau-hoi">
+  <div class="sec-h"><span class="n">04</span><h2>Câu hỏi cần chốt</h2><p>Người trả lời: BA và vận hành GIP</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Tồn kho</div><h4>Pick theo phiếu: trừ tồn vị trí lúc nào?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất: lúc bấm Hoàn tất pick, theo vị trí gợi ý.</div></div></div>
+    <div class="dcard"><div class="q">Phạm vi</div><h4>Bật chế độ pick theo kho hay theo từng danh sách?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất: theo kho, thêm tuỳ chọn chỉ áp dụng cho đơn hoả tốc.</div></div></div>
+    <div class="dcard"><div class="q">Vị trí kho</div><h4>Gộp còn 3 loại vị trí?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất: Pick / Storage / Damage; <code>staging</code> giữ hay bỏ cần vận hành xác nhận.</div></div></div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

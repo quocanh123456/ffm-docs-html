@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hủy đơn trên Order detail (Wait Print → Waiting for pick up)</title>
+<meta name="owner" content="tiendat@pancake.vn">
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { height: auto; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  /* Bảng kế hoạch dự án + Gantt theo sprint: .filters lọc, table.plan, thanh .bar theo ưu tiên p0–p3, cột mốc .pilot */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .filters span { color: var(--ink2); font-size: 13px; margin-right: 4px; }
+  .fbtn { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink2); }
+  .fbtn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .plan-wrap { overflow-x: auto; }
+  table.plan { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  table.plan th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink3); font-weight: 700; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; background: #fff; }
+  table.plan td { padding: 8px 6px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+  table.plan td.no { color: var(--ink2); font-weight: 700; text-align: center; width: 28px; }
+  table.plan td.name { min-width: 220px; }
+  table.plan td.name b { display: block; font-size: 13px; }
+  table.plan td.name small { display: block; color: var(--ink2); font-size: 11.5px; line-height: 1.4; }
+  table.plan td.team, table.plan td.own { white-space: nowrap; color: var(--ink2); }
+  table.plan td.srcs { min-width: 92px; }
+  table.plan tr.grp td { background: var(--slate-bg); font-weight: 700; font-size: 12.5px; padding: 6px 10px; }
+  table.plan th.g, table.plan td.g { width: 31px; min-width: 31px; padding: 8px 0; text-align: center; }
+  table.plan td.g { border-left: 1px solid #f1f3f8; }
+  table.plan .pilot { border-right: 2px dashed var(--green) !important; }
+  table.plan th.later, table.plan td.later { width: 40px; min-width: 40px; padding-right: 4px; }
+  .bar { display: block; height: 14px; }
+  .bar.st { border-top-left-radius: 5px; border-bottom-left-radius: 5px; margin-left: 3px; }
+  .bar.en { border-top-right-radius: 5px; border-bottom-right-radius: 5px; margin-right: 3px; }
+  .bar.p0 { background: var(--ink3); } .bar.p1 { background: var(--blue); } .bar.p2 { background: var(--ffm); }
+  .bar.p3 { background: var(--violet-bg); border: 1px dashed var(--violet); }
+  .pri:not(.btn) { display: inline-block; font-weight: 700; font-size: 11.5px; padding: 1px 7px; border-radius: 6px; }
+  .pri.p0 { background: var(--slate-bg); color: var(--ink2); } .pri.p1 { background: var(--blue); color: #fff; }
+  .pri.p2 { background: #e0f2fe; color: #0369a1; } .pri.p3 { background: var(--violet-bg); color: var(--violet); }
+  .src { display: inline-block; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; margin: 1px 0; }
+  .src.d { background: var(--blue-bg); color: var(--blue); } .src.t { background: var(--green-bg); color: var(--green); }
+  .src.tn { background: var(--violet-bg); color: var(--violet); } .src.o { background: var(--slate-bg); color: var(--ink2); }
+  .muted { color: var(--ink3); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink2); margin-top: 12px; align-items: center; }
+  .legend .bar { display: inline-block; width: 26px; vertical-align: -2px; margin: 0 6px 0 0; border-radius: 5px; }
+  /* Lưới ánh xạ ngắn (vd take note → hạng mục) */
+  .tnmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tnmap div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; background: #fff; }
+  .tnmap div b { color: var(--violet); margin-right: 4px; }
+  .tnmap div span { display: block; color: var(--ink2); font-size: 12px; }
+
+  @media (max-width: 960px) {
+    .tnmap { grid-template-columns: 1fr 1fr; }
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>Hủy đơn trên Order detail</div>
+  <nav class="nav">
+    <a href="#boi-canh">Bối cảnh</a><a href="#actor">Actor</a><a href="#us-ac">User Stories &amp; AC</a><a href="#luong">Luồng chính</a>
+    <a href="#prototype">Prototype</a><a href="#ngoai-le">Ngoại lệ</a><a href="#dong-bo">Đồng bộ POS</a><a href="#quyet-dinh">Phương án &amp; câu hỏi</a><a href="#tech">Tech</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Order · Đặc tả tính năng</div>
+  <h1>Hủy đơn ngay trên Order detail (Wait Print → Waiting for pick up)</h1>
+  <p>Thêm nút Cancel trên Order detail cho đơn ở Wait Print, Printed, Packing, Waiting for pick up. Hệ thống đã cho hủy đơn ở 4 trạng thái này, nên chỉ cần thêm lối vào và dùng lại đúng logic hủy của Bulk Update, không thêm rule mới.</p>
+  <div class="meta">
+    <span class="chip">Issue: [cần bổ sung]</span>
+    <span class="chip">Cập nhật 18/11/2026</span>
+    <span class="chip">Đối chiếu KB: ffm-knowledge 98b275a</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>4</b><span>trạng thái được thêm nút Cancel</span></div>
+  <div class="kpi"><b>7 → 3 bước</b><span>so với hủy qua Bulk Update</span></div>
+  <div class="kpi"><b>0</b><span>rule mới (dùng lại logic hủy có sẵn)</span></div>
+  <div class="kpi"><b>3</b><span>câu hỏi chờ dev / PM chốt</span></div>
+</div>
+
+<section id="boi-canh">
+  <div class="sec-h"><span class="n">01</span><h2>Bối cảnh &amp; Bài toán</h2><p>Hệ thống đã cho hủy, chỉ thiếu lối vào trên Order detail</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Order detail chưa có nút Cancel</h4><span class="pill p-bad">Thiếu</span></div><p>Đơn ở Wait Print, Printed, Packing, Waiting for pick up không hủy được từ Order detail. Người dùng phải ra danh sách Order → Bulk Update → tìm hoặc quét lại mã đơn → Update status → Canceled → chọn lý do → chờ chạy nền rồi xem lịch sử Bulk Update.</p></div>
+    <div class="row"><div><h4>Rule hủy đã có</h4><span class="pill p-ok">Có sẵn</span></div><p>Đơn được chuyển sang Canceled ở mọi trạng thái trước Shipped. Từ Shipped trở đi chỉ Admin hủy được bằng force. Đơn đang trong Picking List hoặc Handover Session chưa xác nhận vẫn được hủy (#431).</p></div>
+    <div class="row"><div><h4>Hậu quả</h4><span class="pill p-mid">Ảnh hưởng vận hành</span></div><p>Hủy 1 đơn mất nhiều bước, dễ chọn nhầm đơn trong Bulk Update. Đơn càng gần bước giao ĐVVC, hủy chậm càng dễ bị bàn giao nhầm. Số đơn hủy ở 4 trạng thái này mỗi ngày: [cần bổ sung]. Khách yêu cầu: [cần bổ sung].</p></div>
+  </div>
+</section>
+
+<section id="actor">
+  <div class="sec-h"><span class="n">02</span><h2>Người dùng &amp; Actor</h2><p>Ai bấm hủy, ai chịu tác động</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th>Actor</th><th>Vai trò trong tính năng</th></tr>
+      <tr><td><b>CS / Sale Manager / Warehouse Manager</b></td><td>Nhận yêu cầu hủy, bấm Cancel trên Order detail. Cần có quyền đổi trạng thái đơn, và trạng thái hiện tại của đơn phải nằm trong Editable Order Status của role hoặc Department.</td></tr>
+      <tr><td><b>Warehouse Staff</b></td><td>Không bấm hủy, nhưng xử lý hàng của đơn đã hủy: Packing, Handover, cất lại kệ.</td></tr>
+      <tr><td><b>POS (hệ thống)</b></td><td>Nhận trạng thái Canceled đồng bộ từ FFM.</td></tr>
+      <tr><td><span class="pill p-info">Ngoài phạm vi</span></td><td>Seller tự hủy trên cổng Seller.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="us-ac">
+  <div class="sec-h"><span class="n">03</span><h2>User Stories &amp; Acceptance Criteria</h2><p>3 bước theo hành trình người dùng</p></div>
+  <div class="status">
+    <div class="row"><div><h4>US1 – Hiển thị nút Cancel</h4><p>Là CS, tôi muốn thấy nút Cancel trên Order detail khi đơn đang ở các bước kho, để hủy ngay tại màn đang xem.</p></div>
+      <ul class="clean">
+        <li>AC1: Nút Cancel hiện trên Order detail khi đơn ở Wait Print, Printed, Packing, Waiting for pick up.</li>
+        <li>AC2: User không có quyền đổi trạng thái đơn, hoặc trạng thái hiện tại của đơn không nằm trong Editable Order Status của role/Department → ẩn nút.</li>
+        <li>AC3: Đơn từ Shipped trở đi không hiện nút. Các trạng thái trước Wait Print giữ nguyên như hiện nay.</li>
+      </ul></div>
+    <div class="row"><div><h4>US2 – Xác nhận hủy</h4><p>Là CS, tôi muốn chọn lý do rồi xác nhận hủy, để đơn được hủy đúng quy trình như khi hủy qua Bulk Update.</p></div>
+      <ul class="clean">
+        <li>AC1: Bấm Cancel → mở form xác nhận có ô Cancellation reason bắt buộc. Danh sách lý do lấy từ cấu hình lý do hủy hiện có, kèm Other để nhập tay (giống Bulk Update).</li>
+        <li>AC2: Chưa chọn lý do (hoặc chọn Other mà để trống) → nút Confirm không bấm được.</li>
+        <li>AC3: Bấm Confirm → đơn chuyển Canceled ngay, Order detail hiện trạng thái mới, kèm thông báo "Order canceled successfully".</li>
+        <li>AC4: Kết quả giống hủy qua Bulk Update: lịch sử trạng thái ghi người hủy, thời điểm, lý do; đơn được gắn tag lý do hủy; tồn kho hoàn theo rule hiện có; trạng thái đồng bộ về POS.</li>
+        <li>AC5: Trong lúc đang xử lý, nút Confirm bị khóa, bấm nhiều lần không gửi hủy lặp.</li>
+        <li>AC6: Bấm Cancel trên form hoặc đóng form → đơn giữ nguyên trạng thái.</li>
+      </ul></div>
+    <div class="row"><div><h4>US3 – Cảnh báo khi đơn đã vào luồng kho</h4><p>Là CS, tôi muốn được cảnh báo nếu đơn đã được kho nhặt, đóng gói hoặc quét Handover, để báo kho xử lý hàng sau khi hủy.</p></div>
+      <ul class="clean">
+        <li>AC1: Đơn đã nằm trong Picking List, đã đóng gói, hoặc đã quét vào Handover Session chưa xác nhận → form hiện thêm cảnh báo: "This order is already being processed in the warehouse. Picked or packed items need to be put back to the shelf after canceling." Vẫn cho hủy.</li>
+        <li>AC2: Đơn chưa vào luồng kho → không hiện cảnh báo.</li>
+      </ul></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="pipe">
+      <div class="s">Wait Print<small>có Cancel</small></div>
+      <div class="s">Printed<small>có Cancel</small></div>
+      <div class="s">Packing<small>có Cancel</small></div>
+      <div class="s">Waiting for pick up<small>có Cancel</small></div>
+      <div class="s you">Canceled<small>sau khi Confirm</small></div>
+    </div>
+    <p class="caption">State transition: 4 trạng thái kho → Canceled. Từ Shipped trở đi không có nút (giữ rule hiện tại).</p>
+  </div>
+</section>
+
+<section id="luong">
+  <div class="sec-h"><span class="n">04</span><h2>Luồng chính (Happy Path)</h2><p>Từ lúc mở Order detail đến lúc đơn được đồng bộ về POS</p></div>
+  <div class="card">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Mở Order detail<small>đơn ở 1 trong 4 trạng thái kho</small></div>
+      <div class="s"><b>2</b><br>Bấm Cancel<small>đơn đã vào kho → hiện cảnh báo</small></div>
+      <div class="s"><b>3</b><br>Chọn Cancellation reason<small>bắt buộc, có Other</small></div>
+      <div class="s"><b>4</b><br>Confirm<small>đơn → Canceled</small></div>
+      <div class="s"><b>5</b><br>Hệ thống chạy tiếp<small>ghi lịch sử, gắn tag, hoàn tồn, đồng bộ POS</small></div>
+    </div>
+    <p class="caption">Ví dụ: khách gọi hủy đơn 2611180001 đang ở Printed. CS mở Order detail → Cancel → chọn "Customer changed mind" → Confirm → đơn hiện Canceled; lịch sử ghi tên CS, giờ hủy, lý do; trên POS đơn cũng chuyển Canceled.</p>
+  </div>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">05</span><h2>Prototype</h2><p>Bấm thử: mở đơn → Cancel → chọn lý do → Confirm; Confirm khi chưa chọn lý do; Other để trống; đơn 2611180003 (cảnh báo kho); "Giả lập: ĐVVC vừa lấy hàng" ở đơn 2611180004 rồi hủy (báo lỗi); đổi sang Warehouse Staff (ẩn nút)</p></div>
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/order</span></div>
+    <div class="app">
+      <div class="side">
+        <div class="brand"><b>F</b>Orders &amp; Telesale</div>
+        <a>Telesale</a><a class="on">Order</a><a>Bulk update history</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>Order</h3>
+          <div style="display:flex;gap:8px;align-items:center;font-size:12px">Đăng nhập với:
+            <select id="who" class="btn"><option value="cs">Nguyễn Thu Hà · CS (có quyền)</option><option value="wh">Phạm Văn Long · Warehouse Staff (không quyền)</option></select>
+          </div></div>
+        <div class="panel" id="list-view">
+          <table class="ant"><thead><tr><th>Order ID</th><th>Customer</th><th>Status</th><th>Courier · Waybill</th><th style="text-align:right">COD</th></tr></thead><tbody id="rows"></tbody></table>
+          <p style="color:#999;font-size:12px;margin:10px 0 0">Bấm vào 1 dòng để mở Order detail.</p>
+        </div>
+        <div class="panel" id="detail-view" style="display:none">
+          <div class="ph" style="margin-bottom:8px">
+            <div style="display:flex;gap:10px;align-items:center"><button class="btn" data-act="back">← Back</button><h3 id="d-title"></h3><span id="d-status"></span></div>
+            <div style="display:flex;gap:8px"><span class="changed"><button class="btn" data-act="open" id="btn-cancel" style="color:#ff4d4f;border-color:#ff4d4f">Cancel</button></span></div>
+          </div>
+          <table class="ant" id="d-info"></table>
+          <h4 style="margin:14px 0 6px;font-size:13px">Status history</h4>
+          <table class="ant"><thead><tr><th>Time</th><th>User</th><th>Status</th><th>Reason</th></tr></thead><tbody id="d-hist"></tbody></table>
+          <p style="color:#999;font-size:12px;margin:10px 0 0">Các khối và nút khác của Order detail (sản phẩm, giao vận, ghi chú…) giữ như hiện tại, không vẽ trong prototype.</p>
+          <div style="margin-top:10px"><button class="btn" data-act="sim" id="btn-sim">Giả lập: ĐVVC vừa lấy hàng</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="mask" data-act="close"></div>
+    <div class="drawer">
+      <h4 id="dr-title">Cancel order</h4>
+      <div class="note n-warn" id="dr-warn" style="display:none;margin-bottom:12px"><span class="ic">!</span><div><p>This order is already being processed in the warehouse. Picked or packed items need to be put back to the shelf after canceling.</p></div></div>
+      <div class="fld"><label>Cancellation reason <em>*</em></label>
+        <select id="in-reason"><option value="">Select a reason</option><option>Customer changed mind</option><option>Duplicate order</option><option>Wrong address</option><option>Out of stock</option><option value="other">Other</option></select></div>
+      <div class="fld" id="f-other" style="display:none"><label>Other reason <em>*</em></label><input id="in-other" placeholder="Enter reason"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="confirm" id="btn-confirm">Confirm</button></div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+  <p class="caption">Viền tím nét đứt là chỗ thay đổi so với hiện tại (nút Cancel). Form xác nhận vẽ dạng drawer để minh hoạ; modal hay drawer do dev/design chọn theo giao diện Order detail hiện có. Lý do hủy là dữ liệu mẫu, thực tế lấy từ cấu hình lý do hủy của từng client.</p>
+</section>
+
+<section id="ngoai-le">
+  <div class="sec-h"><span class="n">06</span><h2>Luồng ngoại lệ &amp; Edge Cases</h2><p>Hệ thống xử lý thế nào khi không đi theo luồng chính</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th style="width:34%">Tình huống</th><th>Hệ thống xử lý</th></tr>
+      <tr><td>Đang mở form thì ĐVVC lấy hàng, đơn sang Shipped</td><td>Hủy thất bại, hiện đúng câu lỗi hệ thống trả về, Order detail tải lại trạng thái mới.</td></tr>
+      <tr><td>2 người cùng hủy 1 đơn</td><td>Người sau nhận lỗi hoặc thấy đơn đã Canceled. Lịch sử không ghi hủy 2 lần.</td></tr>
+      <tr><td>Đơn đã được nhặt (trong Picking List)</td><td>Vẫn cho hủy, có cảnh báo. Hàng đã nhặt được cất lại theo luồng Re-putaway (issue riêng).</td></tr>
+      <tr><td>Đơn đã đóng gói, chờ Handover</td><td>Vẫn cho hủy. Khi quét ở Handover, đơn được tính vào số đơn Canceled và không giao cho ĐVVC (rule hiện có).</td></tr>
+      <tr><td>Đơn đã quét vào Handover Session chưa xác nhận</td><td>Vẫn cho hủy. Khi xác nhận phiên, đơn được đánh dấu Canceled, đếm riêng, không giao (rule hiện có).</td></tr>
+      <tr><td>Tồn kho khi hủy</td><td>Wait Print / Printed / Packing: chỉ hoàn số Có thể bán. Waiting for pick up: hoàn cả số Có thể bán và tồn thực tế. Giữ nguyên rule hiện có.</td></tr>
+      <tr><td>Đơn đã có mã vận đơn</td><td>Hủy trên FFM như Bulk Update hiện nay. Có gửi hủy vận đơn sang ĐVVC hay không: xem câu hỏi Q1.</td></tr>
+      <tr><td>Mất mạng hoặc lỗi khi đang gửi</td><td>Hiện thông báo lỗi, đơn giữ trạng thái cũ, người dùng bấm lại được.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="dong-bo">
+  <div class="sec-h"><span class="n">07</span><h2>Đồng bộ FFM ↔ POS</h2><p>Dùng đúng cơ chế đồng bộ trạng thái hiện có, không thêm luồng mới</p></div>
+  <div class="card">
+    <div class="arch">
+      <div class="zone z-ffm"><div class="zt"><i>F</i>FFM</div><div class="tile"><b>Order → Canceled</b><small>người dùng bấm Confirm trên Order detail</small></div><div class="tile"><b>Hoàn tồn</b><small>theo trạng thái lúc hủy</small></div></div>
+      <div class="link"><div class="arrow"><em>trạng thái Canceled</em></div><div class="arrow"><em>số dư tồn (shop dùng tồn FFM)</em></div></div>
+      <div class="zone z-pos"><div class="zt"><i>P</i>POS</div><div class="tile"><b>Đơn → Canceled</b><small>như khi hủy qua Bulk Update</small></div></div>
+    </div>
+    <p class="caption">Chiều FFM → POS, chạy ngay sau khi đơn chuyển Canceled. Nếu POS gửi đổi trạng thái cùng lúc thì xử lý theo rule đồng bộ hiện có; tính năng này không thêm rule.</p>
+  </div>
+</section>
+
+<section id="quyet-dinh">
+  <div class="sec-h"><span class="n">08</span><h2>Phương án &amp; câu hỏi chờ chốt</h2><p>Phương án đề xuất có dấu tích; câu hỏi mở màu tím</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Phương án</div><h4>Hủy đơn đơn lẻ ở đâu?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Đề xuất: nút Cancel riêng trên Order detail, dùng lại logic hủy của Bulk Update. Nhanh, ít rủi ro, giữ đúng quyền hiện có. Bulk Update vẫn giữ để hủy hàng loạt.</div></div>
+      <div class="alt"><s>Mở dropdown đổi trạng thái đầy đủ trên Order detail</s> (mở cả đường lùi trạng thái, vướng khóa #431) · <s>Giữ nguyên, hướng dẫn quét mã trong Bulk Update</s> (không giải quyết vấn đề)</div></div>
+    <div class="dcard"><div class="q">Q1 · ĐVVC</div><h4>Hủy đơn đã có mã vận đơn có gửi hủy sang ĐVVC không?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất: giữ đúng như Bulk Update hiện nay. KB chỉ nhắc việc gửi hủy với SSC. Người trả lời: dev.</div></div></div>
+    <div class="dcard"><div class="q">Q2 · Hiện trạng</div><h4>Vì sao Order detail đang ẩn Cancel ở 4 trạng thái này?</h4>
+      <div class="choice open"><span class="ck">?</span><div>Tài liệu chưa đề cập. Dev kiểm tra có điều kiện ẩn nào cần giữ không. Người trả lời: dev.</div></div></div>
+    <div class="dcard"><div class="q">Q3 · Câu chữ</div><h4>Câu thông báo thành công và câu cảnh báo</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất như ở US2-AC3 và US3-AC1. Người trả lời: PM.</div></div></div>
+  </div>
+</section>
+
+<section id="tech">
+  <div class="sec-h"><span class="n">09</span><h2>Tech &amp; Tham chiếu</h2><p>Key kỹ thuật tách riêng khỏi phần nghiệp vụ</p></div>
+  <div class="grid2">
+    <div class="card"><ul class="clean">
+      <li>Quyền đổi status: khóa <code>order.edit</code> / <code>telesale.edit_status</code>, phạm vi trạng thái theo <code>edit_order_group</code> (role hoặc Department).</li>
+      <li>Lý do hủy: <code>FFMSetting</code> type <code>order_cancellation_reason</code> → <code>cancel_reason_id</code>; Other = <code>-2</code> (<code>other_cancel_reason</code>).</li>
+      <li>Chặn hủy khi ≥ <code>shipped</code> trừ <code>is_force</code> (BR-ORD-007). Khóa lùi #431 vẫn cho hủy khi đơn còn trong Picking List / Handover Session mở.</li>
+      <li>Status key: Wait Print = <code>wait_print</code>, Printed = <code>printed</code>, Packing = <code>packing</code>, Waiting for pick up = <code>pending</code>.</li>
+      <li>Tồn: hủy ≤ <code>packing</code> → <code>DEALLOC</code>; hủy ở <code>pending</code> → <code>RTN</code>. <code>processing_count</code> +1 khi hủy (BR-ORD-009).</li>
+    </ul></div>
+    <div class="card"><ul class="clean">
+      <li><code>ffm-knowledge/90_Templates/prd-feed.template.md</code> (format spec)</li>
+      <li><code>ffm-knowledge/10_Modules/order/logic.md</code> §A.2, BR-ORD-007, BR-ORD-009, §D</li>
+      <li><code>ffm-knowledge/10_Modules/order/flows.md</code> §5 (Bulk update)</li>
+      <li><code>ffm-knowledge/10_Modules/warehouse/logic.md</code> (DEALLOC / RTN khi hủy)</li>
+      <li><code>ffm-knowledge/10_Modules/wms-inbuild/logic.md</code> (Handover đơn cancel giữa scan và confirm)</li>
+      <li><code>ffm-knowledge/20_Integrations/pos-sync-flow.md</code></li>
+      <li><code>ffm-knowledge/00_Overview/permission-system.md</code></li>
+    </ul></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong mảng orders, mọi thao tác cập nhật rồi vẽ lại.
+(() => {
+  const root = document.getElementById('proto');
+  const $ = (id) => document.getElementById(id);
+  const CANCELABLE = ['Wait Print', 'Printed', 'Packing', 'Waiting for pick up'];
+  const PILL = { 'Wait Print': 'p-info', 'Printed': 'p-info', 'Packing': 'p-mid', 'Waiting for pick up': 'p-mid', 'Shipped': 'p-ok', 'Canceled': 'p-bad' };
+  const orders = [
+    { id: '2611180001', cus: 'Maria Santos', phone: '+63 917 555 0101', status: 'Printed', courier: 'J&T · JT0098812345', cod: 1240, inWh: false, hist: [['09:12', 'System', 'Wait Print', ''], ['09:40', 'Trần Minh Đức', 'Printed', '']] },
+    { id: '2611180002', cus: 'Jose Reyes', phone: '+63 918 555 0144', status: 'Wait Print', courier: 'Ninja Van · –', cod: 890, inWh: false, hist: [['10:05', 'System', 'Wait Print', '']] },
+    { id: '2611180003', cus: 'Ana Cruz', phone: '+63 919 555 0188', status: 'Packing', courier: 'Flash · TH01234567', cod: 2150, inWh: true, hist: [['08:30', 'System', 'Wait Print', ''], ['08:55', 'Trần Minh Đức', 'Printed', ''], ['09:20', 'Lê Quang Huy', 'Packing', '']] },
+    { id: '2611180004', cus: 'Mark Dela Rosa', phone: '+63 920 555 0122', status: 'Waiting for pick up', courier: 'SPX · SPEPH0661234', cod: 560, inWh: true, picked: false, hist: [['07:50', 'System', 'Wait Print', ''], ['08:10', 'Trần Minh Đức', 'Printed', ''], ['08:40', 'Lê Quang Huy', 'Packing', ''], ['09:05', 'Lê Quang Huy', 'Waiting for pick up', '']] },
+    { id: '2611170021', cus: 'Liza Garcia', phone: '+63 921 555 0177', status: 'Shipped', courier: 'J&T · JT0098800021', cod: 1780, inWh: false, hist: [['17/11 15:00', 'System', 'Shipped', '']] },
+  ];
+  let cur = null, busy = false;
+  const fmt = (n) => '₱' + n.toLocaleString('en-US');
+  const now = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const toast = (text, bad) => { const el = $('toast'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => el.className = 'toast', 2200); };
+  const pill = (s) => `<span class="pill ${PILL[s]}">${s}</span>`;
+  const canCancel = (o) => $('who').value === 'cs' && CANCELABLE.includes(o.status);
+
+  function renderList() {
+    $('rows').innerHTML = orders.map((o, i) => `<tr data-i="${i}" style="cursor:pointer"><td style="color:#1677ff">${o.id}</td><td>${o.cus}</td><td>${pill(o.status)}</td><td>${o.courier}</td><td style="text-align:right">${fmt(o.cod)}</td></tr>`).join('');
+  }
+  function renderDetail() {
+    const o = orders[cur];
+    $('d-title').textContent = 'Order ' + o.id;
+    $('d-status').innerHTML = pill(o.status);
+    $('btn-cancel').parentElement.style.display = canCancel(o) ? '' : 'none';
+    $('btn-sim').style.display = (o.id === '2611180004' && o.status === 'Waiting for pick up' && !o.picked) ? '' : 'none';
+    $('d-info').innerHTML = `<tr><td style="width:160px;color:#888">Customer</td><td>${o.cus} · ${o.phone}</td></tr><tr><td style="color:#888">Courier · Waybill</td><td>${o.courier}</td></tr><tr><td style="color:#888">COD</td><td>${fmt(o.cod)}</td></tr><tr><td style="color:#888">Warehouse step</td><td>${o.inWh ? 'Đã vào Picking List / đóng gói' : 'Chưa vào luồng kho'}</td></tr>`;
+    $('d-hist').innerHTML = o.hist.slice().reverse().map((h) => `<tr><td>${h[0]}</td><td>${h[1]}</td><td>${pill(h[2])}</td><td>${h[3] || '–'}</td></tr>`).join('');
+  }
+  function show(view) { $('list-view').style.display = view === 'list' ? '' : 'none'; $('detail-view').style.display = view === 'detail' ? '' : 'none'; }
+  function reasonValue() { const r = $('in-reason').value; return r === 'other' ? $('in-other').value.trim() : r; }
+  function syncConfirm() { const ok = !!reasonValue() && !busy; const b = $('btn-confirm'); b.disabled = !ok; b.style.opacity = ok ? '' : '.45'; b.style.cursor = ok ? '' : 'not-allowed'; }
+  function closeDrawer() { root.classList.remove('open'); }
+
+  root.addEventListener('click', (e) => {
+    const tr = e.target.closest('#rows tr');
+    if (tr) { cur = +tr.dataset.i; renderDetail(); show('detail'); return; }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'back') { show('list'); renderList(); }
+    if (act === 'open') {
+      const o = orders[cur];
+      $('dr-title').textContent = 'Cancel order ' + o.id;
+      $('dr-warn').style.display = o.inWh ? '' : 'none';
+      $('in-reason').value = ''; $('in-other').value = ''; $('f-other').style.display = 'none';
+      busy = false; syncConfirm(); root.classList.add('open');
+      setTimeout(() => $('in-reason').focus({ preventScroll: true }), 260);
+    }
+    if (act === 'close') closeDrawer();
+    if (act === 'sim') { orders[cur].picked = true; toast('Giả lập: ĐVVC đã lấy hàng đơn ' + orders[cur].id + ' (màn chưa tải lại)'); $('btn-sim').style.display = 'none'; }
+    if (act === 'confirm') {
+      if (!reasonValue()) { toast('Please select a cancellation reason', true); return; }
+      if (busy) return;
+      busy = true; syncConfirm(); $('btn-confirm').textContent = 'Processing…';
+      setTimeout(() => {
+        const o = orders[cur];
+        busy = false; $('btn-confirm').textContent = 'Confirm';
+        if (o.picked) {
+          o.status = 'Shipped'; o.inWh = false; o.hist.push([now(), 'SPX webhook', 'Shipped', '']);
+          closeDrawer(); renderDetail(); toast('Cannot update order status to Canceled. Order is already Shipped.', true); return;
+        }
+        o.status = 'Canceled'; o.hist.push([now(), $('who').value === 'cs' ? 'Nguyễn Thu Hà' : 'Phạm Văn Long', 'Canceled', reasonValue()]);
+        closeDrawer(); renderDetail(); toast('Order canceled successfully');
+      }, 700);
+    }
+  });
+  $('in-reason').addEventListener('change', () => { $('f-other').style.display = $('in-reason').value === 'other' ? '' : 'none'; syncConfirm(); });
+  $('in-other').addEventListener('input', syncConfirm);
+  $('who').addEventListener('change', () => { if (cur !== null) renderDetail(); toast('Đăng nhập với ' + $('who').selectedOptions[0].text); });
+  renderList();
+})();
+</script>
+</body>
+</html>

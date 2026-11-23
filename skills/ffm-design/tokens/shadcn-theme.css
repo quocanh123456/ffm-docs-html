@@ -1,0 +1,27 @@
+/* shadcn/ui theme → FFM tokens. Import tokens.css trước file này. */
+:root {
+  --background: var(--ffm-bg-base-canvas);
+  --foreground: var(--ffm-fg-base-primary);
+  --card: var(--ffm-bg-base-card);
+  --card-foreground: var(--ffm-fg-base-primary);
+  --popover: var(--ffm-bg-base-card);
+  --popover-foreground: var(--ffm-fg-base-primary);
+  --primary: var(--ffm-bg-brand-default);
+  --primary-foreground: var(--ffm-fg-base-light-solid);
+  --secondary: var(--ffm-bg-base-surface-strong);
+  --secondary-foreground: var(--ffm-fg-base-primary);
+  --muted: var(--ffm-bg-base-surface-strong);
+  --muted-foreground: var(--ffm-fg-base-secondary);
+  --accent: var(--ffm-bg-base-hover);
+  --accent-foreground: var(--ffm-fg-base-primary);
+  --destructive: var(--ffm-bg-error-default);
+  --destructive-foreground: var(--ffm-fg-base-light-solid);
+  --border: var(--ffm-border-base-default);
+  --input: var(--ffm-border-base-default);
+  --ring: var(--ffm-border-base-focus);
+  --sidebar: var(--ffm-bg-base-surface);
+  --sidebar-foreground: var(--ffm-fg-base-primary);
+  --sidebar-accent: var(--ffm-bg-base-selected);
+  --sidebar-border: var(--ffm-border-base-default);
+  --radius: 12px; /* control = radius/xl 12 · container = radius/2xl 16 (rule #14) */
+}

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call Configuration: khách tự cấu hình Call result</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+
+  /* ── Phần thêm riêng của trang Call Configuration (mẫu chưa có): tab kiểu card, card antd, popover form, modal, select, danh sách lệnh, khung chọn bối cảnh ── */
+  .ctabs { display: flex; gap: 2px; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px; }
+  .ctabs a { padding: 6px 16px; cursor: pointer; border: 1px solid #f0f0f0; border-bottom: none; border-radius: 8px 8px 0 0; background: #fafafa; color: rgba(0,0,0,.65); margin-bottom: -1px; }
+  .ctabs a.on { background: #fff; color: #1677ff; border-bottom: 1px solid #fff; }
+  .acard { background: #fff; border: 1px solid #f0f0f0; border-radius: 8px; margin-bottom: 12px; position: relative; }
+  .acard .hd { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-weight: 600; }
+  .acard .bd { padding: 10px 14px; }
+  .acard .sub { color: #bfbfbf; font-size: 12px; font-weight: 400; }
+  .btn.sm { padding: 2px 10px; font-size: 12.5px; }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; }
+  .lnk { color: #1677ff; cursor: pointer; margin-right: 10px; } .lnk.del { color: #ff4d4f; }
+  .pop { position: absolute; z-index: 7; right: 14px; top: 46px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 12px 14px; width: 300px; visibility: hidden; }
+  .pop.show { visibility: visible; }
+  .pop h5 { margin: 0 0 10px; font-size: 13.5px; }
+  .keyprev { font-size: 12px; color: #bfbfbf; margin-top: 4px; } .keyprev code { font-size: 12px; }
+  .amodal { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; visibility: hidden; }
+  .amodal.show { visibility: visible; }
+  .amodal .mbg { position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .amodal .box { position: relative; background: #fff; border-radius: 8px; padding: 18px 20px; width: 380px; box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+  .amodal .box h4 { margin: 0 0 12px; font-size: 15px; }
+  .amodal .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  .sel { position: relative; }
+  .sel .val { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; cursor: pointer; background: #fff; min-height: 32px; }
+  .sel .val.ph { color: #bfbfbf; }
+  .sel.dis .val { background: #f5f5f5; color: #bfbfbf; cursor: not-allowed; }
+  .fld.err .sel .val { border-color: #ff4d4f; }
+  .opts { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 4px; max-height: 190px; overflow: auto; z-index: 9; visibility: hidden; }
+  .opts.show { visibility: visible; }
+  .opts div { padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+  .opts div:hover { background: #f5f5f5; } .opts div.cur { background: var(--blue-bg); font-weight: 600; }
+  .empty-msg { color: #ff4d4f; font-size: 12px; margin-top: 4px; }
+  .fld .msg2 { color: #ff4d4f; font-size: 12px; }
+  textarea.note { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 13px; resize: none; display: block; }
+  .cmdwrap { position: relative; }
+  .cmdlist { position: absolute; left: 0; bottom: 100%; margin-bottom: 4px; width: 300px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 4px; z-index: 6; visibility: hidden; }
+  .cmdlist.show { visibility: visible; }
+  .cmdlist div { padding: 6px 10px; border-radius: 4px; background: #f5f5f5; cursor: pointer; }
+  .cmdlist small { display: block; color: #bfbfbf; font-size: 12px; }
+  .ctx { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+  .seg { display: inline-flex; border: 1px solid #d9d9d9; border-radius: 6px; overflow: hidden; background: #fff; }
+  .seg a { padding: 4px 12px; cursor: pointer; font-size: 13px; color: rgba(0,0,0,.88); border-left: 1px solid #d9d9d9; }
+  .seg a:first-child { border-left: none; } .seg a.on { background: #1677ff; color: #fff; }
+  .chk { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; }
+  .notes { display: grid; gap: 8px; margin-bottom: 12px; }
+  .nt { background: #fafafa; border-radius: 6px; padding: 8px 10px; } .nt small { color: #bfbfbf; display: block; font-size: 12px; }
+  .info-empty { text-align: center; color: #bfbfbf; padding: 60px 10px; }
+  .proto-h { margin: 22px 0 8px; font-size: 14.5px; }
+  pre.log { min-height: 110px; max-height: 230px; overflow-y: auto; white-space: pre-wrap; }
+  .steps4 { margin: 0; padding-left: 18px; } .steps4 li { margin: 6px 0; } .steps4 small { display: block; color: #bfbfbf; }
+  .acct { display: inline-flex; align-items: center; gap: 10px; border: 1px solid #d9d9d9; border-radius: 8px; padding: 10px 14px; }
+  .acct i { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #1677ff; display: inline-block; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>FFM · #491</div>
+  <nav class="nav">
+    <a href="#hien-trang">Hiện trạng</a><a href="#luong">Luồng</a><a href="#prototype">Prototype</a><a href="#quy-tac">Business rules</a>
+    <a href="#quyet-dinh">Phương án</a><a href="#ngoai-pham-vi">Ngoài phạm vi</a><a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Setting / Conversation · Đặc tả + prototype</div>
+  <h1>Call Configuration: khách tự cấu hình Call result</h1>
+  <p>Trang Setting › ITY Connection đổi thành <b>Call Configuration</b> gồm 2 tab. Tab <b>Common Setting</b> có card <b>Call Result</b> để admin từng công ty, từng market tự thêm, sửa, xoá các kết quả cuộc gọi mà <code>/gen_call_note</code> dùng ở Conversation của đơn và ticket; danh sách này tách khỏi bộ trạng thái của ITY. Tab <b>ITY Setting</b> giữ nguyên các màn ITY và chỉ hiện ở Philippines.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i491">ffm_dev #491</a></span>
+    <span class="chip">Liên quan <a href="https://pancakework.vn/issues/w4/c5024/i462">ffm_dev #462</a></span>
+    <span class="chip">Requested by GIP</span>
+    <span class="chip">Cập nhật 03/11/2026</span>
+    <span class="chip">Code: sea-fulfillment-web develop f4eee14d · sea-fulfillment develop 23eb675f</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>1 quyền mới</b><span><code>call.config</code>, <code>COUNTRY_ADMIN</code> có sẵn sau khi sync</span></div>
+  <div class="kpi"><b>0 migration</b><span>lưu ở bảng <code>ffm_settings</code> có sẵn</span></div>
+  <div class="kpi"><b>9 × 4</b><span>Call result tạo sẵn cho GIP (PH, TH, MY, ID)</span></div>
+  <div class="kpi"><b>5 bước</b><span>BE → sync quyền → TmpFix → FE → cấp quyền</span></div>
+</div>
+
+<section id="hien-trang">
+  <div class="sec-h"><span class="n">01</span><h2>Hiện trạng</h2><p>Những gì đang có và sẽ đổi</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Setting › ITY Connection</h4><span class="pill p-mid">Đổi thành Call Configuration</span></div><p>Trang <code>/admin/setting/ity-connection</code> có 3 tab Instruction / Authentication / Configuration. Menu hiện ở mọi market theo quyền <code>partner.ity_connect</code>, nhưng BE chỉ hỗ trợ Philippines (<code>ItyController @supported_countries ["63"]</code>), nên market khác mở ra là báo <code>Country code is not supported.</code></p></div>
+    <div class="row"><div><h4>Call result của <code>/gen_call_note</code></h4><span class="pill p-mid">Chuyển sang cấu hình</span></div><p>Hằng <code>callResults</code> trong <code>components/GenCallNoteModal.js</code> = 9 giá trị <code>ityStatus</code> + 3 giá trị thêm ở PR #547 (Callback, Change Order, Bank Transfer). Mọi công ty, mọi market thấy giống nhau; thêm giá trị phải sửa code, chờ review, deploy.</p></div>
+    <div class="row"><div><h4><code>ityStatus</code> (utils/ity.js)</h4><span class="pill p-info">Giữ nguyên</span></div><p>9 Call Status của ITY, chỉ còn dùng cho <code>ITYConfigMappingStatus</code> và <code>ITYCallInfo</code>. Không đổi nội dung, không đổi nơi dùng.</p></div>
+    <div class="row"><div><h4><code>noteCommands</code>, <code>toOrdinal</code>, <code>genCallNote</code>, <code>findSlashCommand</code></h4><span class="pill p-mid">Dời sang utils/call-note.js</span></div><p>#462 đặt các hàm này trong <code>utils/ity.js</code> dù không liên quan ITY. Dời ra để <code>utils/ity.js</code> trở về đúng như trước #462 (chỉ có <code>ityStatus</code>).</p></div>
+    <div class="row"><div><h4>Bulk Update Order › Create ITY Auto Campaign</h4><span class="pill p-mid">Chỉ hiện ở Philippines</span></div><p>Mục trong <code>updateTypeOptions</code> của <code>components/OrderMultiUpdate.js</code> (màn Telesale) đang hiện ở mọi market.</p></div>
+    <div class="row"><div><h4>Quyền <code>call.config</code> · type <code>call_result</code> · <code>TmpFix.seed_call_results/2</code></h4><span class="pill p-new">Mới thêm</span></div><p>Quyền xem / sửa card Call Result; mỗi Call result là 1 dòng <code>ffm_settings</code>; hàm vận hành chạy tay để tạo sẵn dữ liệu trước khi deploy FE.</p></div>
+  </div>
+</section>
+
+<section id="luong">
+  <div class="sec-h"><span class="n">02</span><h2>Luồng</h2><p>Từ lúc admin thêm Call result tới khi nó nằm trong note</p></div>
+  <div class="card">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Admin thêm Call result<small>Call Configuration › Common Setting › Call Result</small></div>
+      <div class="s"><b>2</b><br>BE sinh key, lưu<small><code>ffm_settings</code> type <code>call_result</code>, theo <code>app_id</code> + <code>country_code</code></small></div>
+      <div class="s"><b>3</b><br>FE tải danh sách<small><code>current.ffmSettings</code>, lúc đăng nhập</small></div>
+      <div class="s"><b>4</b><br>Sale / CSR gõ <code>/gen_call_note</code><small>chọn Call result của market đang chọn</small></div>
+      <div class="s"><b>5</b><br>Note ghi key<small><code>2nd call 2026-11-03 14:05:00 keep-ringing</code></small></div>
+    </div>
+    <p class="caption">Người dùng khác thấy giá trị mới sau khi tải lại trang (bước 3 chỉ chạy lúc đăng nhập), giống các danh sách lý do đang có. BE không đọc lại chữ trong note, nên sửa hay xoá Call result không làm thay đổi note đã ghi.</p>
+  </div>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">03</span><h2>Prototype</h2><p>Bấm thử: đổi market / quyền, thêm – sửa – xoá Call result, gõ /gen_call_note, mở Bulk Update Order</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th>#</th><th>Thao tác</th><th>Kết quả mong đợi</th></tr>
+      <tr><td>1</td><td>Bối cảnh mặc định: Philippines, có cả 2 quyền. Xem prototype A</td><td>Menu có <b>Call Configuration</b>; 2 tab Common Setting, ITY Setting; card Call Result 9 dòng: Answered, No Answered, Not Available, Cancel, Busy, Invalid Number, Callback, Change Order, Bank Transfer</td></tr>
+      <tr><td>2</td><td>A: <b>+ Create</b> → gõ <code>Keep Ringing</code> → Submit</td><td>Dưới ô nhập hiện <code>Key: keep-ringing</code>; bảng 10 dòng, dòng cuối Keep Ringing / <code>keep-ringing</code></td></tr>
+      <tr><td>3</td><td>A: <b>+ Create</b> → để trống → Submit; rồi gõ <code>ANSWERED</code> → Submit</td><td>Lần 1 báo <code>Please input call result name</code>; lần 2 báo <code>Key answered already exists</code>; bảng vẫn 10 dòng</td></tr>
+      <tr><td>4</td><td>A: Edit dòng Callback → sửa thành <code>Call Back Later</code> → Submit</td><td>Dòng đó thành Call Back Later / <code>call-back-later</code></td></tr>
+      <tr><td>5</td><td>A: Delete dòng Busy → <b>Yes, delete it!</b></td><td>Bảng còn 9 dòng, không còn Busy; dropdown Call result ở B cũng không còn Busy</td></tr>
+      <tr><td>6</td><td>B: gõ <code>/</code> → Enter → Call attempt <code>2</code> → chọn Keep Ringing → Insert → Enter</td><td>Ô note thành <code>2nd call &lt;giờ Philippines&gt; keep-ringing</code>; Enter lần nữa thì note nằm đầu danh sách, ô nhập trống</td></tr>
+      <tr><td>7</td><td>Đổi market sang Thailand</td><td>A chỉ còn tab Common Setting, card 9 dòng của Thailand (không có Keep Ringing); C không còn <b>Create ITY Auto Campaign</b></td></tr>
+      <tr><td>8</td><td>Vẫn Thailand. A: <b>+ Create</b> → gõ <code>ไม่รับสาย</code> → Submit. B: gõ <code>/</code> → Enter → Call attempt <code>1</code> → chọn ไม่รับสาย → Insert</td><td>A: dưới ô nhập hiện <code>Key: ไม่รับสาย</code>, bảng 10 dòng. B: ô note thành <code>1st call &lt;giờ Thailand&gt; ไม่รับสาย</code></td></tr>
+      <tr><td>9</td><td>Đổi market sang Singapore, ở B gõ <code>/</code> → Enter</td><td>Card Call Result của Singapore rỗng; form báo <code>No call result configured…</code>, ô Call result và nút Insert bị tắt</td></tr>
+      <tr><td>10</td><td>Về Philippines, bỏ quyền <code>call.config</code>, rồi bỏ tiếp <code>partner.ity_connect</code></td><td>A chỉ còn tab ITY Setting; bỏ tiếp thì menu không còn Call Configuration. B vẫn dùng được (đọc danh sách không cần quyền sửa)</td></tr>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="ctx">
+      <b>Bối cảnh (dùng chung 3 prototype)</b>
+      <span>Market <span class="seg" id="mk"></span></span>
+      <label class="chk"><input type="checkbox" id="p-call" checked> <code>call.config</code></label>
+      <label class="chk"><input type="checkbox" id="p-ity" checked> <code>partner.ity_connect</code></label>
+    </div>
+    <p class="caption">GIP có 9 Call result tạo sẵn ở Philippines, Thailand, Malaysia, Indonesia (TmpFix). Singapore minh hoạ market chưa cấu hình. Viền tím nét đứt là chỗ thay đổi so với hiện tại.</p>
+  </div>
+
+  <h4 class="proto-h">A. Setting › Call Configuration</h4>
+  <div class="proto" id="pa">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/setting/call-configuration</span></div>
+    <div class="app">
+      <div class="side" id="pa-side"></div>
+      <div class="main" id="pa-main"></div>
+    </div>
+    <div class="amodal" id="pa-del"><div class="mbg" data-a="del-no"></div><div class="box">
+      <h4>Are you sure?</h4>
+      <p style="margin:0">This action cannot be undone! <span class="changed">Notes already written keep their text.</span></p>
+      <div class="acts"><button class="btn" data-a="del-no">No, keep it</button><button class="btn pri" data-a="del-yes">Yes, delete it!</button></div>
+    </div></div>
+    <div class="toast" id="pa-toast"></div>
+  </div>
+
+  <h4 class="proto-h">B. Chi tiết đơn › Conversation — <code>/gen_call_note</code></h4>
+  <div class="proto" id="pb">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/order/telesale</span></div>
+    <div class="app" style="min-height:560px">
+      <div class="side"><div class="brand"><b>F</b>FFM</div><a>Order</a><a class="on">Telesale</a><a>CSR Ticket</a><a>Setting</a></div>
+      <div class="main">
+        <div class="ph"><h3>Order SO-10231 · Conversation</h3><span id="pb-mk"></span></div>
+        <div class="panel">
+          <div class="notes" id="pb-notes"></div>
+          <div class="cmdwrap">
+            <div class="cmdlist" id="pb-cmd"><div data-a="cmd-pick"><b>/gen_call_note</b><small>Generate call note from template</small></div></div>
+            <textarea class="note" id="pb-input" rows="4" placeholder="Write a note (Press Enter to send)"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="amodal" id="pb-modal" style="place-items:start center;padding-top:36px"><div class="mbg" data-a="gen-cancel"></div><div class="box">
+      <h4>/gen_call_note</h4>
+      <div class="fld" id="g-att"><label>Call attempt <em>*</em></label><input id="g-att-in" placeholder="1, 2, 3..."><div class="msg" id="g-att-msg"></div></div>
+      <div class="fld"><label>Called at <em>*</em></label><input id="g-at-in"></div>
+      <div class="fld" id="g-res"><label>Call result <em>*</em></label>
+        <div class="sel changed" id="g-sel"><div class="val ph" data-a="sel-toggle" id="g-sel-val">Select call result</div><div class="opts" id="g-opts"></div></div>
+        <div class="msg2" id="g-res-msg"></div><div class="empty-msg" id="g-empty"></div>
+      </div>
+      <div class="acts"><button class="btn" data-a="gen-cancel">Cancel</button><button class="btn pri" data-a="gen-insert" id="g-insert">Insert</button></div>
+    </div></div>
+  </div>
+
+  <h4 class="proto-h">C. Màn Telesale › Bulk Update Order</h4>
+  <div class="proto" id="pc">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/order/telesale</span></div>
+    <div class="app" style="min-height:300px">
+      <div class="side"><div class="brand"><b>F</b>FFM</div><a>Order</a><a class="on">Telesale</a><a>CSR Ticket</a><a>Setting</a></div>
+      <div class="main">
+        <div class="ph"><h3>Telesale · 2 orders selected</h3><span id="pc-mk"></span></div>
+        <div class="panel" style="max-width:460px">
+          <b>Bulk Update Order</b>
+          <div class="sel" style="margin-top:10px" id="pc-sel"><div class="val ph" data-a="bulk-toggle" id="pc-val">Select Update Type</div><div class="opts" id="pc-opts"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4 class="proto-h">Nhật ký thao tác (mới nhất ở trên)</h4>
+  <pre class="log" id="log"></pre>
+</section>
+
+<section id="quy-tac">
+  <div class="sec-h"><span class="n">04</span><h2>Business rules</h2><p>Quy tắc dự kiến, chốt trước khi code</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th style="width:190px">Nhóm</th><th>Quy tắc</th></tr>
+      <tr><td>Nơi hiển thị</td><td>Setting › Order Configuration › <b>Call Configuration</b> thay mục ITY Connection, URL <code>/admin/setting/call-configuration</code>. URL cũ <code>/admin/setting/ity-connection</code> tự chuyển sang URL mới.</td></tr>
+      <tr><td>Tab và quyền</td><td>Tab <b>Common Setting</b> (card Call Result) cần quyền <code>call.config</code>. Tab <b>ITY Setting</b> cần quyền <code>partner.ity_connect</code> và market đang chọn là Philippines (<code>"63"</code>). Sau khi sync quyền, vai <code>COUNTRY_ADMIN</code> có sẵn <code>call.config</code>; vai khác và Department vận hành tick tay. Menu hiện khi user thấy được ít nhất 1 tab; mở trang thì chọn sẵn tab đầu tiên user thấy được. Tab đang chọn giữ bằng state, không ghi lên URL.</td></tr>
+      <tr><td>ITY Setting</td><td>Giữ nguyên 3 tab con Instruction / Authentication / Configuration và toàn bộ logic. Market khác Philippines không render tab này, nên không gọi API ITY và không còn thông báo <code>Country code is not supported.</code></td></tr>
+      <tr><td>Danh sách Call result</td><td>Riêng cho từng công ty + market. Thứ tự trong bảng và trong dropdown là thứ tự tạo (<code>id</code> tăng dần). Dùng chung cho <code>/gen_call_note</code> ở Conversation của đơn (Telesale) và Conversations của ticket (CSR). Không còn liên quan tới <code>ityStatus</code>.</td></tr>
+      <tr><td>Name và key</td><td>Name bắt buộc, nhập được chữ của mọi ngôn ngữ (Anh, Thái, Indonesia…). Key BE tự sinh từ Name, admin không nhập: viết thường, giữ chữ và số của mọi ngôn ngữ, ký tự khác (khoảng trắng, dấu câu) thành <code>-</code>; Name không có chữ / số nào thì báo <code>Name must contain letters or numbers</code>. Key là chữ ghi vào note; không được trùng key với Call result khác trong cùng công ty + market. Form hiện trước key khi gõ.</td></tr>
+      <tr><td>Sửa, xoá</td><td>Sửa Name thì key sinh lại theo Name mới. Xoá là xoá mềm (<code>is_removed</code>). Note đã ghi giữ nguyên chữ cũ trong cả 2 trường hợp.</td></tr>
+      <tr><td>Form <code>/gen_call_note</code></td><td>Ô Call result liệt kê Call result của market đang chọn. Market chưa có Call result: form vẫn mở, ô Call result và nút Insert bị tắt, báo <code>No call result configured. Ask an admin to add one in Setting › Call Configuration.</code> Format note giữ nguyên: <code>{ordinal} call {YYYY-MM-DD HH:mm:ss} {key}</code>.</td></tr>
+      <tr><td>Bulk Update Order</td><td>Mục <b>Create ITY Auto Campaign</b> ở màn Telesale chỉ hiện khi market đang chọn là Philippines. Các mục khác không đổi.</td></tr>
+      <tr><td>Dữ liệu tạo sẵn</td><td><code>TmpFix.seed_call_results(app_id, country_codes)</code>: cả 2 tham số bắt buộc, không có mặc định; mỗi <code>country_code</code> phải thuộc <code>supported_countries</code>, sai thì dừng, không ghi gì. Tạo 9 Call result theo thứ tự: Answered, No Answered, Not Available, Cancel, Busy, Invalid Number, Callback, Change Order, Bank Transfer (bỏ Failed, Congestion, Drop của ITY). Tên tạo sẵn bằng tiếng Anh; khách tự đổi sang ngôn ngữ của market nếu muốn (key sinh lại theo tên mới, note cũ giữ key cũ). Lần này chạy cho GIP: <code>["63", "66", "60", "62"]</code>. 5 giá trị khách xin thêm (Confirmed, Keep Ringing, Unattended, Voicemail, Out of Service) không tạo sẵn, khách tự thêm.</td></tr>
+      <tr><td>Phạm vi áp dụng</td><td>Mọi công ty (GIP, AFG…) đều tự cấu hình được khi admin có quyền <code>call.config</code>. Đọc danh sách (dùng <code>/gen_call_note</code>) không cần quyền này.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="quyet-dinh">
+  <div class="sec-h"><span class="n">05</span><h2>Phương án đã chốt</h2><p>Chốt khi trao đổi ngày 03/11/2026; không còn câu hỏi mở</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Lưu trữ</div><h4>Lưu Call result ở đâu?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Mỗi Call result 1 dòng <code>ffm_settings</code>, type <code>call_result</code>, <code>settings: {key, name}</code>. Dùng lại luồng thêm / sửa / xoá của các danh sách lý do; nhật ký thấy đúng dòng đổi; có <code>id</code> cố định để sau này gắn điều kiện.</div></div>
+      <div class="alt"><s>Cả danh sách là mảng trong 1 dòng</s> · <s>Bảng riêng <code>call_results</code></s></div></div>
+    <div class="dcard"><div class="q">Quan hệ với ITY</div><h4>Có giữ 9 giá trị ITY cố định không?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Không. Khách tự cấu hình từ đầu, tách khỏi <code>ityStatus</code>. Failed, Congestion, Drop là sự kiện của tổng đài, Sale gọi tay không chọn tới. Muốn note khớp ITY thì đặt cùng tên, key sinh ra trùng key ITY.</div></div>
+      <div class="alt"><s>9 giá trị ITY cố định + giá trị khách tự thêm</s></div></div>
+    <div class="dcard"><div class="q">Chỗ đặt</div><h4>Cấu hình nằm ở trang nào?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Đổi trang ITY Connection thành Call Configuration: tab Common Setting (card Call Result) và tab ITY Setting. Một chỗ duy nhất, tên trung lập; sau này có nhà cung cấp gọi điện khác thì thêm 1 tab.</div></div>
+      <div class="alt"><s>Cùng 1 card ở cả Telesale Configuration và CSR Configuration</s> · <s>Chỉ ở Telesale Configuration</s> · <s>2 danh sách riêng Telesale / CSR</s></div></div>
+    <div class="dcard"><div class="q">Quyền</div><h4>Ai sửa được card Call Result?</h4>
+      <div class="choice"><span class="ck">✓</span><div>Quyền mới <code>call.config</code>, <code>default_groups</code> = <code>COUNTRY_ADMIN</code> giống <code>order.telesale_config</code>: sync quyền xong thì <code>COUNTRY_ADMIN</code> có sẵn; vai khác và Department vận hành tick tay.</div></div>
+      <div class="alt"><s>Dùng lại <code>order.telesale_config</code> hoặc <code>csr.config</code></s> · <s>Thêm <code>SALE_MANAGER</code>, <code>CS_MANAGER</code> vào <code>default_groups</code></s></div></div>
+    <div class="dcard"><div class="q">Dữ liệu tạo sẵn</div><h4>Tạo sẵn gì, cho ai?</h4>
+      <div class="choice"><span class="ck">✓</span><div><code>TmpFix.seed_call_results(app_id, country_codes)</code> bắt buộc 2 tham số, vận hành tự chọn và chạy tay; 9 giá trị (bỏ Failed, Congestion, Drop), tên tiếng Anh, khách tự đổi tên sau. Lần này: GIP ở PH, TH, MY, ID. 5 giá trị mới để khách tự thêm.</div></div>
+      <div class="alt"><s>Tự tạo cho mọi công ty + market có cấu hình Telesale</s> · <s>Tạo sẵn cả 5 giá trị mới cho GIP</s></div></div>
+    <div class="dcard"><div class="q">Key</div><h4>Key lấy từ đâu khi Name là tiếng Thái?</h4>
+      <div class="choice"><span class="ck">✓</span><div>BE tự sinh từ Name, admin không nhập key. Giữ chữ và số của mọi ngôn ngữ (cả dấu thanh, nguyên âm tiếng Thái), ký tự khác thành <code>-</code>. Ví dụ <code>ไม่รับสาย</code> → <code>ไม่รับสาย</code>, <code>No Answer (ไม่รับสาย)</code> → <code>no-answer-ไม่รับสาย</code>, <code>Don't pick up</code> → <code>don-t-pick-up</code>. Sửa Name thì key sinh lại; note cũ giữ nguyên. Sau này cần "Name tiếng Thái, key tiếng Anh" thì thêm ô Key, không cần migration.</div></div>
+      <div class="alt"><s>Admin tự nhập key</s> · <s>Chỉ giữ chữ không dấu và số (Name tiếng Thái báo lỗi)</s></div></div>
+  </div>
+</section>
+
+<section id="ngoai-pham-vi">
+  <div class="sec-h"><span class="n">06</span><h2>Ngoài phạm vi</h2></div>
+  <div class="note n-info"><span class="ic">i</span><div><ul class="clean">
+    <li>Không đổi logic ITY: <code>ityStatus</code>, Mapping Status, Allowed Order Statuses, đồng bộ call log, note ITY tự sinh ở BE.</li>
+    <li>Không sửa note đã ghi; không tự đếm số lần gọi.</li>
+    <li>Không sắp xếp kéo thả, không thêm mô tả hay điều kiện riêng cho từng Call result.</li>
+    <li>Không tách danh sách riêng cho Telesale và CSR.</li>
+  </ul></div></div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">07</span><h2>Cho dev</h2><p>File dự kiến sửa, thứ tự deploy, rủi ro</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th>BE — sea-fulfillment</th><th>Sửa gì</th><th style="text-align:right">~dòng</th></tr>
+      <tr><td><code>lib/sea_fulfillment_web/model/ffm_setting.ex</code></td><td>thêm <code>call_result</code> vào <code>validate_inclusion(:type)</code> và <code>is_allow_multiple_type?</code></td><td class="num">3</td></tr>
+      <tr><td><code>lib/sea_fulfillment_web/controllers/ffm_setting_controller.ex</code></td><td>scope <code>call</code> trong <code>@setting_scopes</code> (type <code>call_result</code>), <code>upsert_call/2</code>, nhánh <code>handle_params</code> sinh key từ Name (<code>String.normalize(:nfc)</code>, <code>String.downcase</code>, thay <code>~r/[^\p{L}\p{M}\p{N}]+/u</code> bằng <code>-</code>), kiểm trùng key trong cùng <code>app_id</code> + <code>country_code</code></td><td class="num">35</td></tr>
+      <tr><td><code>lib/sea_fulfillment_web/router.ex</code></td><td><code>post("/ffm_settings/call", FFMSettingController, :upsert_call)</code></td><td class="num">1</td></tr>
+      <tr><td><code>lib/app/permission_catalog.ex</code></td><td>key <code>call.config</code> ("Call Configuration", module Setting, route <code>upsert_call</code>, <code>default_groups</code> <code>COUNTRY_ADMIN</code>)</td><td class="num">12</td></tr>
+      <tr><td><code>lib/manage.ex</code> (<code>TmpFix</code>)</td><td><code>seed_call_results(app_id, country_codes)</code></td><td class="num">25</td></tr>
+      <tr><td><code>test/…/ffm_setting_controller_test.exs</code></td><td>tạo / trùng key / sửa tên sinh lại key / xoá / thiếu quyền</td><td class="num">90</td></tr>
+    </table>
+  </div>
+  <div class="card" style="padding:8px 10px;margin-top:14px">
+    <table class="t">
+      <tr><th>FE — sea-fulfillment-web</th><th>Sửa gì</th><th style="text-align:right">~dòng</th></tr>
+      <tr><td><code>pages/admin/setting/call-configuration.js</code> (mới)</td><td>2 tab lớn kiểu card; tab ITY Setting bọc nguyên 3 tab cũ của <code>ity-connection.js</code></td><td class="num">80</td></tr>
+      <tr><td><code>pages/admin/setting/ity-connection.js</code></td><td>chuyển hướng sang <code>/admin/setting/call-configuration</code></td><td class="num">10</td></tr>
+      <tr><td><code>components/setting/CallResult.js</code> (mới)</td><td>card Call Result theo mẫu <code>OrderCancellationReason.js</code>, hiện trước key</td><td class="num">120</td></tr>
+      <tr><td><code>utils/call-note.js</code> (mới) · <code>utils/ity.js</code></td><td>dời <code>noteCommands</code>, <code>toOrdinal</code>, <code>genCallNote</code>, <code>findSlashCommand</code>; thêm <code>toCallResultKey</code>, <code>getCallResults</code>; <code>utils/ity.js</code> chỉ còn <code>ityStatus</code> + <code>ityCountryCodes = ['63']</code></td><td class="num">40</td></tr>
+      <tr><td><code>components/GenCallNoteModal.js</code></td><td>đọc <code>getCallResults(current.ffmSettings)</code>, bỏ <code>ityStatus</code> và 3 giá trị viết cứng; trạng thái rỗng</td><td class="num">20</td></tr>
+      <tr><td><code>utils/menu/settings.js</code></td><td>mục <code>call-configuration</code> thay <code>ity-connection</code>; hiện khi có <code>call.config</code> hoặc (<code>partner.ity_connect</code> và market thuộc <code>ityCountryCodes</code>)</td><td class="num">8</td></tr>
+      <tr><td><code>components/OrderMultiUpdate.js</code></td><td>ẩn <code>ityAutoCampaign</code> khi market không thuộc <code>ityCountryCodes</code></td><td class="num">3</td></tr>
+      <tr><td><code>static/translations/*/</code></td><td>nhãn mới × 6 ngôn ngữ</td><td class="num">60</td></tr>
+      <tr><td><code>test/unit/call-note-command.test.js</code>, <code>test/unit/menu/settings.test.js</code>, <code>test/components/GenCallNoteModal.test.js</code>, <code>test/e2e/ity-authentication.spec.js</code>, test mới cho <code>CallResult.js</code></td><td>đổi import, danh sách lấy từ <code>ffmSettings</code>, trạng thái rỗng, menu theo quyền + market, URL mới</td><td class="num">150</td></tr>
+    </table>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Deploy BE</div>
+      <div class="s you"><b>2</b><br><code>Manage.sync_permission_catalog()</code><small>đưa <code>call.config</code> vào bảng quyền</small></div>
+      <div class="s you"><b>3</b><br><code>TmpFix.seed_call_results</code><small>GIP: <code>["63","66","60","62"]</code></small></div>
+      <div class="s"><b>4</b><br>Deploy FE</div>
+      <div class="s you"><b>5</b><br>Vận hành cấp <code>call.config</code> cho vai khác<small><code>COUNTRY_ADMIN</code> có sẵn; khách tự thêm / xoá Call result</small></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="note n-red"><span class="ic">!</span><div><p><b>Rủi ro</b></p><ul class="clean">
+      <li>Deploy FE trước bước 3: GIP mở <code>/gen_call_note</code> thấy danh sách rỗng, không chèn được note.</li>
+      <li>Bỏ bước 2: key <code>call.config</code> chưa có trong bảng quyền, kể cả <code>COUNTRY_ADMIN</code> cũng không thấy tab Common Setting (tab ITY Setting vẫn hiện ở Philippines).</li>
+      <li>Luật sinh key ở FE (<code>toCallResultKey</code>, chỉ để xem trước) và BE phải giống nhau; lệch thì key xem trước khác key được lưu.</li>
+      <li>Department không được tự bật key mới: user lấy quyền qua Department phải được tick tay.</li>
+      <li>Cần kiểm: user chỉ có quyền CSR có đọc được <code>ffm_settings</code> lúc đăng nhập không (ô note ticket dùng danh sách này).</li>
+    </ul></div></div>
+    <div class="note n-info"><span class="ic">↺</span><div><p><b>Hoàn tác</b></p><ul class="clean">
+      <li>Revert FE: <code>/gen_call_note</code> quay về 12 giá trị viết cứng, trang ITY Connection như cũ; các dòng <code>call_result</code> nằm yên trong DB, không ảnh hưởng gì.</li>
+      <li>Revert BE: type <code>call_result</code> không còn API ghi; dữ liệu đã tạo giữ nguyên.</li>
+    </ul></div></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // giống utils/tools.js supportedCountries (countryCode, name, timezone)
+  const MARKETS = [
+    { code: '63', name: 'Philippines', tz: 8 },
+    { code: '66', name: 'Thailand', tz: 7 },
+    { code: '60', name: 'Malaysia', tz: 8 },
+    { code: '62', name: 'Indonesia', tz: 7 },
+    { code: '65', name: 'Singapore', tz: 8 },
+  ];
+  // giống ItyController @supported_countries (sea-fulfillment); FE thêm hằng ityCountryCodes
+  const ITY_COUNTRY_CODES = ['63'];
+  // TmpFix.seed_call_results: tên lấy từ utils/ity.js ityStatus (bỏ failed, congestion, drop) + 3 giá trị của PR #547
+  const SEED = [['answered', 'Answered'], ['no-answered', 'No Answered'], ['not-available', 'Not Available'], ['cancel', 'Cancel'], ['busy', 'Busy'], ['invalid-number', 'Invalid Number'], ['callback', 'Callback'], ['change-order', 'Change Order'], ['bank-transfer', 'Bank Transfer']];
+  let nextId = 101;
+  // các dòng ffm_settings type call_result
+  const settings = [];
+  ['63', '66', '60', '62'].forEach((cc) => SEED.forEach(([key, name]) => settings.push({ id: nextId++, country_code: cc, key, name, is_removed: false })));
+
+  const st = {
+    market: '63',
+    perms: { call: true, ity: true },
+    tab: 'common',
+    ityTab: 'authentication',
+    pop: null, // { mode: 'create' | 'edit', id }
+    delId: null,
+    notes: [{ by: 'Sale A', at: '2026-11-03 09:12:40', text: 'Customer asked to call back after 5pm' }],
+    cmd: null, // { text, start, end } lúc chọn /gen_call_note
+    gen: null, // { result, selOpen }
+    bulkOpen: false,
+    bulkValue: null,
+  };
+
+  const marketOf = (code) => MARKETS.find((m) => m.code === code);
+  const log = (line) => { const el = $('log'); el.textContent = line + '\n' + el.textContent; };
+  const toast = (text, bad) => { const el = $('pa-toast'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => (el.className = 'toast'), 1800); };
+
+  // Đề xuất cho utils/call-note.js toCallResultKey (BE sinh cùng luật): viết thường, giữ chữ / số mọi ngôn ngữ (\p{M} giữ dấu thanh, nguyên âm tiếng Thái), ký tự khác → "-"
+  const toCallResultKey = (name) => name.normalize('NFC').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
+  // Đề xuất cho utils/call-note.js getCallResults: lọc type call_result của market đang chọn, sắp theo id
+  const getCallResults = () => settings.filter((s) => s.country_code === st.market && !s.is_removed).sort((a, b) => a.id - b.id);
+
+  // giống utils/ity.js (develop) findSlashCommand
+  const noteCommands = [{ key: 'gen_call_note' }];
+  const findSlashCommand = (text, caret) => {
+    const match = text.slice(0, caret).match(/(^|\s)\/(\w*)$/);
+    if (!match) return null;
+    const commands = noteCommands.filter((c) => c.key.startsWith(match[2].toLowerCase()));
+    const rest = text.slice(caret).match(/^\w*/)[0];
+    const coversRest = commands.some((c) => c.key.startsWith((match[2] + rest).toLowerCase()));
+    return commands.length ? { start: caret - match[2].length - 1, end: coversRest ? caret + rest.length : caret } : null;
+  };
+  // giống utils/ity.js (develop) toOrdinal + genCallNote
+  const toOrdinal = (n) => ([11, 12, 13].includes(n % 100) ? `${n}th` : `${n}${{ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'}`);
+  const pad = (n) => String(n).padStart(2, '0');
+  const marketNow = () => {
+    const d = new Date(Date.now() + marketOf(st.market).tz * 3600 * 1000);
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  };
+
+  const canCommon = () => st.perms.call;
+  const canIty = () => st.perms.ity && ITY_COUNTRY_CODES.includes(st.market);
+  const visibleTabs = () => [canCommon() && 'common', canIty() && 'ity'].filter(Boolean);
+
+  function renderContext() {
+    $('mk').innerHTML = MARKETS.map((m) => `<a data-a="market" data-v="${m.code}" class="${m.code === st.market ? 'on' : ''}">${m.name} ${m.code}</a>`).join('');
+    const label = `Market: ${marketOf(st.market).name}`;
+    $('pb-mk').textContent = label;
+    $('pc-mk').textContent = label;
+  }
+
+  function renderA() {
+    const tabs = visibleTabs();
+    if (tabs.length && !tabs.includes(st.tab)) st.tab = tabs[0];
+    const items = ['Telesale Configuration', 'Tag Management', tabs.length ? 'CALL' : null, 'CSR Configuration', 'SLA Setting'].filter(Boolean);
+    $('pa-side').innerHTML = '<div class="brand"><b>F</b>Order Configuration</div>' + items.map((it) => (it === 'CALL' ? '<a class="on" id="menu-call"><span class="changed">Call Configuration</span></a>' : `<a>${it}</a>`)).join('');
+    const main = $('pa-main');
+    if (!tabs.length) {
+      main.innerHTML = '<div class="info-empty"><i>(Giải thích, app không hiện chữ này) User không thấy được tab nào ở market này nên menu không có Call Configuration; mở URL thẳng thì không vào được trang.</i></div>';
+      return;
+    }
+    const tabBar = `<div class="ctabs changed">${tabs.map((t) => `<a data-a="tab" data-v="${t}" class="${t === st.tab ? 'on' : ''}">${t === 'common' ? 'Common Setting' : 'ITY Setting'}</a>`).join('')}</div>`;
+    main.innerHTML = `<div class="ph"><h3>Call Configuration</h3></div><div class="panel">${tabBar}<div id="pa-body"></div></div>`;
+    if (st.tab === 'common') renderCommon(); else renderIty();
+  }
+
+  function renderCommon() {
+    const list = getCallResults();
+    const rows = list.map((s) => `<tr data-id="${s.id}"><td>${s.id}</td><td>${esc(s.name)}</td><td><code>${esc(s.key)}</code></td><td><span class="lnk" data-a="edit" data-id="${s.id}">Edit</span><span class="lnk del" data-a="del" data-id="${s.id}">Delete</span></td></tr>`).join('')
+      || '<tr><td colspan="4" style="text-align:center;color:#bfbfbf;padding:24px">No data</td></tr>';
+    const p = st.pop;
+    const editing = p && p.mode === 'edit' ? settings.find((s) => s.id === p.id) : null;
+    $('pa-body').innerHTML = `
+      <div class="acard changed" id="cr-card">
+        <div class="hd"><div>Call Result<div class="sub">Shared by /gen_call_note in order Conversation and ticket Conversations · ${marketOf(st.market).name}</div></div><button class="btn pri sm" data-a="create">+ Create</button></div>
+        <div class="bd"><table class="ant"><thead><tr><th style="width:70px">ID</th><th>Name</th><th>Key (written to note)</th><th style="width:120px">Action</th></tr></thead><tbody id="cr-rows">${rows}</tbody></table></div>
+        <div class="pop ${p ? 'show' : ''}" id="cr-pop">
+          <h5>${editing ? 'Edit call result' : 'Add call result'}</h5>
+          <div class="fld" id="cr-fld"><label>Name <em>*</em></label><input id="cr-name" placeholder="Input call result name" value="${editing ? esc(editing.name) : ''}"><div class="keyprev" id="cr-key"></div><div class="msg" id="cr-msg"></div></div>
+          <div style="text-align:right"><button class="btn pri sm" data-a="submit">Submit</button></div>
+        </div>
+      </div>`;
+    if (p) { updateKeyPreview(); setTimeout(() => { const el = $('cr-name'); if (el) { el.focus({ preventScroll: true }); el.setSelectionRange(el.value.length, el.value.length); } }, 30); }
+  }
+
+  function renderIty() {
+    const sub = [['instruction', 'Instruction'], ['authentication', 'Authentication'], ['configuration', 'Configuration']];
+    const tabs = `<div class="tabs">${sub.map(([k, l]) => `<a data-a="itytab" data-v="${k}" class="${k === st.ityTab ? 'on' : ''}">${l}</a>`).join('')}</div>`;
+    let body = '';
+    // giống components/ity/ITYInstruction.js (4 bước), rút gọn
+    if (st.ityTab === 'instruction') body = '<ol class="steps4"><li>Push orders to ITY campaign<small>Admin selects orders in FFM and pushes them to an ITY campaign.</small></li><li>Auto-dial customers<small>ITY automatically dials the phone number from each FFM order.</small></li><li>Route to Telesale agent<small>When the customer answers, the call is routed to the MicroSIP app on the Telesale agent\'s computer.</small></li><li>Sync call results<small>After the call ends, ITY sends the result back to FFM to automatically update the order status.</small></li></ol>';
+    // giống pages/admin/setting/ity-connection.js AuthenticationTab, rút gọn
+    if (st.ityTab === 'authentication') body = '<div class="acard"><div class="hd">Logged-in Accounts<button class="btn pri sm">+ Login New Account</button></div><div class="bd"><span class="acct"><i></i>ity.sale01</span></div></div>';
+    // giống components/ity/ITYConfigAllowedStatuses.js + ITYConfigMappingStatus.js, rút gọn
+    if (st.ityTab === 'configuration') body = '<div class="acard"><div class="hd">Allowed Order Statuses for ITY Lead Push</div><div class="bd">Order Statuses: New, Need confirm</div></div><div class="acard"><div class="hd">Mapping Status<button class="btn pri sm">+ Create</button></div><div class="bd"><table class="ant"><thead><tr><th>ID</th><th>ITY Call Status</th><th>FFM Call Status</th><th>Action</th></tr></thead><tbody><tr><td>1</td><td>No Answered, Busy</td><td>Customer not answering</td><td><span class="lnk">Edit</span><span class="lnk del">Delete</span></td></tr></tbody></table></div></div>';
+    $('pa-body').innerHTML = `${tabs}${body}<p style="color:#bfbfbf;font-size:12px;margin:8px 0 0">(Giải thích) Nội dung 3 tab con giữ nguyên như trang ITY Connection hiện tại; prototype chỉ vẽ rút gọn.</p>`;
+  }
+
+  function updateKeyPreview() {
+    const el = $('cr-name');
+    if (!el) return;
+    const key = toCallResultKey(el.value.trim());
+    $('cr-key').innerHTML = key ? `Key: <code>${esc(key)}</code>` : '';
+  }
+
+  function submitCallResult() {
+    const name = $('cr-name').value.trim();
+    const fld = $('cr-fld');
+    const fail = (msg, logLine) => { $('cr-msg').textContent = msg; fld.classList.add('err'); toast('Not saved', true); log(logLine); };
+    if (!name) return fail('Please input call result name', 'Call Result › Submit tên trống → không gửi BE (validate form)');
+    const key = toCallResultKey(name);
+    if (!key) return fail('Name must contain letters or numbers', `Call Result › Submit "${name}" → key rỗng, BE trả lỗi`);
+    const editingId = st.pop.mode === 'edit' ? st.pop.id : null;
+    const dup = getCallResults().find((s) => s.key === key && s.id !== editingId);
+    if (dup) return fail(`Key ${key} already exists`, `Call Result › Submit "${name}" → POST /ffm_settings/call → BE: trùng key "${key}" (id ${dup.id}), không lưu`);
+    if (editingId) {
+      const row = settings.find((s) => s.id === editingId);
+      const old = `${row.name} / ${row.key}`;
+      row.name = name; row.key = key;
+      log(`Call Result › Edit id ${row.id}: ${old} → ${name} / ${key} (POST /ffm_settings/call, BE sinh lại key; note cũ giữ nguyên)`);
+      toast('Call result updated');
+    } else {
+      const row = { id: nextId++, country_code: st.market, key, name, is_removed: false };
+      settings.push(row);
+      log(`Call Result › Create "${name}" → POST /ffm_settings/call {type: "call_result", settings.name} → BE sinh key "${key}", id ${row.id}, country_code "${st.market}"`);
+      toast('Call result created');
+    }
+    st.pop = null;
+    renderCommon();
+  }
+
+  // ---------- B. Conversation + /gen_call_note ----------
+  function renderNotes() {
+    $('pb-notes').innerHTML = st.notes.map((n) => `<div class="nt">${esc(n.text)}<small>${esc(n.by)} · ${esc(n.at)}</small></div>`).join('');
+  }
+  function refreshCmdList() {
+    const ta = $('pb-input');
+    const open = !st.cmd && !st.gen && !!findSlashCommand(ta.value, ta.selectionStart);
+    $('pb-cmd').classList.toggle('show', open);
+    return open;
+  }
+  function openGen() {
+    const ta = $('pb-input');
+    const c = findSlashCommand(ta.value, ta.selectionStart);
+    if (!c) return;
+    st.cmd = { text: ta.value, start: c.start, end: c.end };
+    st.gen = { result: null, selOpen: false };
+    $('pb-cmd').classList.remove('show');
+    $('g-att-in').value = '';
+    $('g-at-in').value = marketNow();
+    ['g-att', 'g-res'].forEach((id) => $(id).classList.remove('err'));
+    $('g-att-msg').textContent = ''; $('g-res-msg').textContent = '';
+    renderGen();
+    $('pb-modal').classList.add('show');
+    const empty = !getCallResults().length;
+    log(`B › chọn /gen_call_note → mở form; Called at mặc định ${$('g-at-in').value} (giờ ${marketOf(st.market).name}); Call result: ${empty ? 'market chưa cấu hình' : getCallResults().length + ' giá trị'}`);
+    setTimeout(() => $('g-att-in').focus({ preventScroll: true }), 30);
+  }
+  function renderGen() {
+    if (!st.gen) return;
+    const list = getCallResults();
+    const empty = !list.length;
+    const cur = list.find((s) => s.key === st.gen.result);
+    if (st.gen.result && !cur) st.gen.result = null;
+    $('g-sel').classList.toggle('dis', empty);
+    const val = $('g-sel-val');
+    val.textContent = cur ? cur.name : 'Select call result';
+    val.classList.toggle('ph', !cur);
+    $('g-opts').innerHTML = list.map((s) => `<div data-a="sel-pick" data-v="${esc(s.key)}" class="${s.key === st.gen.result ? 'cur' : ''}">${esc(s.name)}</div>`).join('');
+    $('g-opts').classList.toggle('show', !!st.gen.selOpen && !empty);
+    $('g-empty').textContent = empty ? 'No call result configured. Ask an admin to add one in Setting › Call Configuration.' : '';
+    $('g-insert').disabled = empty;
+  }
+  function closeGen(restore) {
+    $('pb-modal').classList.remove('show');
+    const ta = $('pb-input');
+    if (restore && st.cmd) { ta.value = st.cmd.text; ta.setSelectionRange(st.cmd.end, st.cmd.end); }
+    st.gen = null; st.cmd = null;
+    ta.focus({ preventScroll: true });
+  }
+  function insertGen() {
+    const attRaw = $('g-att-in').value.trim();
+    const att = Number(attRaw);
+    let ok = true;
+    if (!attRaw) { $('g-att-msg').textContent = 'Please enter call attempt'; $('g-att').classList.add('err'); ok = false; }
+    else if (!Number.isInteger(att) || att < 1) { $('g-att-msg').textContent = 'Call attempt must be a whole number from 1'; $('g-att').classList.add('err'); ok = false; }
+    else { $('g-att').classList.remove('err'); }
+    if (!st.gen.result) { $('g-res-msg').textContent = 'Please select call result'; ok = false; } else { $('g-res-msg').textContent = ''; }
+    if (!ok) { log('B › Insert → form báo lỗi, chưa chèn'); return; }
+    const note = `${toOrdinal(att)} call ${$('g-at-in').value} ${st.gen.result}`;
+    const { text, start, end } = st.cmd;
+    const ta = $('pb-input');
+    ta.value = text.slice(0, start) + note + text.slice(end);
+    const caret = start + note.length;
+    log(`B › Insert → ô note: "${ta.value}" (chưa gửi)`);
+    st.gen = null; st.cmd = null;
+    $('pb-modal').classList.remove('show');
+    ta.focus({ preventScroll: true });
+    ta.setSelectionRange(caret, caret);
+  }
+  function sendNote() {
+    const ta = $('pb-input');
+    const text = ta.value.trim();
+    if (!text) return;
+    st.notes.unshift({ by: 'Sale A', at: marketNow(), text });
+    ta.value = '';
+    renderNotes();
+    log(`B › Enter → gửi note qua luồng cũ (updateOrder, is_create_telesale_note): "${text}"`);
+  }
+
+  // ---------- C. Bulk Update Order ----------
+  // giống components/OrderMultiUpdate.js updateTypeOptions có scope 'telesale'
+  function bulkOptions() {
+    return [
+      { v: 'serviceType', l: 'Update FFM service type' },
+      { v: 'assignSaleToOrder', l: 'Assign/Unassign sale ›' },
+      { v: 'status', l: 'Update order(s) status' },
+      { v: 'orderInformation', l: 'Update Order Information ›' },
+      ITY_COUNTRY_CODES.includes(st.market) ? { v: 'ityAutoCampaign', l: 'Create ITY Auto Campaign', changed: true } : null,
+    ].filter(Boolean);
+  }
+  function renderC() {
+    const opts = bulkOptions();
+    if (st.bulkValue && !opts.some((o) => o.v === st.bulkValue)) st.bulkValue = null;
+    const cur = opts.find((o) => o.v === st.bulkValue);
+    $('pc-val').textContent = cur ? cur.l : 'Select Update Type';
+    $('pc-val').classList.toggle('ph', !cur);
+    $('pc-opts').innerHTML = opts.map((o) => `<div data-a="bulk-pick" data-v="${o.v}" class="${o.v === st.bulkValue ? 'cur' : ''}"><span class="${o.changed ? 'changed' : ''}">${o.l}</span></div>`).join('');
+    $('pc-opts').classList.toggle('show', st.bulkOpen);
+  }
+
+  function renderAll() { renderContext(); renderA(); renderNotes(); renderGen(); renderC(); }
+
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-a]');
+    const a = el?.dataset.a;
+    // bấm ra ngoài: đóng popover / dropdown (bỏ qua phần tử vừa bị vẽ lại)
+    if (e.target.isConnected) {
+      if (st.pop && !e.target.closest('#cr-pop') && a !== 'create' && a !== 'edit') { st.pop = null; renderCommon(); }
+      if (st.bulkOpen && !e.target.closest('#pc-sel')) { st.bulkOpen = false; renderC(); }
+      if (st.gen?.selOpen && !e.target.closest('#g-sel')) { st.gen.selOpen = false; renderGen(); }
+    }
+    if (!a) return;
+    if (a === 'market') {
+      st.market = el.dataset.v; st.pop = null; st.bulkOpen = false;
+      renderAll();
+      log(`Bối cảnh › market ${marketOf(st.market).name} (${st.market}) → tab thấy được: ${visibleTabs().join(', ') || 'không có'}; Call result: ${getCallResults().length}`);
+    }
+    if (a === 'tab') { st.tab = el.dataset.v; st.pop = null; renderA(); log(`A › tab ${st.tab === 'common' ? 'Common Setting' : 'ITY Setting'}${st.tab === 'ity' ? ' → gọi getListITYPartnerAccounts' : ''}`); }
+    if (a === 'itytab') { st.ityTab = el.dataset.v; renderIty(); }
+    if (a === 'create') { st.pop = { mode: 'create' }; renderCommon(); }
+    if (a === 'edit') { st.pop = { mode: 'edit', id: Number(el.dataset.id) }; renderCommon(); }
+    if (a === 'submit') submitCallResult();
+    if (a === 'del') { st.delId = Number(el.dataset.id); $('pa-del').classList.add('show'); }
+    if (a === 'del-no') { st.delId = null; $('pa-del').classList.remove('show'); }
+    if (a === 'del-yes') {
+      const row = settings.find((s) => s.id === st.delId);
+      row.is_removed = true;
+      $('pa-del').classList.remove('show'); st.delId = null;
+      renderCommon(); renderGen();
+      log(`Call Result › Delete "${row.name}" (id ${row.id}) → POST /ffm_settings/call {is_removed: true}; note đã ghi giữ nguyên`);
+      toast('Call result deleted');
+    }
+    if (a === 'cmd-pick') openGen();
+    if (a === 'gen-cancel') { closeGen(true); log('B › Cancel → ô note giữ nguyên text trước khi chọn command'); }
+    if (a === 'gen-insert') { if (!$('g-insert').disabled) insertGen(); }
+    if (a === 'sel-toggle') { if (getCallResults().length) { st.gen.selOpen = !st.gen.selOpen; renderGen(); } }
+    if (a === 'sel-pick') { st.gen.result = el.dataset.v; st.gen.selOpen = false; $('g-res-msg').textContent = ''; renderGen(); }
+    if (a === 'bulk-toggle') { st.bulkOpen = !st.bulkOpen; renderC(); }
+    if (a === 'bulk-pick') { st.bulkValue = el.dataset.v; st.bulkOpen = false; renderC(); log(`C › Select Update Type → ${bulkOptions().find((o) => o.v === st.bulkValue).l}`); }
+  });
+
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'cr-name') { $('cr-fld').classList.remove('err'); updateKeyPreview(); }
+    if (e.target.id === 'pb-input') refreshCmdList();
+    if (e.target.id === 'g-att-in') $('g-att').classList.remove('err');
+  });
+  document.addEventListener('keyup', (e) => { if (e.target.id === 'pb-input' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) refreshCmdList(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.target.id === 'cr-name' && e.key === 'Enter') { e.preventDefault(); submitCallResult(); }
+    if (e.target.id === 'pb-input' && e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (findSlashCommand(e.target.value, e.target.selectionStart)) openGen(); else sendNote();
+    }
+    if (st.gen && e.key === 'Enter' && e.target.closest('#pb-modal') && e.target.tagName !== 'BUTTON' && !st.gen.selOpen) { e.preventDefault(); if (!$('g-insert').disabled) insertGen(); return; }
+    if (st.gen && e.key === 'Escape') { e.preventDefault(); closeGen(true); log('B › Esc → đóng form, ô note giữ nguyên'); }
+  });
+  document.getElementById('p-call').addEventListener('change', (e) => { st.perms.call = e.target.checked; st.pop = null; renderA(); log(`Bối cảnh › call.config ${e.target.checked ? 'có' : 'không'} → tab thấy được: ${visibleTabs().join(', ') || 'không có'}`); });
+  document.getElementById('p-ity').addEventListener('change', (e) => { st.perms.ity = e.target.checked; renderA(); log(`Bối cảnh › partner.ity_connect ${e.target.checked ? 'có' : 'không'} → tab thấy được: ${visibleTabs().join(', ') || 'không có'}`); });
+
+  renderAll();
+  log('Mở trang: GIP, Philippines, có call.config + partner.ity_connect; 9 Call result tạo sẵn ở 63, 66, 60, 62');
+})();
+</script>
+</body>
+</html>

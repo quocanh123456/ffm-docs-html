@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#496 Bảng giá — đặc tả + prototype · GIP CRM</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { height: auto; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  /* Bảng kế hoạch dự án + Gantt theo sprint: .filters lọc, table.plan, thanh .bar theo ưu tiên p0–p3, cột mốc .pilot */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .filters span { color: var(--ink2); font-size: 13px; margin-right: 4px; }
+  .fbtn { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink2); }
+  .fbtn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .plan-wrap { overflow-x: auto; }
+  table.plan { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  table.plan th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink3); font-weight: 700; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; background: #fff; }
+  table.plan td { padding: 8px 6px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+  table.plan td.no { color: var(--ink2); font-weight: 700; text-align: center; width: 28px; }
+  table.plan td.name { min-width: 220px; }
+  table.plan td.name b { display: block; font-size: 13px; }
+  table.plan td.name small { display: block; color: var(--ink2); font-size: 11.5px; line-height: 1.4; }
+  table.plan td.team, table.plan td.own { white-space: nowrap; color: var(--ink2); }
+  table.plan td.srcs { min-width: 92px; }
+  table.plan tr.grp td { background: var(--slate-bg); font-weight: 700; font-size: 12.5px; padding: 6px 10px; }
+  table.plan th.g, table.plan td.g { width: 31px; min-width: 31px; padding: 8px 0; text-align: center; }
+  table.plan td.g { border-left: 1px solid #f1f3f8; }
+  table.plan .pilot { border-right: 2px dashed var(--green) !important; }
+  table.plan th.later, table.plan td.later { width: 40px; min-width: 40px; padding-right: 4px; }
+  .bar { display: block; height: 14px; }
+  .bar.st { border-top-left-radius: 5px; border-bottom-left-radius: 5px; margin-left: 3px; }
+  .bar.en { border-top-right-radius: 5px; border-bottom-right-radius: 5px; margin-right: 3px; }
+  .bar.p0 { background: var(--ink3); } .bar.p1 { background: var(--blue); } .bar.p2 { background: var(--ffm); }
+  .bar.p3 { background: var(--violet-bg); border: 1px dashed var(--violet); }
+  .pri:not(.btn) { display: inline-block; font-weight: 700; font-size: 11.5px; padding: 1px 7px; border-radius: 6px; }
+  .pri.p0 { background: var(--slate-bg); color: var(--ink2); } .pri.p1 { background: var(--blue); color: #fff; }
+  .pri.p2 { background: #e0f2fe; color: #0369a1; } .pri.p3 { background: var(--violet-bg); color: var(--violet); }
+  .src { display: inline-block; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; margin: 1px 0; }
+  .src.d { background: var(--blue-bg); color: var(--blue); } .src.t { background: var(--green-bg); color: var(--green); }
+  .src.tn { background: var(--violet-bg); color: var(--violet); } .src.o { background: var(--slate-bg); color: var(--ink2); }
+  .muted { color: var(--ink3); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink2); margin-top: 12px; align-items: center; }
+  .legend .bar { display: inline-block; width: 26px; vertical-align: -2px; margin: 0 6px 0 0; border-radius: 5px; }
+  /* Lưới ánh xạ ngắn (vd take note → hạng mục) */
+  .tnmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tnmap div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; background: #fff; }
+  .tnmap div b { color: var(--violet); margin-right: 4px; }
+  .tnmap div span { display: block; color: var(--ink2); font-size: 12px; }
+
+  @media (max-width: 960px) {
+    .tnmap { grid-template-columns: 1fr 1fr; }
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+  /* ── Phần thêm riêng của trang #496 (mẫu chưa có): khung nhúng prototype online ── */
+  .proto .embed { display: block; width: 100%; height: 780px; border: 0; background: #fff; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>CRM · #496 Bảng giá</div>
+  <nav class="nav">
+    <a href="#hien-trang">Hiện trạng</a><a href="#luong">Luồng</a><a href="#prototype">Prototype</a><a href="#quy-tac">Quy tắc</a>
+    <a href="#quyet-dinh">Đã quyết định</a><a href="#ngoai-pham-vi">Ngoài phạm vi</a><a href="#kiem-thu">Kiểm thử</a><a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">CRM · Báo giá · Đặc tả + prototype</div>
+  <h1>Bảng giá</h1>
+  <p>Mỗi bảng giá là đơn giá chuẩn của một Thị trường trong một khoảng hiệu lực. Người quản lý bảng giá chỉ chọn Thị trường và hiệu lực, nhập giá ngay trên bảng rồi bấm Dùng bảng giá. Khi thêm hoặc đổi dịch vụ ở Danh mục dùng chung, bảng giá chưa hết hạn tự cập nhật. Trang này ghi đúng bản đã làm; điểm nào khác spec BA BG v0.1 thì theo trang này.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i496">ffm_dev #496</a></span>
+    <span class="chip">PR BE <a href="https://github.com/pancake-vn/sea-fulfillment/pull/606">#606</a></span>
+    <span class="chip">PR FE <a href="https://github.com/pancake-vn/sea-fulfillment-web/pull/552">#552</a></span>
+    <span class="chip">Dự án GIP CRM</span>
+    <span class="chip">Spec BA <a href="https://ffm-docs-html.pages.dev/crm/quotes/dac-ta-bang-gia">BG v0.1</a></span>
+    <span class="chip">Cập nhật 12/11/2026</span>
+    <span class="chip">Code: sea-fulfillment aa23e30a · sea-fulfillment-web d63561c6</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>2 quyền</b><span><code>crm.price_list.view</code> · <code>crm.price_list.manage</code></span></div>
+  <div class="kpi"><b>6 API</b><span>trong <code>/api/crm/price_lists</code></span></div>
+  <div class="kpi"><b>4 migration</b><span>2 bảng mới, 2 cột mới ở Danh mục</span></div>
+  <div class="kpi"><b>BE → FE</b><span>deploy liền nhau, rồi chạy <code>TmpFix.Crm</code></span></div>
+</div>
+
+<section id="hien-trang">
+  <div class="sec-h"><span class="n">01</span><h2>Hiện trạng</h2><p>Những gì #496 thêm hoặc đổi</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Báo giá › Bảng giá</h4><span class="pill p-new">Màn mới</span></div><p>Danh sách, Thêm bảng giá, chi tiết sửa tại chỗ, Dùng / Ngừng dùng, tab Lịch sử thay đổi. Đường dẫn <code>/crm/price-lists</code> và <code>/crm/price-lists/[id]</code>.</p></div>
+    <div class="row"><div><h4>Danh mục dùng chung › Dịch vụ chi tiết</h4><span class="pill p-new">Thêm Kiểu thu</span></div><p>Theo phát sinh · Hằng tháng · Một lần, bắt buộc, mặc định Theo phát sinh. Mỗi lần lưu Dịch vụ chi tiết thì bảng giá chưa hết hạn cập nhật theo.</p></div>
+    <div class="row"><div><h4>Danh mục dùng chung › Đơn vị tính</h4><span class="pill p-new">Thêm Kiểu giá</span></div><p>Số tiền hoặc Tỷ lệ (%). Bắt buộc chọn khi thêm, không đổi được sau khi tạo. Dữ liệu mẫu: GMV, NMV, Budget là Tỷ lệ, 8 đơn vị còn lại là Số tiền.</p></div>
+    <div class="row"><div><h4>Phân quyền CRM</h4><span class="pill p-new">2 quyền mới</span></div><p>Nhóm "Bảng giá" thuộc khối Bán hàng: Xem bảng giá, Quản lý bảng giá. Tích cho Department; user group ADMIN hoặc Super Admin luôn có đủ.</p></div>
+    <div class="row"><div><h4>Cài đặt › Pipeline (ma trận Trường bắt buộc)</h4><span class="pill p-mid">Bỏ 1 trường</span></div><p>Bỏ trường Bảng giá (<code>price_list</code>) vì lead không còn ô Bảng giá, còn 59 trường. Cấu hình đã lưu của trường này không bị xoá, chỉ không còn hiện.</p></div>
+    <div class="row"><div><h4>Danh mục Bảng giá (GP01 · GP02 · GP03 · Enterprise · Custom)</h4><span class="pill p-info">Giữ nguyên</span></div><p>Không đổi tên, không bỏ, bảng giá không dùng tới danh mục này.</p></div>
+    <div class="row"><div><h4>Báo giá</h4><span class="pill p-info">Làm sau</span></div><p>BE đã có hàm <code>CrmPriceListAction.applicable/2</code> trả bảng giá Đang dùng có hiệu lực chứa ngày cần xem. Endpoint và màn Báo giá làm cùng tính năng Báo giá.</p></div>
+  </div>
+</section>
+
+<section id="luong">
+  <div class="sec-h"><span class="n">02</span><h2>Luồng</h2><p>Vòng đời một bảng giá và đồng bộ từ Danh mục dùng chung</p></div>
+  <div class="card">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Thêm bảng giá<small>Ngừng dùng · v1 · mọi dòng giá 0</small></div>
+      <div class="s"><b>2</b><br>Nhập giá, Lưu thay đổi<small>đã từng Dùng thì đổi giá lên phiên bản</small></div>
+      <div class="s"><b>3</b><br>Dùng bảng giá<small>Đang dùng · Lịch sử "Bắt đầu dùng"</small></div>
+      <div class="s"><b>4</b><br>⋮ › Ngừng dùng<small>báo giá đã tạo giữ giá</small></div>
+      <div class="s"><b>5</b><br>Dùng bảng giá lần nữa<small>Đang dùng · Lịch sử "Dùng lại"</small></div>
+    </div>
+    <p class="caption">Báo giá chỉ lấy bảng giá Đang dùng có khoảng hiệu lực chứa hôm nay. Phiên bản chỉ tăng khi đổi đơn giá ở bảng giá đã từng Dùng; đổi ngày, ghi chú, trạng thái hay đồng bộ từ Danh mục không đổi phiên bản.</p>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="seq">
+      <span></span>
+      <div class="hd" style="background:var(--crm)">User group ADMIN hoặc Super Admin · Danh mục</div><div class="hd" style="background:#64748b">BE</div><div class="hd" style="background:var(--blue)">Bảng giá chưa hết hạn</div>
+      <span class="no">1</span><div class="msg" style="--from:2;--to:4">Lưu Dịch vụ chi tiết: thêm mới, gắn thêm Dịch vụ tổng, Dùng lại, đổi Đơn vị tính / Kiểu thu</div><span></span>
+      <span class="no">2</span><span></span><div class="msg" style="--from:3;--to:5">Thêm dòng giá 0 còn thiếu; cập nhật Đơn vị tính / Kiểu thu, giữ giá</div>
+      <span class="no">3</span><span></span><div class="msg err" style="--from:3;--to:5">Đơn vị mới khác kiểu giá: xoá giá dòng đó, phải nhập lại</div>
+      <span class="no">4</span><div class="msg rev" style="--from:2;--to:4">"Đã thêm N dòng giá 0…" / "Đã cập nhật…" / "Đã xoá giá ở N dòng…"</div><span></span>
+    </div>
+    <p class="caption">Cả 3 việc chạy cùng lần lưu ở Danh mục: lỗi bên bảng giá thì giá trị Danh mục cũng không lưu. "Chưa hết hạn" là Hiệu lực đến từ hôm nay trở đi, ở mọi trạng thái; bảng giá đã hết hạn giữ nguyên, tới khi được gia hạn thì dòng giá về theo Danh mục.</p>
+  </div>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">03</span><h2>Prototype</h2><p>Bản thiết kế CRM DES, bấm thử được: Thêm bảng giá, sửa giá, Dùng bảng giá, Lịch sử thay đổi</p></div>
+  <div class="proto">
+    <div class="bar"><i></i><i></i><i></i><span>gip-crm-redesign.pages.dev/#/price-lists</span><a href="https://gip-crm-redesign.pages.dev/#/price-lists" target="_blank" rel="noopener" style="margin-left:auto">Mở toàn màn hình ↗</a></div>
+    <iframe class="embed" src="https://gip-crm-redesign.pages.dev/#/price-lists" title="Prototype Bảng giá GIP CRM" loading="lazy"></iframe>
+  </div>
+  <p class="caption">Prototype là giao diện thiết kế, chạy bằng dữ liệu mẫu, không nối BE. App đã làm khác prototype ở các điểm dưới đây; kiểm thử theo app và theo mục 04, 07.</p>
+  <div class="card" style="margin-top:14px;padding:8px 10px">
+    <table class="t">
+      <tr><th>#</th><th>Điểm</th><th>Prototype</th><th>App đã làm</th></tr>
+      <tr><td class="num">1</td><td>Ô đơn giá</td><td>Gõ % là tỷ lệ; ô trống lưu 0</td><td>Kiểu giá theo Đơn vị tính: ô số tiền có ký hiệu tiền tệ, ô tỷ lệ có hậu tố %. Ô trống phải nhập, dịch vụ miễn phí gõ 0</td></tr>
+      <tr><td class="num">2</td><td>Định dạng số</td><td>Kiểu Việt Nam cho mọi tiền tệ (16.300; 1,05)</td><td>Theo tiền tệ của bảng giá, như các màn tiền khác của hệ thống: PHP <code>16,300.50</code>; VND <code>16.300</code>, không có số lẻ</td></tr>
+      <tr><td class="num">3</td><td>Dòng chưa có giá</td><td>Không có</td><td>Có: dòng bị xoá giá do Danh mục đổi đơn vị khác kiểu giá; Alert nêu số dòng, ô trống "Nhập đơn giá"</td></tr>
+      <tr><td class="num">4</td><td>Tuỳ chỉnh xem</td><td>Drawer 3 nhóm Cố định / Đang hiển thị / Có thể thêm</td><td>Hộp chọn cột dùng chung của hệ thống: kéo để sắp xếp, bỏ tích để ẩn. Khoá Mã bảng giá và cột ⋮; lưu theo trình duyệt</td></tr>
+      <tr><td class="num">5</td><td>Thêm bảng giá</td><td>Drawer 640px</td><td>Hộp thoại; Thị trường và Tiền tệ (ô khoá) cùng hàng</td></tr>
+      <tr><td class="num">6</td><td>Cột ô chọn, cột Dịch vụ tổng</td><td>Có ô chọn; Dịch vụ tổng liệt kê tên</td><td>Không có ô chọn (không có thao tác hàng loạt); Dịch vụ tổng hiện số lượng</td></tr>
+      <tr><td class="num">7</td><td>Đầu danh sách</td><td>Nút Thêm bảng giá trên thanh công cụ; view dạng tab có icon</td><td>Nút ở đầu trang; view là chữ "Tất cả bảng giá · n"</td></tr>
+      <tr><td class="num">8</td><td>Trạng thái, thời gian</td><td>Nhãn chấm màu; <code>dd/mm/yyyy HH:mm</code></td><td>Tag Đang dùng xanh / Ngừng dùng xám; thời gian <code>HH:mm:ss DD/MM/YYYY</code> theo múi giờ của tài khoản</td></tr>
+      <tr><td class="num">9</td><td>Tiêu đề màn chi tiết</td><td>"Bảng giá Philippines" + ô mã</td><td>Mã bảng giá + phiên bản</td></tr>
+      <tr><td class="num">10</td><td>Tab Lịch sử thay đổi</td><td>Có số đếm; có lý do Ngừng dùng</td><td>Không có số đếm; không có ô lý do (spec không có)</td></tr>
+      <tr><td class="num">11</td><td>Hộp Ngừng dùng</td><td>Cảnh báo vàng</td><td>Thông báo xanh, nội dung theo spec A7</td></tr>
+      <tr><td class="num">12</td><td>Màu, nền, breadcrumb</td><td>Xanh dương, nền trắng phẳng, breadcrumb trên thanh đầu</td><td>Tím chàm và thẻ trắng như các màn CRM đã làm (Danh mục, Pipeline, Chất lượng lead); breadcrumb thuộc layout chung, chưa có</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="quy-tac">
+  <div class="sec-h"><span class="n">04</span><h2>Business rules</h2><p>Luật đang chạy ở BE + FE</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th style="width:190px">Nhóm</th><th>Quy tắc</th></tr>
+      <tr><td><b>Phạm vi</b></td><td>Một bảng giá gồm một Thị trường, một khoảng hiệu lực và một mức giá. Tiền tệ lấy theo Thị trường và chốt lúc tạo. Không có "không thời hạn".</td></tr>
+      <tr><td><b>Tạo</b></td><td>Chỉ nhập Thị trường (đang dùng ở Danh mục), Hiệu lực từ (mặc định hôm nay), Hiệu lực đến (bắt buộc, mặc định +1 tháng, tự đổi theo Hiệu lực từ cho tới khi người dùng tự chọn), Ghi chú (tối đa 500 ký tự). Ngày không được trước hôm nay, tính theo múi giờ của tài khoản; Hiệu lực đến không được trước Hiệu lực từ (bằng thì được).</td></tr>
+      <tr><td><b>Trùng hiệu lực</b></td><td>Hai bảng giá Đang dùng cùng Thị trường không được có khoảng hiệu lực giao nhau, kể cả chỉ chạm 1 ngày (bảng mới kết thúc đúng ngày bảng kia bắt đầu). Kiểm khi tạo, khi lưu ngày của bảng Đang dùng và khi Dùng bảng giá. Bảng Ngừng dùng thì đổi ngày tự do.</td></tr>
+      <tr><td><b>Mã</b></td><td><code>GIA-{mã nước 2 chữ}-{năm tháng của Hiệu lực từ}</code>, vd <code>GIA-PH-202611</code>; trùng thì thêm <code>-2</code>, <code>-3</code>. Chốt lúc tạo: sửa Hiệu lực từ sau đó không đổi mã.</td></tr>
+      <tr><td><b>Dòng giá</b></td><td>Tạo xong có sẵn một dòng giá 0 cho mỗi cặp Dịch vụ chi tiết đang dùng × Dịch vụ tổng cha. Đơn vị tính, Kiểu thu lấy theo Danh mục và chỉ hiện chữ, không sửa trên bảng giá. Không thêm / xoá dòng bằng tay.</td></tr>
+      <tr><td><b>Kiểu giá của dòng</b></td><td>Theo Kiểu giá của Đơn vị tính. Số tiền: ô có ký hiệu tiền tệ. Tỷ lệ (%): ô có hậu tố %. Không gõ % để đổi kiểu.</td></tr>
+      <tr><td><b>Đơn giá</b></td><td>Số tiền ≥ 0, tối đa 15 chữ số; số lẻ theo tiền tệ: VND, IDR, LAK, MMK không có số lẻ; PHP, THB, MYR, SGD, USD tối đa 2 chữ số lẻ. Tỷ lệ từ 0 đến 100, tối đa 2 chữ số lẻ. Dấu chấm / phẩy theo tiền tệ của bảng giá, như các màn tiền khác của hệ thống. <b>Ô trống không lưu thành 0</b>: phải nhập, dịch vụ miễn phí gõ 0.</td></tr>
+      <tr><td><b>Sửa</b></td><td>Màn chi tiết không có nút Sửa: Hiệu lực từ / đến, Ghi chú và ô đơn giá luôn sửa được. Có thay đổi thì thanh đáy "Có N thay đổi chưa lưu · Hủy thay đổi · Lưu thay đổi"; rời trang khi chưa lưu thì hỏi lại. Ngày đã qua chỉ bị chặn ở ô bị đổi. Hai người cùng sửa: người lưu sau nhận "Bảng giá vừa được người khác thay đổi. Tải lại trang để xem bản mới."</td></tr>
+      <tr><td><b>Phiên bản</b></td><td>Lưu có đổi đơn giá ở bảng giá đã từng Dùng thì phiên bản +1 (v1 → v2). Bảng chưa Dùng lần nào giữ v1. Đổi ngày, ghi chú, Dùng / Ngừng dùng, đồng bộ từ Danh mục không đổi phiên bản.</td></tr>
+      <tr><td><b>Dùng bảng giá</b></td><td>Bị chặn khi: còn thay đổi chưa lưu; bảng đã hết hiệu lực (Hiệu lực đến trước hôm nay, bằng hôm nay vẫn dùng được); trùng hiệu lực; còn dòng chưa có giá. Hộp xác nhận nêu Thị trường · hiệu lực · số dòng; còn dòng giá 0 thì cảnh báo "Còn N dòng giá 0", vẫn dùng được (dịch vụ miễn phí).</td></tr>
+      <tr><td><b>Ngừng dùng</b></td><td>⋮ › Ngừng dùng, có hộp xác nhận; còn thay đổi chưa lưu thì phải lưu / hủy trước. Báo giá đã tạo giữ giá; Thị trường không còn bảng giá áp dụng thì không tạo được báo giá mới ở Thị trường đó. Dùng lại được.</td></tr>
+      <tr><td><b>Đồng bộ từ Danh mục</b></td><td>Áp cho mọi bảng giá có Hiệu lực đến từ hôm nay trở đi, ở mọi trạng thái. (a) Thêm Dịch vụ chi tiết, gắn thêm Dịch vụ tổng, Dùng lại dịch vụ đang Ngừng dùng → thêm dòng giá 0 còn thiếu, Lịch sử "Thêm dịch vụ". (b) Đổi Đơn vị tính cùng kiểu giá, hoặc đổi Kiểu thu → cập nhật dòng, giữ giá, Lịch sử "Cập nhật dịch vụ". (c) Đổi sang Đơn vị tính khác kiểu giá → xoá giá dòng đó; bảng giá không lưu được và không Dùng được cho tới khi nhập lại; ai đang mở bảng giá đó sẽ phải tải lại.</td></tr>
+      <tr><td><b>Dịch vụ ngừng dùng</b></td><td>Dịch vụ chi tiết Ngừng dùng ở Danh mục: bảng giá giữ dòng và giá, dòng có nhãn Ngừng dùng kèm giải thích "báo giá mới không lấy dòng này"; không thêm dòng mới cho dịch vụ đang ngừng.</td></tr>
+      <tr><td><b>Bỏ Dịch vụ tổng khỏi Dịch vụ chi tiết</b></td><td>Bảng giá tạo sau không có dòng của cặp đó. Bảng giá đã có giữ dòng và giá, dòng có nhãn Ngừng dùng kèm giải thích "Dịch vụ không còn thuộc Dịch vụ tổng này ở Danh mục dùng chung: báo giá mới không lấy dòng này."</td></tr>
+      <tr><td><b>Gia hạn bảng giá đã hết hạn</b></td><td>Lưu Hiệu lực đến từ hôm nay trở đi cho bảng giá đã hết hạn → dòng giá về theo Danh mục hiện tại như đồng bộ: thêm dòng giá 0 còn thiếu, cập nhật Đơn vị tính / Kiểu thu, đơn vị đã đổi sang kiểu giá khác thì xoá giá dòng đó (phải nhập lại trước khi lưu tiếp / Dùng). Lưu bảng đã hết hạn mà không gia hạn (chỉ sửa Ghi chú, đơn giá) thì dòng giá giữ nguyên.</td></tr>
+      <tr><td><b>Danh mục</b></td><td>Kiểu thu: 3 loại cố định trong code (loại mới do dev thêm), bắt buộc ở Dịch vụ chi tiết, mặc định Theo phát sinh. Kiểu giá: bắt buộc chọn khi thêm Đơn vị tính (không chọn sẵn, về trống sau mỗi lần thêm), không đổi được sau khi tạo; đơn vị có sẵn chưa có kiểu giá thì được chọn một lần. Đổi Đơn vị tính sang kiểu giá khác thì drawer cảnh báo trước khi lưu.</td></tr>
+      <tr><td><b>Quyền</b></td><td>Xem bảng giá: menu Báo giá › Bảng giá, danh sách, chi tiết, lịch sử, chỉ đọc. Quản lý bảng giá: tạo, sửa, Dùng / Ngừng dùng; phải kèm Xem. Quyền tính theo nước đang chọn ở header; có quyền thì thấy bảng giá mọi Thị trường. User group ADMIN hoặc Super Admin luôn có đủ. Người không có quyền không thấy mục Báo giá › Bảng giá.</td></tr>
+      <tr><td><b>Danh sách</b></td><td>Một view "Tất cả bảng giá · n", bảng Đang dùng xếp trước. Tìm theo mã, Thị trường. Lọc Trạng thái, Thị trường. Cột mặc định: Mã bảng giá · Thị trường · Tiền tệ · Hiệu lực · Dịch vụ tổng · Dòng giá · Phiên bản · Trạng thái · Cập nhật · ⋮; thêm được Ghi chú, Dòng giá 0, Ngày tạo. 20 bảng giá / trang (đổi 10 / 20 / 50 / 100).</td></tr>
+      <tr><td><b>Lịch sử thay đổi</b></td><td>Cột: Thời gian · Người thực hiện · Hành động · Nội dung · Phiên bản. Hành động: Tạo bảng giá, Thêm dịch vụ, Sửa thông tin (trường: cũ → mới), Sửa giá ("Sửa N dòng giá (Dịch vụ tổng). Báo giá đã tạo giữ giá cũ."), Bắt đầu dùng, Dùng lại, Ngừng dùng, Cập nhật dịch vụ (dịch vụ – trường: cũ → mới). Một lần lưu không bị tách theo giây; đổi thông tin và đổi giá trong cùng một lần lưu hiện 2 dòng (Sửa thông tin, Sửa giá). Dòng Bắt đầu dùng / Dùng lại ghi khoảng hiệu lực.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="quyet-dinh">
+  <div class="sec-h"><span class="n">05</span><h2>Đã quyết định</h2><p>BA trả lời 10–12/11/2026, dev chốt khi làm 10–12/11/2026; điểm khác spec BG v0.1 ghi rõ</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Quyền</div><h4>Tách 2 quyền Xem / Quản lý</h4>
+      <div class="choice"><span class="ck">✓</span><div><code>crm.price_list.view</code> + <code>crm.price_list.manage</code>, nhóm riêng "Bảng giá". Người dùng thường được Xem, cấp quản lý mới có Quản lý.</div></div>
+      <div class="alt"><s>Một quyền <code>crm.price_list.manage</code> (spec mục 7)</s> · <s><code>quote.manage_template</code> (chưa có trong hệ thống)</s></div></div>
+    <div class="dcard"><div class="q">Lưu đơn giá</div><h4>Số nguyên theo tiền tệ, như ví seller</h4>
+      <div class="choice"><span class="ck">✓</span><div>Đơn giá lưu số nguyên đơn vị nhỏ theo tiền tệ chốt trên bảng giá (PH lưu PHP100, hiển thị PHP); tỷ lệ lưu riêng. Cùng cách với <code>seller_wallets</code> / <code>seller_transactions</code>.</div></div>
+      <div class="alt"><s>Số thập phân <code>numeric(18,2)</code></s></div></div>
+    <div class="dcard"><div class="q">Số lẻ</div><h4>Theo tiền tệ</h4>
+      <div class="choice"><span class="ck">✓</span><div>VND, IDR, LAK, MMK không có số lẻ; PHP, THB, MYR, SGD, USD tối đa 2 chữ số lẻ.</div></div>
+      <div class="alt"><s>Tối đa 2 chữ số lẻ với mọi tiền tệ (BR_BG08)</s></div></div>
+    <div class="dcard"><div class="q">Kiểu giá</div><h4>Khai ở Đơn vị tính, không đổi được</h4>
+      <div class="choice"><span class="ck">✓</span><div>GMV, NMV, Budget là Tỷ lệ (%), còn lại là Số tiền. Khoá sau khi tạo để công thức báo giá / hợp đồng không lệch.</div></div>
+      <div class="alt"><s>Gõ % trong ô đơn giá là tỷ lệ (BR_BG08, AC_BG08)</s></div></div>
+    <div class="dcard"><div class="q">Đổi đơn vị khác kiểu giá</div><h4>Xoá giá, bắt nhập lại</h4>
+      <div class="choice"><span class="ck">✓</span><div>Dòng của bảng giá chưa hết hạn đổi kiểu và để trống giá, không lấy giá trị nào thay thế. Còn dòng trống thì không lưu được, không Dùng được.</div></div>
+      <div class="alt"><s>Giữ số cũ</s> · <s>Về 0</s></div></div>
+    <div class="dcard"><div class="q">Ô trống</div><h4>Phải nhập, không tự thành 0</h4>
+      <div class="choice"><span class="ck">✓</span><div>Ô đơn giá để trống thì không lưu; dịch vụ miễn phí gõ 0. Cùng luật "không lấy giá trị thay thế" ở trên.</div></div>
+      <div class="alt"><s>Ô trống lưu 0 (AC_BG09)</s></div></div>
+    <div class="dcard"><div class="q">Mã</div><h4>GIA-{nước}-{năm tháng}</h4>
+      <div class="choice"><span class="ck">✓</span><div>Theo Hiệu lực từ, trùng thêm <code>-2</code>, chốt lúc tạo. Mã nước 2 chữ tra theo mã 3 chữ của Thị trường.</div></div>
+      <div class="alt"><s><code>BG-{nước}-{năm}</code> (issue cũ)</s></div></div>
+    <div class="dcard"><div class="q">Kiểu thu</div><h4>Cố định 3 loại trong code</h4>
+      <div class="choice"><span class="ck">✓</span><div>Theo phát sinh · Hằng tháng · Một lần, bắt buộc ở Dịch vụ chi tiết, mặc định Theo phát sinh; loại mới (vd "Theo thực tế") do dev thêm vì mỗi loại có cách xử lý riêng ở hợp đồng.</div></div>
+      <div class="alt"><s>Danh mục admin tự thêm loại</s></div></div>
+    <div class="dcard"><div class="q">Đồng bộ từ Danh mục</div><h4>Bảng giá chưa hết hạn, mọi trạng thái</h4>
+      <div class="choice"><span class="ck">✓</span><div>Đổi Đơn vị tính / Kiểu thu: cập nhật dòng, giữ giá, không tăng phiên bản. Dùng lại dịch vụ: thêm dòng giá 0 còn thiếu. Bảng giá hết hạn không đổi tới khi được gia hạn; báo giá đã lưu không đổi.</div></div></div>
+    <div class="dcard"><div class="q">Gia hạn bảng giá đã hết hạn</div><h4>Dòng giá về theo Danh mục hiện tại</h4>
+      <div class="choice"><span class="ck">✓</span><div>Dev chốt 12/11/2026. Bảng hết hạn không nhận đồng bộ, nên lúc gia hạn có thể đã lệch Danh mục: thêm dòng còn thiếu, cập nhật Đơn vị tính / Kiểu thu, đơn vị đã đổi kiểu giá thì xoá giá. Chỉ chạy khi Hiệu lực đến chuyển từ đã qua sang từ hôm nay trở đi.</div></div>
+      <div class="alt"><s>Giữ nguyên dòng giá như lúc hết hạn</s></div></div>
+    <div class="dcard"><div class="q">Bỏ Dịch vụ tổng khỏi Dịch vụ chi tiết</div><h4>Bảng giá cũ giữ dòng, gắn nhãn Ngừng dùng</h4>
+      <div class="choice"><span class="ck">✓</span><div>BA chốt 12/11/2026. Bảng giá mới theo Danh mục mới; bảng giá đã có giữ dòng và giá, nhãn Ngừng dùng như dịch vụ ngừng dùng. Báo giá sau này bỏ qua dòng này như dịch vụ ngừng dùng.</div></div>
+      <div class="alt"><s>Xoá dòng khỏi bảng giá chưa hết hạn</s></div></div>
+    <div class="dcard"><div class="q">Danh mục Bảng giá GP01…</div><h4>Giữ danh mục, bỏ ô ở Pipeline</h4>
+      <div class="choice"><span class="ck">✓</span><div>Danh mục GP01 · GP02 · GP03 · Enterprise · Custom giữ nguyên; chỉ bỏ dòng Bảng giá ở ma trận Trường bắt buộc.</div></div>
+      <div class="alt"><s>Bỏ cả danh mục (BR_BG14)</s></div></div>
+    <div class="dcard"><div class="q">Lịch sử</div><h4>Đọc từ nhật ký hệ thống</h4>
+      <div class="choice"><span class="ck">✓</span><div>Lịch sử dựng từ <code>system_logs</code> (trigger của 2 bảng), cùng cách các màn lịch sử FFM, không thêm bảng sự kiện riêng. Đổi thông tin và đổi giá trong cùng một lần lưu là 2 dòng. Dòng Bắt đầu dùng / Dùng lại chỉ ghi khoảng hiệu lực, vì nhật ký không lưu số dòng giá 0 lúc Dùng.</div></div>
+      <div class="alt"><s>Bảng <code>crm_price_list_events</code></s> · <s>Số dòng giá 0 ở dòng Bắt đầu dùng / Dùng lại (spec mục 9.2)</s></div></div>
+    <div class="dcard"><div class="q">Phân trang</div><h4>Ở FE</h4>
+      <div class="choice"><span class="ck">✓</span><div>BA ước dưới 200 bảng giá mỗi công ty: BE trả cả danh sách, FE chia trang, tìm và lọc tại chỗ.</div></div>
+      <div class="alt"><s>Phân trang ở BE</s></div></div>
+    <div class="dcard"><div class="q">User group ADMIN hoặc Super Admin</div><h4>Có mọi quyền CRM</h4>
+      <div class="choice"><span class="ck">✓</span><div>ADMIN và Super Admin vào được Bảng giá và thao tác đủ, không cần tích quyền; vẫn theo luật nghiệp vụ (trùng hiệu lực, ngày…).</div></div></div>
+    <div class="dcard"><div class="q">Câu hỏi GIP (không chặn #496)</div><h4>Q_03 – Q_06 còn mở</h4>
+      <div class="choice open"><span class="ck">?</span><div>Q_03 phí tháng + hoa hồng (TMĐT), Q_04 phí tối thiểu, Q_05 thu theo thực tế, Q_06 tách Thuê tài khoản. Q_03 trả lời "có" thì một dịch vụ cần 2 dòng giá, phải đổi khoá dòng giá. Người trả lời: GIP.</div></div></div>
+  </div>
+</section>
+
+<section id="ngoai-pham-vi">
+  <div class="sec-h"><span class="n">06</span><h2>Ngoài phạm vi</h2></div>
+  <div class="note n-info"><span class="ic">i</span><div>
+    <ul class="clean">
+      <li>Phần của Báo giá: chọn Thị trường theo bảng giá áp dụng (AC_BG14, AC_BG16), báo giá giữ giá khi bảng giá đổi (AC_BG15, AC_BG20), link Bảng giá trên báo giá (AC_BG26). Làm cùng tính năng Báo giá.</li>
+      <li>Nhiều mức giá trong một bảng giá (giá riêng làm ở báo giá Nâng cao); nhập bảng giá từ Excel; duyệt bảng giá.</li>
+      <li>Kiểu thu kết hợp, phí tối thiểu, thu theo thực tế: chờ GIP trả lời Q_03 – Q_05.</li>
+      <li>Nạp sẵn Danh mục và quyền CRM một lần khi vào app (thay vì mỗi màn tự tải): làm ở PR riêng.</li>
+    </ul>
+  </div></div>
+</section>
+
+<section id="kiem-thu">
+  <div class="sec-h"><span class="n">07</span><h2>Kiểm thử trên app</h2><p>Kịch bản cho Tester theo bản đã làm; ví dụ dùng Thị trường Philippines (PHP)</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th>#</th><th>Cho trước · thao tác</th><th>Kết quả mong đợi</th></tr>
+      <tr><td class="num">1</td><td>Hôm nay 11/11/2026, bấm Thêm bảng giá, chọn Philippines</td><td>Ô Tiền tệ khoá, hiện PHP; Hiệu lực từ 11/11/2026, Hiệu lực đến 11/12/2026; ngày trước hôm nay bị mờ</td></tr>
+      <tr><td class="num">2</td><td>Đổi Hiệu lực từ thành 05/12/2026 (chưa tự chọn Hiệu lực đến)</td><td>Hiệu lực đến tự thành 05/01/2027</td></tr>
+      <tr><td class="num">3</td><td>Tạo hợp lệ</td><td>Mở màn chi tiết <code>GIA-PH-202611</code>, Ngừng dùng, v1, mọi dòng giá 0 (số dòng = số cặp Dịch vụ chi tiết đang dùng × Dịch vụ tổng); tạo thêm 1 bảng PH bắt đầu tháng 11 → <code>GIA-PH-202611-2</code></td></tr>
+      <tr><td class="num">4</td><td>PH đang dùng bảng 11/11/2026 – 11/12/2026; tạo PH 11/12/2026 – 11/01/2027</td><td>"Không hợp lệ: Philippines đã có bảng giá GIA-PH-202611 hiệu lực 11/11/2026 – 11/12/2026. Chọn khoảng hiệu lực khác." (chạm 1 ngày cũng là trùng)</td></tr>
+      <tr><td class="num">5</td><td>Sửa 1 giá và Ghi chú</td><td>Thanh đáy "Có 2 thay đổi chưa lưu"; Hủy thay đổi → về dữ liệu đã lưu, thanh đáy ẩn</td></tr>
+      <tr><td class="num">6</td><td>Dòng đơn vị GMV gõ 1.5; dòng đơn vị Order gõ số có 3 chữ số lẻ</td><td>Ô GMV có hậu tố %, lưu 1.5%; ô Order có ký hiệu ₱, chỉ giữ 2 chữ số lẻ</td></tr>
+      <tr><td class="num">7</td><td>Xoá trống 1 ô đơn giá rồi Lưu thay đổi</td><td>Ô viền đỏ, placeholder "Nhập đơn giá"; bấm Lưu báo "Nhập đơn giá cho 1 dòng: …", không lưu; gõ 0 thì lưu được</td></tr>
+      <tr><td class="num">8</td><td>Bảng đã từng Dùng (v1): đổi 1 giá, lưu. Bảng chưa Dùng lần nào: đổi giá, lưu</td><td>Bảng thứ nhất lên v2, Lịch sử "Sửa giá"; bảng thứ hai giữ v1</td></tr>
+      <tr><td class="num">9</td><td>Còn thay đổi chưa lưu, bấm Dùng bảng giá</td><td>"Lưu hoặc hủy thay đổi trước khi dùng bảng giá."</td></tr>
+      <tr><td class="num">10</td><td>Bảng còn 28 dòng giá 0, bấm Dùng bảng giá rồi xác nhận</td><td>Hộp xác nhận cảnh báo "Còn 28 dòng giá 0"; xác nhận → Đang dùng, Lịch sử "Bắt đầu dùng"; ⋮ › Ngừng dùng rồi Dùng lại → Lịch sử "Ngừng dùng", "Dùng lại"</td></tr>
+      <tr><td class="num">11</td><td>Bảng có Hiệu lực đến trước hôm nay, bấm Dùng bảng giá</td><td>"Bảng giá đã hết hiệu lực (dd/mm/yyyy). Sửa Hiệu lực đến trước khi dùng."; Hiệu lực đến = hôm nay thì Dùng được</td></tr>
+      <tr><td class="num">12</td><td>Danh mục: thêm Dịch vụ chi tiết "Dán nhãn phụ" thuộc Warehouse</td><td>Báo "Đã thêm N dòng giá 0 vào bảng giá chưa hết hạn."; bảng chưa hết hạn có dòng giá 0 ở nhóm Warehouse, Lịch sử "Thêm dịch vụ"; bảng đã hết hạn không đổi</td></tr>
+      <tr><td class="num">13</td><td>Danh mục: đổi Kiểu thu của Setup từ Một lần sang Theo phát sinh</td><td>Bảng chưa hết hạn: dòng Setup đổi Kiểu thu, giữ giá, phiên bản giữ nguyên; Lịch sử "Cập nhật dịch vụ"</td></tr>
+      <tr><td class="num">14</td><td>Danh mục: đổi Đơn vị tính của một dịch vụ từ Order (số tiền) sang GMV (%)</td><td>Drawer cảnh báo trước khi lưu; lưu xong báo "Đã xoá giá ở N dòng giá…"; bảng giá: dòng đó trống, Alert "1 dòng chưa có đơn giá…", không Lưu / Dùng được tới khi nhập</td></tr>
+      <tr><td class="num">15</td><td>Danh mục: thêm Đơn vị tính không chọn Kiểu giá; mở drawer đơn vị đã có kiểu giá</td><td>"Chọn kiểu giá."; ô Kiểu giá trong drawer bị khoá</td></tr>
+      <tr><td class="num">16</td><td>Dịch vụ chi tiết Lalamove đang Ngừng dùng → Dùng lại</td><td>Bảng chưa hết hạn còn thiếu dòng Lalamove có thêm dòng giá 0, Lịch sử "Thêm dịch vụ"</td></tr>
+      <tr><td class="num">17</td><td>Người chỉ có quyền Xem mở Bảng giá</td><td>Thấy danh sách, chi tiết, lịch sử; không có Thêm bảng giá, Dùng bảng giá; ô chỉ đọc; ⋮ chỉ có Xem bảng giá</td></tr>
+      <tr><td class="num">18</td><td>Người không có quyền nào</td><td>Không thấy mục Báo giá › Bảng giá trong menu</td></tr>
+      <tr><td class="num">19</td><td>2 người cùng mở một bảng giá; A lưu trước, B lưu sau</td><td>B nhận "Bảng giá vừa được người khác thay đổi. Tải lại trang để xem bản mới."</td></tr>
+      <tr><td class="num">20</td><td>Bảng giá đã hết hạn; sau đó ở Danh mục đổi Đơn vị tính của Lưu kho từ CBM (số tiền) sang GMV (%) và thêm Dịch vụ chi tiết mới. Mở bảng đã hết hạn, chỉ sửa Ghi chú rồi lưu; sau đó đổi Hiệu lực đến sang sau hôm nay rồi lưu</td><td>Lần lưu Ghi chú: dòng Lưu kho vẫn CBM, giữ giá; không có dòng dịch vụ mới. Lần gia hạn: dòng Lưu kho thành GMV, ô trống, Alert "1 dòng chưa có đơn giá…"; có thêm dòng giá 0 của dịch vụ mới; Lịch sử "Cập nhật dịch vụ", "Thêm dịch vụ"</td></tr>
+      <tr><td class="num">21</td><td>Danh mục: Dịch vụ chi tiết thuộc 2 Dịch vụ tổng, bỏ bớt 1 Dịch vụ tổng</td><td>Bảng giá đã có: dòng của Dịch vụ tổng vừa bỏ giữ giá, có nhãn Ngừng dùng, di chuột hiện "Dịch vụ không còn thuộc Dịch vụ tổng này…"; bảng giá tạo sau không có dòng đó</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">08</span><h2>Cho dev</h2><p>Dữ liệu, API, file đã sửa, deploy</p></div>
+  <div class="schema">
+    <div class="tbl"><div class="th new">crm_price_lists<span>bảng mới</span></div>
+      <div class="f isnew"><code>app_id · code</code><small>unique <code>(app_id, code)</code>; không có <code>country_code</code>, Thị trường là một cột</small><span></span></div>
+      <div class="f isnew"><code>market_code · currency</code><small>mã alpha-3 của Thị trường; tiền tệ lưu chốt lúc tạo (<code>CrmCatalog.storage_currency/1</code>, PH = <code>PHP100</code>)</small><span></span></div>
+      <div class="f isnew"><code>valid_from · valid_to</code><small><code>date</code>, bắt buộc</small><span></span></div>
+      <div class="f isnew"><code>active · version · ever_used · lock_version</code><small>Đang dùng; phiên bản; đã từng Dùng; chống lưu đè</small><span></span></div>
+      <div class="f isnew"><code>note · last_editor_id</code><small>trigger <code>pn_system_logs_trigger</code>, bỏ qua <code>lock_version</code></small><span></span></div>
+    </div>
+    <div class="tbl"><div class="th new">crm_price_list_items<span>bảng mới</span></div>
+      <div class="f isnew"><code>price_list_id</code><small>FK không cascade (code không xoá bảng giá; cần xoá thì tự xoá dòng giá có lọc <code>app_id</code> trước); unique <code>(app_id, price_list_id, service_code, service_detail_code)</code></small><span></span></div>
+      <div class="f isnew"><code>service_code · service_detail_code</code><small>Dịch vụ tổng · Dịch vụ chi tiết</small><span></span></div>
+      <div class="f isnew"><code>unit_code · billing_type</code><small>chép từ Danh mục, cập nhật khi Danh mục đổi</small><span></span></div>
+      <div class="f isnew"><code>price_type · price · rate</code><small><code>amount</code>: <code>price</code> bigint đơn vị nhỏ; <code>rate</code>: <code>rate</code> float %; cả hai NULL = chờ nhập lại</small><span></span></div>
+      <div class="f isnew"><code>last_editor_id</code><small>trigger ghi <code>parent_table = crm_price_lists</code></small><span></span></div>
+    </div>
+    <div class="tbl"><div class="th">crm_catalog_values<span>sửa</span></div>
+      <div class="f isnew"><code>billing_type</code><small>Dịch vụ chi tiết: <code>usage</code> / <code>monthly</code> / <code>one_time</code></small><span class="pill p-new">mới</span></div>
+      <div class="f isnew"><code>price_type</code><small>Đơn vị tính: <code>amount</code> / <code>rate</code></small><span class="pill p-new">mới</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;padding:8px 10px">
+    <table class="t">
+      <tr><th>API</th><th>Quyền</th><th>Ghi chú</th></tr>
+      <tr><td><code>GET /api/crm/price_lists</code></td><td>Xem</td><td>Cả danh sách (không phân trang) kèm số dòng, số dòng giá 0, số Dịch vụ tổng, người sửa; kèm giá trị Danh mục để hiện tên</td></tr>
+      <tr><td><code>GET /api/crm/price_lists/:id</code></td><td>Xem</td><td>Bảng giá + dòng giá, kèm giá trị Danh mục</td></tr>
+      <tr><td><code>GET /api/crm/price_lists/:id/history</code></td><td>Xem</td><td><code>system_logs</code> của bảng giá và dòng giá; <code>limit</code> + con trỏ <code>prev_entries</code></td></tr>
+      <tr><td><code>POST /api/crm/price_lists</code></td><td>Quản&nbsp;lý</td><td><code>market_code</code>, <code>valid_from</code>, <code>valid_to</code>, <code>note</code></td></tr>
+      <tr><td><code>PUT /api/crm/price_lists/:id</code></td><td>Quản&nbsp;lý</td><td>Ô đã đổi + <code>items: [{id, price}|{id, rate}]</code> + <code>lock_version</code></td></tr>
+      <tr><td><code>PUT /api/crm/price_lists/:id/status</code></td><td>Quản&nbsp;lý</td><td><code>active</code> + <code>lock_version</code></td></tr>
+    </table>
+    <p class="caption">Lỗi trả <code>error_code</code> (vd <code>overlap</code>, <code>past_date</code>, <code>expired</code>, <code>missing_price</code>, <code>invalid_price</code>, <code>stale</code>) kèm <code>details</code> để FE dựng câu báo. Báo giá sẽ dùng <code>CrmPriceListAction.applicable/2</code>.</p>
+  </div>
+
+  <div class="card" style="margin-top:14px;padding:8px 10px">
+    <table class="t">
+      <tr><th>BE · sea-fulfillment (PR #606)</th><th>Sửa gì</th><th style="text-align:right">~dòng</th></tr>
+      <tr><td><code>lib/app/crm/crm_price_list_action.ex</code></td><td>tạo, lưu, Dùng / Ngừng dùng, lịch sử, đồng bộ từ Danh mục, <code>applicable/2</code></td><td class="num">571</td></tr>
+      <tr><td><code>lib/sea_fulfillment_web/controllers/crm/crm_price_list_controller.ex</code> + <code>router.ex</code></td><td>6 route</td><td class="num">111</td></tr>
+      <tr><td><code>model/crm/crm_price_list.ex</code>, <code>crm_price_list_item.ex</code></td><td>schema + changeset</td><td class="num">76</td></tr>
+      <tr><td><code>priv/repo/migrations/20261110162350_…</code>, <code>20261110162351_…</code>, <code>20261111040544_…</code>, <code>20261112080816_…</code></td><td>2 bảng, 2 cột, trigger; khoá ngoại dòng giá không cascade</td><td class="num">96</td></tr>
+      <tr><td><code>lib/app/crm/crm_catalog.ex</code>, <code>crm_catalog_action.ex</code>, <code>crm_catalog_controller.ex</code>, <code>crm_catalog_value.ex</code></td><td>Kiểu thu, Kiểu giá, đồng bộ trong cùng transaction, trả số dòng</td><td class="num">84</td></tr>
+      <tr><td><code>lib/app/permission_catalog.ex</code>, <code>plugs/authorize.ex</code>, <code>crm_permission_controller.ex</code></td><td>2 quyền; user group ADMIN hoặc Super Admin qua route CRM có quyền</td><td class="num">38</td></tr>
+      <tr><td><code>lib/app/crm/crm_lead_field.ex</code></td><td>bỏ <code>price_list</code></td><td class="num">2</td></tr>
+      <tr><td><code>priv/data/crm_catalog_seed.json</code>, <code>lib/manage.ex</code></td><td>Kiểu thu, Kiểu giá cho dữ liệu mẫu; <code>TmpFix.Crm</code></td><td class="num">593</td></tr>
+      <tr><td><code>test/…/crm_price_list_controller_test.exs</code> + 5 file test</td><td>test mới + sửa danh sách cứng</td><td class="num">783</td></tr>
+    </table>
+  </div>
+  <div class="card" style="margin-top:14px;padding:8px 10px">
+    <table class="t">
+      <tr><th>FE · sea-fulfillment-web (PR #552)</th><th>Sửa gì</th><th style="text-align:right">~dòng</th></tr>
+      <tr><td><code>pages/crm/price-lists/index.js</code>, <code>pages/crm/price-lists/[id].js</code></td><td>danh sách, chi tiết</td><td class="num">552</td></tr>
+      <tr><td><code>components/crm/priceList/*</code> (5 file + SCSS)</td><td>bảng đơn giá, Thêm bảng giá, hộp Dùng / Ngừng dùng, Lịch sử</td><td class="num">539</td></tr>
+      <tr><td><code>utils/crm/priceList.js</code>, <code>hooks/useCrmPriceList(s).js</code></td><td>đọc / định dạng giá, đếm thay đổi, dựng lịch sử; gọi API</td><td class="num">443</td></tr>
+      <tr><td><code>components/crm/catalog/*</code>, <code>utils/crm/catalog.js</code>, <code>pages/crm/setting/catalog.js</code>, <code>hooks/useCrmCatalog.js</code></td><td>ô Kiểu thu, Kiểu giá, cảnh báo đổi đơn vị, câu báo số dòng</td><td class="num">116</td></tr>
+      <tr><td><code>utils/menu/crmItems.js</code>, <code>server.js</code>, <code>utils/route.js</code>, <code>pages/crm/index.js</code></td><td>menu Báo giá › Bảng giá, route</td><td class="num">52</td></tr>
+      <tr><td><code>components/OrderColumn.js</code>, <code>hooks/useSystemLog.js</code></td><td>prop tuỳ chọn (dùng chung, không truyền thì như cũ)</td><td class="num">12</td></tr>
+      <tr><td><code>static/translations/*/page.json</code>, <code>constant.json</code></td><td>6 ngôn ngữ</td><td class="num">1180</td></tr>
+      <tr><td><code>test/…</code> (9 file mới + 10 file sửa)</td><td>trang, component, hook, util, i18n</td><td class="num">1868</td></tr>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Migration + deploy BE<small>4 migration</small></div>
+      <div class="s"><b>2</b><br>Deploy FE ngay<small>FE cũ thêm Dịch vụ chi tiết / Đơn vị tính bị BE từ chối</small></div>
+      <div class="s"><b>3</b><br><code>Manage.sync_permission_catalog()</code><small>khai 2 quyền</small></div>
+      <div class="s you"><b>4</b><br><code>TmpFix.Crm</code><small>staging + prod app 1, trước khi ai tạo bảng giá</small></div>
+      <div class="s you"><b>5</b><br>Tích quyền<small>User group ADMIN hoặc Super Admin tích 2 quyền cho Department</small></div>
+    </div>
+    <pre># Bước 4, chạy trong IEx: đặt người chạy để nhật ký ghi đúng người sửa
+Process.put(:user_info, %{id: "&lt;user_id của người chạy&gt;", app_id: 1})
+TmpFix.Crm.inspect_billing_types(1)
+TmpFix.Crm.fix_billing_types(1)
+TmpFix.Crm.inspect_price_types(1)
+TmpFix.Crm.fix_price_types(1)</pre>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="note n-red"><span class="ic">!</span><div><p><b>Rủi ro</b></p><ul class="clean">
+      <li>Tạo bảng giá trước bước 4: dòng của GMV / NMV / Budget mang kiểu Số tiền, Kiểu thu trống. Chạy <code>TmpFix</code> ngay sau deploy.</li>
+      <li>Deploy BE mà chưa deploy FE: màn Danh mục cũ không gửi Kiểu thu / Kiểu giá nên không thêm được Dịch vụ chi tiết, Đơn vị tính.</li>
+    </ul></div></div>
+    <div class="note n-info"><span class="ic">↺</span><div><p><b>Hoàn tác</b></p><ul class="clean">
+      <li>Revert 2 PR. Rollback migration xoá 2 bảng giá và 2 cột Danh mục: mất bảng giá đã nhập.</li>
+      <li>Cấu hình trường Bảng giá ở Pipeline không bị xoá nên revert là hiện lại như cũ.</li>
+    </ul></div></div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Coolmate PH — Luồng đơn, tồn kho và dữ liệu POS ↔ FFM ↔ ERP Coolmate</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: -apple-system, "Segoe UI", sans-serif; margin: 0; color: #1f2328; line-height: 1.55; }
+  nav { position: fixed; top: 0; left: 0; bottom: 0; width: 230px; overflow-y: auto; background: #f6f8fa; border-right: 1px solid #d0d7de; padding: 16px 12px; font-size: 13.5px; }
+  nav a { display: block; color: #1f2328; text-decoration: none; padding: 3px 6px; border-radius: 4px; }
+  nav a:hover { background: #e7ecf2; }
+  nav .h { font-weight: 700; margin: 12px 0 4px; color: #59636e; font-size: 12px; text-transform: uppercase; }
+  main { margin-left: 260px; max-width: 1150px; padding: 20px 28px 80px; }
+  h1 { font-size: 25px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin-top: 44px; border-bottom: 2px solid #d0d7de; padding-bottom: 6px; scroll-margin-top: 10px; }
+  h3 { font-size: 16.5px; margin-top: 30px; scroll-margin-top: 10px; }
+  .sub { color: #59636e; margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
+  th, td { border: 1px solid #e1e4e8; padding: 5px 9px; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  code { background: #f2f4f7; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  .mermaid { background: #fafbfc; border: 1px solid #e1e4e8; border-radius: 10px; padding: 12px; margin: 10px 0; }
+  .box { border-left: 5px solid #2f6fdb; background: #f0f6ff; padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
+  .warn { border-left: 5px solid #d4a72c; background: #fff8c5; padding: 8px 14px; border-radius: 6px; margin: 8px 0; font-size: 14px; }
+  .ok { color: #1a7f37; font-weight: 600; } .bad { color: #cf222e; font-weight: 600; } .mid { color: #9a6700; font-weight: 600; }
+  .tag { display:inline-block; font-size:12px; padding:0 7px; border-radius:9px; background:#fff1e5; border:1px solid #f0c9a0; margin-left:6px; }
+  .zoom { overflow-x: auto; border: 1px solid #e1e4e8; border-radius: 10px; padding: 8px; background: #fff; }
+  .zoom img { width: 2600px; max-width: none; }
+  ol li, ul li { margin: 3px 0; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="h">Tổng quan</div>
+  <a href="#boi-canh">Bối cảnh</a>
+  <a href="#da-chot">Đã chốt</a>
+  <div class="h">Sơ đồ theo luồng</div>
+  <a href="#luong-1">1. Đơn sàn</a>
+  <a href="#luong-2">2. Đơn website</a>
+  <a href="#luong-3">3. Đồng bộ tồn kho</a>
+  <a href="#luong-4">4. Sản phẩm + chứng từ kho</a>
+  <a href="#master">Master flow tổng</a>
+  <div class="h">Dữ liệu</div>
+  <a href="#ma-tran">Nguồn và cách đồng bộ</a>
+  <div class="h">Câu hỏi mở</div>
+  <a href="#cau-hoi">Q1–Q9 (chốt với Coolmate)</a>
+  <a href="#noi-bo">Câu hỏi nội bộ</a>
+</nav>
+<main>
+<h1>Coolmate PH — Luồng đơn, tồn kho và dữ liệu POS ↔ FFM ↔ ERP Coolmate</h1>
+<p class="sub">Cập nhật: 2026-10-14 · Bản nháp để thảo luận · Người soạn: Long (PM)</p>
+
+<h2 id="boi-canh">Bối cảnh</h2>
+<ul>
+  <li>GIP FFM onboard <b>1 kho FFM mới ở Philippines</b> để phục vụ khách lớn <b>Coolmate</b>.</li>
+  <li>Coolmate có 2 nguồn đơn:
+    <ul>
+      <li><b>Đơn sàn</b> (Shopee, Lazada, TikTok Shop PH) tích hợp thẳng vào <b>Pancake POS</b>.</li>
+      <li><b>Đơn website nội bộ</b> về <b>ERP Coolmate</b> trước, rồi ERP tạo đơn sang POS qua <b>Open API</b>.</li>
+    </ul>
+  </li>
+  <li>Mọi đơn đi từ POS sang <b>FFM</b> để telesale, vận hành và đóng gói trên <b>WMS</b>, rồi bàn giao cho hãng vận chuyển PH.</li>
+  <li>ERP Coolmate là hệ thống của khách. Pancake chỉ tích hợp qua Open API và webhook.</li>
+</ul>
+
+<h2 id="da-chot">Đã chốt</h2>
+<ul>
+  <li><span class="ok">Tồn kho:</span> WMS tính tồn, POS chỉ hiển thị (ánh xạ tồn từ FFM).</li>
+  <li><span class="ok">Tồn trên sàn:</span> POS đẩy realtime lên sàn.</li>
+  <li><span class="ok">Tồn trên website:</span> POS/FFM đồng bộ tồn về ERP Coolmate, Coolmate tự cập nhật lên website nội bộ.</li>
+  <li><span class="ok">Không chia tồn</span> (buffer hoặc %) giữa các kênh.</li>
+  <li><span class="ok">Đơn sàn:</span> mã vận đơn và mẫu in sàn lấy qua POS.</li>
+  <li><span class="ok">Đơn đã bàn giao ĐVVC:</span> không cho phép hủy hoặc xóa.</li>
+  <li><span class="ok">Đơn mới về:</span> đẩy ngay từ POS sang FFM.</li>
+  <li><span class="ok">Đơn sàn bỏ qua telesale</span> (không có SĐT khách).</li>
+</ul>
+
+<h2 id="luong">Sơ đồ theo luồng</h2>
+<div class="box">Mỗi sơ đồ chia cột theo 4 bên: <b>Kênh bán / Coolmate / Pancake / Vận chuyển</b>. Mũi tên liền = gọi hoặc đẩy dữ liệu, mũi tên đứt = trả trạng thái hoặc kết quả. <code>[cần build]</code> = phần chưa có. <code>?Qn</code> = câu hỏi mở tương ứng ở cuối trang.</div>
+
+<h3 id="luong-1">1. Luồng đơn sàn (Shopee / Lazada / TikTok Shop PH)</h3>
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    box rgb(246,248,250) Kênh bán
+        participant SAN as Sàn TMĐT PH
+    end
+    box rgb(255,248,240) Coolmate
+        participant ERP as ERP Coolmate
+    end
+    box rgb(240,246,255) Pancake
+        participant POS as Pancake POS
+        participant FFM as Pancake FFM (OMS + Telesale)
+        participant WMS as WMS kho PH
+    end
+    box rgb(246,248,250) Vận chuyển
+        participant DVVC as Hãng vận chuyển PH
+    end
+
+    SAN->>POS: Đơn mới (API), webhook bổ sung khách hàng + trạng thái
+    POS->>POS: Gán kho POS (map kho FFM PH), giảm "Có thể bán"
+    POS->>FFM: Đẩy đơn sang FFM ngay khi đơn mới về
+    Note over FFM: Bỏ qua telesale (đơn sàn không có SĐT)
+    POS->>SAN: Chuẩn bị hàng, lấy mã vận đơn
+    SAN-->>POS: Mã vận đơn + mẫu in sàn
+    FFM->>POS: Lấy mã vận đơn + mẫu in sàn qua POS
+    POS-->>FFM: Mã vận đơn + mẫu in sàn
+    FFM->>WMS: Đơn chờ in
+    WMS->>WMS: Pick, pack, in tem sàn
+    WMS->>DVVC: Bàn giao hàng + mã vận đơn
+    WMS-->>FFM: Đã đóng gói, đã bàn giao
+    DVVC-->>FFM: Trạng thái vận chuyển
+    FFM-->>POS: Trạng thái + tracking (FFM giữ dữ liệu vận hành)
+    POS-->>SAN: Cập nhật trạng thái / vận đơn lên sàn
+    POS-->>ERP: Webhook đơn + trạng thái (cả đơn sàn) [ERP cần build nhận] ?Q8
+    alt Hàng hoàn
+        DVVC->>WMS: Trả hàng hoàn
+        WMS->>WMS: QC good / not good, hàng good cộng lại tồn
+        WMS-->>POS: Kết quả QC hàng hoàn ?Q7
+    end
+</pre>
+
+<h3 id="luong-2">2. Luồng đơn website Coolmate</h3>
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    box rgb(246,248,250) Kênh bán
+        participant WEB as Website Coolmate
+    end
+    box rgb(255,248,240) Coolmate
+        participant ERP as ERP Coolmate
+    end
+    box rgb(240,246,255) Pancake
+        participant POS as Pancake POS
+        participant FFM as Pancake FFM (OMS + Telesale)
+        participant WMS as WMS kho PH
+    end
+    box rgb(246,248,250) Vận chuyển
+        participant DVVC as Hãng vận chuyển PH
+    end
+
+    WEB->>ERP: Khách đặt đơn
+    ERP->>POS: Tạo đơn qua Open API (kho = kho map FFM PH, tiền PHP, địa chỉ Province/City/Barangay) [Coolmate build] ?Q9
+    POS-->>ERP: Trả mã đơn POS
+    POS->>POS: Giảm "Có thể bán"
+    POS->>FFM: Đẩy đơn sang FFM ngay khi đơn mới về
+    opt ?Q4 Đơn website có qua telesale?
+        FFM->>FFM: Gọi xác nhận đơn
+    end
+    FFM->>WMS: Đơn đã xác nhận, chờ in
+    WMS->>WMS: Pick, pack
+    WMS->>DVVC: Bàn giao hàng + mã vận đơn
+    DVVC-->>FFM: Trạng thái vận chuyển
+    FFM-->>POS: Trạng thái + tracking
+    POS-->>ERP: Webhook trạng thái đơn ?Q8
+    ERP-->>WEB: Cập nhật trạng thái cho khách
+    alt Khách hủy / sửa đơn TRƯỚC khi bàn giao ĐVVC
+        WEB->>ERP: Hủy / sửa đơn
+        ERP->>POS: Cập nhật / hủy đơn qua Open API
+        POS->>FFM: Đồng bộ thay đổi (POS giữ dữ liệu thương mại)
+        Note over FFM,WMS: ?Q5 Đơn đang pick / pack / đã đóng gói thì xử lý thế nào?
+    else Đơn ĐÃ bàn giao ĐVVC
+        ERP->>POS: Yêu cầu hủy / xóa
+        POS-->>ERP: Không cho phép hủy / xóa
+    end
+</pre>
+
+<h3 id="luong-3">3. Luồng đồng bộ tồn kho (FFM/WMS là nguồn tồn thật, không chia tồn)</h3>
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    box rgb(240,246,255) Pancake
+        participant WMS as WMS kho PH
+        participant FFM as Pancake FFM
+        participant POS as Pancake POS
+    end
+    box rgb(246,248,250) Kênh bán
+        participant SAN as Sàn TMĐT PH
+    end
+    box rgb(255,248,240) Coolmate
+        participant ERP as ERP Coolmate
+        participant WEB as Website Coolmate
+    end
+
+    rect rgb(242,251,244)
+        Note over WMS,FFM: Biến động tồn chỉ phát sinh trên WMS
+        WMS->>FFM: Nhập xong (putaway): cộng tồn
+        WMS->>FFM: Đơn đã gửi: trừ tồn thực tế
+        WMS->>FFM: Hàng hoàn đạt QC: cộng tồn
+    end
+    FFM->>POS: Ánh xạ tồn FFM sang POS ?Q1
+    par Đẩy lên sàn
+        POS->>SAN: Đẩy tồn realtime (tổng "Có thể bán" các kho đồng bộ)
+    and Đồng bộ về ERP
+        POS->>ERP: Đồng bộ tồn (webhook hay ERP kéo API?) ?Q2
+        ERP->>WEB: Coolmate cập nhật tồn lên website
+    end
+    rect rgb(255,245,245)
+        Note over SAN,ERP: Khi có đơn mới ở 1 kênh
+        SAN->>POS: Đơn mới
+        POS->>POS: Giảm "Có thể bán" (tạm giữ)
+        POS->>SAN: Đẩy lại tồn mới lên các sàn
+        POS->>ERP: Đồng bộ tồn mới về ERP, website cập nhật theo
+    end
+    Note over ERP,POS: ?Q1 Độ trễ cả chuỗi phải đủ nhanh để chống oversell giờ cao điểm · ?Q6 Không sửa tồn trực tiếp ở ERP/POS, mọi biến động đi qua WMS
+</pre>
+
+<h3 id="luong-4">4. Sản phẩm + chứng từ kho (nhập / xuất / kiểm / chuyển)</h3>
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    box rgb(255,248,240) Coolmate
+        participant ERP as ERP Coolmate
+    end
+    box rgb(240,246,255) Pancake
+        participant POS as Pancake POS
+        participant FFM as Pancake FFM
+        participant WMS as WMS kho PH
+    end
+    box rgb(246,248,250) Kênh bán
+        participant SAN as Sàn TMĐT PH
+    end
+
+    rect rgb(246,248,250)
+        Note over ERP,SAN: A. Sản phẩm (đề xuất ERP làm master) ?Q3
+        ERP->>POS: Tạo / sửa sản phẩm + mẫu mã qua Open API
+        POS->>FFM: Đồng bộ sản phẩm 1 chiều
+        FFM->>FFM: Gán SKU / barcode kho
+        POS->>SAN: Link SKU sàn (tự động khi mã khớp chính xác)
+    end
+    rect rgb(255,248,240)
+        Note over ERP,WMS: B. Phiếu nhập: phương án đề xuất, chốt với CTO Coolmate ?Q6
+        ERP->>POS: Tạo phiếu nhập qua Open API
+        POS->>FFM: Phiếu nhập sang FFM (đã có)
+        FFM->>WMS: Nhận hàng, QC, putaway
+        WMS-->>FFM: Số lượng thực nhận
+        FFM-->>POS: Trạng thái + số lượng QC (đã có)
+        POS-->>ERP: Kết quả nhập về ERP [cần build]
+    end
+    rect rgb(255,245,245)
+        Note over ERP,WMS: C. Xuất / kiểm / chuyển: chưa có luồng POS sang WMS, chốt với CTO Coolmate ?Q6
+        Note over ERP,POS: Xuất kho bán hàng: suy từ webhook đơn (không có phiếu xuất riêng)?
+        Note over POS,WMS: Kiểm kho / chuyển kho: khởi tạo ở ERP, POS hay WMS? Kết quả về ERP?
+    end
+</pre>
+
+<h3 id="master">Master flow tổng (1 hình)</h3>
+<p>Xanh dương = Đơn hàng (A) · Xanh lá = Tồn kho (B) · Cam = Dữ liệu ↔ ERP (C). Nét liền = đã có trong Pancake, nét đứt = cần build hoặc cần chốt. Hình rộng, kéo ngang để xem; <a href="coolmate-ph-master-flow.svg" target="_blank">mở hình riêng</a> để phóng to.</p>
+<div class="zoom"><img src="coolmate-ph-master-flow.svg" alt="Master flow Coolmate PH"></div>
+
+<h2 id="ma-tran">Dữ liệu: nguồn và cách đồng bộ</h2>
+<table>
+<tr><th>Dữ liệu</th><th>Hệ thống nguồn</th><th>Đường đi</th><th>Trạng thái</th></tr>
+<tr><td>Đơn sàn</td><td>Sàn</td><td>Sàn → POS → FFM (đẩy ngay, bỏ qua telesale)</td><td><span class="ok">Có sẵn</span></td></tr>
+<tr><td>Đơn website</td><td>ERP Coolmate</td><td>ERP → POS (Open API tạo đơn) → FFM</td><td><span class="mid">Coolmate build phía ERP</span>. Cần chốt Q4, Q5, Q9</td></tr>
+<tr><td>Trạng thái / tracking</td><td>FFM (vận hành) + hãng vận chuyển</td><td>FFM → POS → sàn. POS → ERP (webhook đơn)</td><td><span class="ok">FFM → POS → sàn có sẵn</span>. Phía ERP cần build (Q8)</td></tr>
+<tr><td>Mã vận đơn + mẫu in sàn</td><td>Sàn</td><td>Sàn → POS → FFM in tem khi đóng gói</td><td><span class="ok">Đã chốt</span></td></tr>
+<tr><td>Sản phẩm</td><td>Đề xuất: ERP làm master</td><td>ERP → POS (Open API) → FFM (1 chiều). POS link SKU sàn</td><td><span class="mid">Cần chốt Q3</span></td></tr>
+<tr><td>Tồn kho</td><td><b>FFM/WMS</b></td><td>FFM → POS (ánh xạ) → sàn và ERP → website</td><td><span class="ok">FFM → POS → sàn có sẵn</span>. POS → ERP cần chốt Q1, Q2</td></tr>
+<tr><td>Chứng từ kho nhập / xuất / kiểm / chuyển</td><td><span class="bad">Cần chốt với CTO Coolmate</span></td><td>Phiếu nhập POS ⇄ FFM đã có 2 chiều. Xuất / kiểm / chuyển sang WMS hiện chưa có</td><td><span class="mid">Q6</span></td></tr>
+<tr><td>Hàng hoàn</td><td>FFM/WMS (QC good / not good)</td><td>Hàng đạt QC cộng lại tồn FFM. Kết quả về POS/ERP chưa rõ</td><td><span class="mid">Q7</span></td></tr>
+<tr><td>Đơn → ERP (căn cứ xuất kho)</td><td>POS</td><td>Webhook đơn, gồm cả đơn sàn</td><td><span class="mid">Cần chốt Q6, Q8</span></td></tr>
+</table>
+
+<h2 id="cau-hoi">Câu hỏi mở — chốt với Coolmate</h2>
+<ol>
+  <li><b>Q1. Độ trễ đồng bộ tồn:</b> ánh xạ FFM → POS rồi POS → sàn và ERP có đủ nhanh để chống oversell giờ cao điểm không?</li>
+  <li><b>Q2. Cách ERP nhận tồn:</b> qua webhook POS (<code>variations_warehouses</code>) hay ERP gọi API kéo định kỳ? Tần suất bao lâu?</li>
+  <li><b>Q3. Master sản phẩm</b> đặt ở ERP hay POS? Quy tắc mã SKU để POS tự link sàn (khớp chính xác, phân biệt hoa thường).</li>
+  <li><b>Q4. Telesale cho đơn website:</b> có qua telesale không, hay coi như đã xác nhận?</li>
+  <li><b>Q5. Hủy / sửa đơn website trước khi bàn giao ĐVVC:</b> đơn đang pick, pack hoặc đã đóng gói thì xử lý thế nào? (Đã bàn giao ĐVVC: không cho hủy/xóa.)</li>
+  <li><b>Q6. Chứng từ kho</b> <span class="tag">CTO Coolmate</span>
+    <ul>
+      <li>Phiếu nhập, xuất, kiểm, chuyển khởi tạo ở đâu: ERP → POS Open API, POS, hay FFM/WMS?</li>
+      <li>Số thực tế (QC, kiểm kê) trả về ERP thế nào? ERP có cần chứng từ xuất riêng hay suy ra từ đơn?</li>
+      <li>Nguyên tắc đề xuất: mọi biến động tồn đi qua WMS, không sửa tồn trực tiếp ở ERP/POS.</li>
+    </ul>
+  </li>
+  <li><b>Q7. Kết quả QC hàng hoàn</b> (good / not good) về POS và ERP thế nào?</li>
+  <li><b>Q8. Đối soát webhook:</b> webhook POS không ký, chỉ retry 2 lần (sau 10 phút rồi 30 phút). Có cần job đối soát định kỳ đơn và tồn với ERP?</li>
+  <li><b>Q9. Dữ liệu PH:</b> tiền PHP và địa chỉ PH (Province / City / Barangay) cho đơn tạo từ ERP.</li>
+</ol>
+
+<h2 id="noi-bo">Câu hỏi nội bộ — team Pancake tự trả lời trước buổi chốt</h2>
+<h3>Hoàn toàn nội bộ</h3>
+<table>
+<tr><th>#</th><th>Câu hỏi</th><th>Người trả lời</th></tr>
+<tr><td>Q1</td><td>Ánh xạ tồn FFM → POS → sàn/ERP hiện trễ bao lâu? Ngày campaign có chống được oversell không?</td><td>Thắng (FFM), Lại Hoàng (POS)</td></tr>
+<tr><td>Q5</td><td>Đơn đang pick, pack hoặc đã đóng gói mà POS gửi hủy/sửa thì FFM xử lý thế nào: chặn, cảnh báo hay trả về kho?</td><td>Quang, Thắng</td></tr>
+<tr><td>Q7</td><td>Kết quả QC hàng hoàn có trả về POS không? Tài liệu FFM chưa ghi.</td><td>Thắng</td></tr>
+</table>
+<h3>Coolmate quyết, nội bộ cần chuẩn bị năng lực trước</h3>
+<table>
+<tr><th>#</th><th>Coolmate quyết</th><th>Nội bộ cần trả lời trước</th></tr>
+<tr><td>Q2</td><td>ERP nhận tồn theo cách nào</td><td>Webhook tồn của POS có đủ tin cậy? ERP gọi API kéo tồn thì giới hạn tần suất bao nhiêu? (Vũ Sơn)</td></tr>
+<tr><td>Q3</td><td>Master sản phẩm ở ERP hay POS</td><td>Tạo sản phẩm qua Open API có tự đồng bộ sang FFM không? (Vũ Sơn, Thắng)</td></tr>
+<tr><td>Q4</td><td>Đơn website có cần telesale</td><td>FFM có cấu hình bỏ telesale theo nguồn đơn được không? (Quang)</td></tr>
+<tr><td>Q6</td><td>Chứng từ kho khởi tạo ở đâu</td><td>Hiện POS → WMS chỉ có phiếu nhập. Xuất / kiểm / chuyển phải build bao nhiêu? Ước lượng trước buổi gặp CTO (SH, Thăng Long)</td></tr>
+<tr><td>Q8</td><td>Có cần job đối soát</td><td>Webhook POS không ký, retry 2 lần. Phía mình có cơ chế bù khi gửi lỗi không? (Rem)</td></tr>
+<tr><td>Q9</td><td>Coolmate tự build phần tạo đơn</td><td>Đưa spec: <code>warehouse_id</code> ở cấp gốc request, tiền PHP, địa chỉ Province / City / Barangay (Vũ Sơn)</td></tr>
+</table>
+<h3>Câu nội bộ mới (rút từ tài liệu POS / FFM)</h3>
+<table>
+<tr><th>#</th><th>Câu hỏi</th><th>Người trả lời</th></tr>
+<tr><td>I1</td><td>POS: đơn sàn trừ ngay cả "Có thể bán" lẫn "Tồn kho" (BR-INV-004), trái quy tắc chung BR-INV-002. Có lệch với số FFM ánh xạ về không? (đang mở là Q27 bên POS)</td><td>Thăng Long</td></tr>
+<tr><td>I2</td><td>Đồng bộ FFM → POS giới hạn 15 request/giây/shop. Đơn Coolmate nhiều thì ngày campaign có nghẽn trạng thái không?</td><td>SH</td></tr>
+<tr><td>I3</td><td>Kho POS tạo sau khi kết nối phải map tay sang kho FFM (backlog #193) → chốt danh sách kho trước go-live.</td><td>Thắng</td></tr>
+</table>
+</main>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: "default", sequence: { mirrorActors: false, wrap: true, width: 190, messageAlign: "left" } });
+</script>
+</body>
+</html>

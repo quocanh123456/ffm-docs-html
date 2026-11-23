@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Shipping Rate tính giá theo vùng lấy hàng (Picking Zone)</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+<style>
+  /* Prototype theo design system FFM (Ant Design v5): màn danh sách + modal Customer Shipping Rate thật. Mọi class đặt trong .ffm */
+  .ffm { --p:#1677ff; --p2:#4096ff; --tx:#1f1f1f; --tx2:#7b8798; --ph:#bfbfbf; --bd:#d9d9d9; --bd2:#f0f0f0; --pg:#f2f2f2; --err:#ff4d4f;
+         font: 14px/1.5715 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--tx); }
+  .ffm * { box-sizing: border-box; }
+  .ffm svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ffm .lay { display: grid; grid-template-columns: 64px 1fr; height: 820px; background: var(--pg); position: relative; }
+  /* sidebar hẹp chỉ icon */
+  .ffm .sd { background: #fff; border-right: 1px solid var(--bd); display: flex; flex-direction: column; align-items: center; padding: 16px 0 14px; gap: 10px; }
+  .ffm .av { width: 32px; height: 32px; border-radius: 50%; background: #bf4096; color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 13px; margin-bottom: 8px; }
+  .ffm .av.s { border-radius: 8px; background: #9ca3af; }
+  .ffm .nv { width: 54px; height: 40px; border-radius: 8px; display: grid; place-items: center; color: var(--tx); border-top: 1px solid var(--bd2); }
+  .ffm .nv.on { background: #e6f4ff; color: var(--p); border-top: 0; }
+  .ffm .sd .sp { flex: 1; }
+  /* header */
+  .ffm .mn { display: flex; flex-direction: column; min-width: 0; }
+  .ffm .hd { height: 52px; background: #fff; border-bottom: 1px solid var(--bd); display: flex; align-items: center; padding: 0 12px 0 20px; gap: 14px; flex: none; }
+  .ffm .hd h1 { font-size: 20px; font-weight: 600; margin: 0; color: #262626; white-space: nowrap; }
+  .ffm .hd .q { display: flex; align-items: center; gap: 6px; border-left: 1px solid var(--bd2); padding-left: 14px; color: var(--ph); flex: 1; min-width: 0; }
+  .ffm .hd .q input { border: 0; outline: 0; font: inherit; color: var(--tx); width: 100%; background: transparent; }
+  .ffm .hd .q input::placeholder { color: var(--ph); }
+  .ffm .hd .ss { width: 260px; height: 32px; border: 1px solid var(--bd); border-radius: 6px; display: flex; align-items: center; gap: 6px; padding: 0 10px; color: var(--ph); }
+  .ffm .hd .rt2 { display: flex; align-items: center; gap: 14px; border-left: 1px solid var(--bd2); padding-left: 14px; }
+  .ffm .hd .ctry { font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .ffm .hd .flag { width: 24px; height: 16px; border-radius: 2px; background: linear-gradient(90deg, #fff 0 34%, transparent 34%), linear-gradient(#0038a8 50%, #ce1126 50%); border: 1px solid var(--bd2); }
+  .ffm .hd .bell { position: relative; } .ffm .hd .bell b { position: absolute; top: -9px; right: -9px; background: var(--err); color: #fff; font-size: 11px; font-weight: 500; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; }
+  /* toolbar */
+  .ffm .tb { display: flex; align-items: center; gap: 8px; padding: 10px 10px; }
+  .ffm .tb .gr { flex: 1; }
+  .ffm .bt { height: 32px; padding: 0 15px; border: 1px solid var(--bd); border-radius: 6px; background: #fff; color: var(--tx); font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .ffm .bt:hover { color: var(--p2); border-color: var(--p2); }
+  .ffm .bt.pr { background: var(--p); border-color: var(--p); color: #fff; } .ffm .bt.pr:hover { background: var(--p2); color: #fff; }
+  .ffm .bt.ic { width: 32px; padding: 0; justify-content: center; }
+  .ffm .fsel { position: relative; }
+  .ffm .fsel .ct { width: 200px; }
+  .ffm .drg { height: 32px; width: 270px; border: 1px solid var(--bd); border-radius: 6px; background: #fff; display: flex; align-items: center; gap: 10px; padding: 0 11px; color: var(--ph); }
+  .ffm .drg .cal { margin-left: auto; }
+  /* bảng danh sách */
+  .ffm table.tl { width: 100%; border-collapse: collapse; background: #fff; }
+  .ffm table.tl th { background: #fafafa; font-weight: 600; text-align: left; padding: 0 16px; height: 54px; border-bottom: 1px solid var(--bd2); white-space: nowrap; position: relative; }
+  .ffm table.tl th + th::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 22px; border-left: 1px solid var(--bd2); }
+  .ffm table.tl td { padding: 0 16px; height: 65px; border-bottom: 1px solid var(--bd2); white-space: nowrap; }
+  .ffm table.tl tbody tr:nth-child(odd) td { background: #fbfbfb; }
+  .ffm table.tl tbody tr:hover td { background: #f5f5f5; }
+  .ffm .acts { display: flex; gap: 22px; } .ffm .acts span { cursor: pointer; display: inline-grid; }
+  .ffm .acts .del { color: var(--err); }
+  .ffm .empty { text-align: center; color: var(--ph); padding: 30px; }
+  /* tag */
+  .ffm .crr { color: #fff; border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 22px; font-weight: 500; display: inline-block; }
+  .ffm .crr.JNT { background: #ff0000; } .ffm .crr.GPX { background: #c2002f; } .ffm .crr.SPX { background: #ee4d2d; }
+  .ffm .st { color: #fff; border-radius: 4px; padding: 0 7px; font-size: 12px; line-height: 22px; display: inline-block; }
+  .ffm .st.Active { background: #52c41a; } .ffm .st.Expired { background: #f5222d; } .ffm .st.New { background: #1677ff; }
+  /* modal */
+  .ffm .msk { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 5; display: none; }
+  .ffm .mdl { position: absolute; top: 14px; left: 14px; right: 14px; bottom: 14px; background: #fff; border-radius: 8px; z-index: 6; display: flex; flex-direction: column; box-shadow: 0 6px 16px rgba(0,0,0,.12); visibility: hidden; }
+  .proto.open .ffm .msk { display: block; } .proto.open .ffm .mdl { visibility: visible; }
+  .ffm .mh { display: flex; align-items: center; gap: 10px; padding: 16px 20px 10px; }
+  .ffm .mh h2 { margin: 0; font-size: 16px; font-weight: 600; color: #262626; }
+  .ffm .mh .his { width: 22px; height: 22px; border: 1.4px solid #8c8c8c; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: #8c8c8c; }
+  .ffm .mh .x { margin-left: auto; font-size: 20px; line-height: 1; color: #8c8c8c; cursor: pointer; }
+  .ffm .mb { flex: 1; display: grid; grid-template-columns: 360px 1fr; gap: 20px; padding: 0 20px 12px; min-height: 0; }
+  .ffm .lf { overflow: auto; padding-right: 4px; }
+  .ffm .mf { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 20px; border-top: 1px solid var(--bd2); }
+  .ffm .fi { margin-bottom: 14px; position: relative; }
+  .ffm .fi > label { display: block; margin-bottom: 6px; }
+  .ffm .fi > label em { color: var(--err); font-style: normal; margin-right: 4px; }
+  .ffm .ct { min-height: 32px; border: 1px solid var(--bd); border-radius: 6px; background: #fff; padding: 2px 11px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 100%; font: inherit; color: var(--tx); }
+  .ffm input.ct { padding: 0 11px; outline: 0; }
+  .ffm input.ct:focus { border-color: var(--p2); box-shadow: 0 0 0 2px rgba(5,145,255,.1); }
+  .ffm .ct.sel { padding-right: 28px; position: relative; cursor: pointer; }
+  .ffm .ct.sel::after { content: ""; position: absolute; right: 12px; top: 11px; width: 7px; height: 7px; border-right: 1.4px solid var(--ph); border-bottom: 1.4px solid var(--ph); transform: rotate(45deg); }
+  .ffm .ct .pl { color: var(--ph); }
+  .ffm .ach { display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,.06); border-radius: 4px; padding: 0 4px 0 8px; font-size: 12px; line-height: 22px; white-space: nowrap; color: var(--tx); }
+  .ffm .ach .cx { color: #8c8c8c; cursor: pointer; padding: 0 3px; font-size: 11px; }
+  .ffm .cal { width: 14px; height: 13px; border: 1.3px solid var(--ph); border-radius: 2px; }
+  .ffm .ct .cal { margin-left: auto; }
+  .ffm .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ffm .blk { border-radius: 8px; padding: 12px 12px 0; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.03), 0 1px 6px -1px rgba(0,0,0,.02), 0 2px 4px rgba(0,0,0,.02); border: 1px solid var(--bd2); }
+  .ffm .blk h4 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+  .ffm .hint { font-size: 12px; color: var(--tx2); margin-top: 4px; }
+  .ffm .emsg { font-size: 12px; color: var(--err); margin-top: 4px; display: none; }
+  .ffm .fi.err .ct { border-color: var(--err); } .ffm .fi.err .emsg { display: block; } .ffm .fi.err .hint { display: none; }
+  .ffm .dd { margin-top: 4px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.08), 0 3px 6px -4px rgba(0,0,0,.12), 0 9px 28px 8px rgba(0,0,0,.05); padding: 4px; z-index: 8; display: none; }
+  .ffm .fsel .dd { position: absolute; left: 0; right: 0; top: 100%; }
+  .ffm .dd.on { display: block; }
+  .ffm .dd div { padding: 5px 12px; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; }
+  .ffm .dd div:hover { background: rgba(0,0,0,.04); }
+  .ffm .dd div.on { background: #e6f4ff; font-weight: 600; } .ffm .dd div.on::after { content: "✓"; color: var(--p); }
+  /* tiers */
+  .ffm .rt { overflow: auto; border: 1px solid var(--bd2); border-radius: 8px; }
+  .ffm table.tr { border-collapse: collapse; width: 100%; }
+  .ffm table.tr th { position: sticky; top: 0; background: #fff; text-align: left; font-weight: 600; padding: 12px 5px; white-space: nowrap; z-index: 1; }
+  .ffm table.tr td { padding: 4px 5px; white-space: nowrap; }
+  .ffm .trs { color: var(--err); margin-right: 6px; font-size: 12px; }
+  .ffm .ip { display: flex; height: 30px; border: 1px solid var(--bd); border-radius: 6px; overflow: hidden; min-width: 70px; }
+  .ffm .ip span { flex: 1; text-align: right; padding: 0 8px; line-height: 28px; }
+  .ffm .ip.l span { text-align: left; }
+  .ffm .ip i { font-style: normal; background: #fafafa; border-left: 1px solid var(--bd); padding: 0 9px; line-height: 28px; font-size: 12px; color: #595959; }
+  .ffm .ip.hl { border-color: var(--p2); box-shadow: 0 0 0 2px rgba(5,145,255,.1); }
+  .ffm .toast2 { position: absolute; top: 18px; left: 50%; transform: translate(-50%, -8px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.08), 0 3px 6px -4px rgba(0,0,0,.12); padding: 9px 14px; opacity: 0; transition: .2s; z-index: 9; pointer-events: none; }
+  .ffm .toast2.show { opacity: 1; transform: translate(-50%, 0); }
+  .ffm .toast2::before { content: "✓"; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: #52c41a; color: #fff; font-size: 10px; margin-right: 8px; }
+  .ffm .toast2.bad::before { content: "✕"; background: var(--err); }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>Customer Shipping Rate · Picking Zone</div>
+  <nav class="nav">
+    <a href="#problem">Vấn đề</a><a href="#lookup">Cách chọn bảng giá</a><a href="#prototype">Prototype</a><a href="#setup">Cấu hình GIP113</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Reconciliation · Prototype</div>
+  <h1>Customer Shipping Rate tính giá theo vùng lấy hàng (Picking Zone)</h1>
+  <p>Thêm trường <b>Picking Zone</b> vào Customer Shipping Rate để thu Seller phí ship khác nhau theo nơi lấy hàng. Picking Zone của Order do hệ thống tự xác định từ địa chỉ Warehouse của Order; bảng Tiers giữ nguyên.</p>
+  <div class="meta">
+    <span class="chip">Case: GIP113 mở thêm kho Malolos</span>
+    <span class="chip">Giải pháp: tech lead Sơn</span>
+    <span class="chip">Cập nhật 22/10/2026</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>1 trường</b><span>Picking Zone (bắt buộc, chọn nhiều)</span></div>
+  <div class="kpi"><b>0 thay đổi</b><span>ở bảng Tiers</span></div>
+  <div class="kpi"><b>Toàn bộ zone</b><span>mặc định cho bảng giá cũ sau deploy</span></div>
+  <div class="kpi"><b>0</b><span>đơn bị đổi giá cho đến khi kế toán tự sửa</span></div>
+</div>
+
+<section id="problem">
+  <div class="sec-h"><span class="n">01</span><h2>Vấn đề</h2><p>Cùng nơi giao, cùng cân nặng, khác nơi lấy hàng → courier tính giá khác</p></div>
+  <div class="card">
+    <table class="ant">
+      <thead><tr><th>Đơn</th><th>Lấy hàng tại</th><th>Giao đến</th><th>Cân nặng</th><th>J&amp;T thu</th><th>FFM đang thu Seller</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>Kho cũ (Metro-manila)</td><td>Quezon City</td><td>0.5 kg</td><td>42</td><td>42 <span class="pill p-ok">đúng</span></td></tr>
+        <tr><td>B</td><td>Kho Malolos (Bulacan)</td><td>Quezon City</td><td>0.5 kg</td><td>95</td><td>42 <span class="pill p-bad">sai</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">Hiện tại Customer Shipping Rate chỉ chọn theo Shop + khoảng thời gian, giá theo Zone giao đến × Tier, nên lấy hàng ở đâu cũng một giá. Giá 95 của đơn B lấy từ file J&amp;T thật của GIP113; các số khác là dữ liệu mẫu.</p>
+</section>
+
+<section id="lookup">
+  <div class="sec-h"><span class="n">02</span><h2>Cách chọn bảng giá</h2><p>Ngoài bảng giá, mọi thứ hệ thống tự suy ra từ địa chỉ</p></div>
+  <div class="pipe">
+    <div class="s"><b>1</b>Order<small>tạo ở shop GIP113 Malolos</small></div>
+    <div class="s"><b>2</b>Warehouse<small>shop gắn kho “Malolos”</small></div>
+    <div class="s"><b>3</b>Picking Zone<small>Bulacan → LUZON (Zone Setting)</small></div>
+    <div class="s"><b>4</b>Customer Shipping Rate<small>có shop · ngày gửi trong khoảng · Picking Zone có LUZON</small></div>
+    <div class="s"><b>5</b>Giá<small>Zone giao đến × Tier → 95</small></div>
+  </div>
+  <p class="caption">Bước 1–3 không ai nhập tay. Trường Picking Zone trên bảng giá (bước 4) là chỗ kế toán khai bảng giá áp cho những vùng lấy hàng nào. Không có bảng giá phù hợp thì dòng import báo lỗi, chỉ rõ shop, Warehouse và địa chỉ.</p>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">03</span><h2>Prototype — Customer Shipping Rate</h2><p>Bấm thử: tìm theo Pricing Name, lọc Select Courier / Select Status, bấm biểu tượng bút để mở bảng giá (bảng cũ của GIP 113 có Picking Zone mặc định toàn bộ zone, bảng Malolos là LUZON), bấm ô Picking Zone để chọn / bỏ zone, bấm + rồi Save khi để trống để xem lỗi, bấm thùng rác để xoá</p></div>
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/reconciliation/customer-shipping-rate</span></div>
+    <div class="ffm">
+      <div class="lay">
+        <div class="sd">
+          <div class="av">P</div>
+          <div class="av s">S</div>
+          <div class="nv on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div>
+          <div class="sp"></div>
+          <div style="color:#1f1f1f"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+          <div style="color:#1f1f1f;margin-top:14px"><svg viewBox="0 0 24 24"><path d="M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10"/></svg></div>
+        </div>
+        <div class="mn">
+          <div class="hd">
+            <h1>Customer Shipping Rate</h1>
+            <div class="q"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="Pricing Name / POS Shop ID"></div>
+            <div class="ss"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search settings...</div>
+            <div class="rt2">
+              <span class="ctry"><span class="flag"></span>PH</span>
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              <span class="bell"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11l2 2 4-4"/></svg><b>5</b></span>
+            </div>
+          </div>
+          <div class="tb">
+            <button class="bt pr ic" data-act="create" title="Create"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button class="bt ic" data-act="reload" title="Reload"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
+            <div class="gr"></div>
+            <div class="fsel"><div class="ct sel" data-act="dd-courier" id="v-courier"><span class="pl">Select Courier</span></div><div class="dd" id="dd-courier"></div></div>
+            <div class="fsel"><div class="ct sel" data-act="dd-status" id="v-status"><span class="pl">Select Status</span></div><div class="dd" id="dd-status"></div></div>
+            <div class="drg">Start date <span>→</span> End date <span class="cal"></span></div>
+          </div>
+          <div style="padding:0 0 0 10px;overflow:auto">
+            <table class="tl"><thead><tr><th>ID</th><th>Pricing Name</th><th>Courier</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
+          </div>
+        </div>
+        <div class="msk" data-act="close"></div>
+        <div class="mdl">
+          <div class="mh"><h2 id="m-title"></h2><span class="st" id="m-act"></span><span class="his">↺</span><span class="x" data-act="close">×</span></div>
+          <div class="mb">
+            <div class="lf">
+              <div class="fi" id="f-name"><label><em>*</em>Pricing Name</label><input class="ct" id="in-name" placeholder="Enter pricing name"><div class="emsg">Please enter Pricing Name</div></div>
+              <div class="fi"><label><em>*</em>Currency</label><div class="ct sel">PHP100</div></div>
+              <div class="fi"><label><em>*</em>Courier</label><div class="ct sel" id="m-courier"></div></div>
+              <div class="fi"><label><em>*</em>Shops</label><div class="ct sel" id="m-shop"></div></div>
+              <div class="blk">
+                <h4>Shipping Fee Configuration</h4>
+                <div class="g2">
+                  <div class="fi"><label><em>*</em>Fee Type</label><div class="ct sel">Fixed</div></div>
+                  <div class="fi"><label><em>*</em>Unit</label><div class="ct sel">Chargeable Weight</div></div>
+                </div>
+                <div class="fi"><label><em>*</em>Zone</label><div class="ct sel" id="m-zone"></div></div>
+                <div class="fi changed" id="f-pz" style="padding:6px;margin:0 -6px 14px">
+                  <label><em>*</em>Picking Zone</label>
+                  <div class="ct sel" id="m-pz" data-act="pzdd"></div>
+                  <div class="dd" id="pz-dd"></div>
+                  <div class="hint">Rate applies to orders picked up from a warehouse in these zones (by warehouse address).</div>
+                  <div class="emsg">Please select Picking Zone</div>
+                </div>
+              </div>
+              <div class="blk">
+                <h4>Time Of Application</h4>
+                <div class="g2">
+                  <div class="fi"><label><em>*</em>Start Date</label><div class="ct" id="m-start"></div></div>
+                  <div class="fi"><label><em>*</em>End Date</label><div class="ct" id="m-end"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="rt"><table class="tr" id="tiers"></table></div>
+          </div>
+          <div class="mf"><button class="bt" data-act="close">Cancel</button><button class="bt pr" data-act="save">Save</button></div>
+        </div>
+        <div class="toast2" id="toast2"></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Prototype dựng theo design system FFM (Ant Design v5), bám màn danh sách và modal Customer Shipping Rate thật. Màn danh sách giữ nguyên như hiện tại; chỗ thay đổi duy nhất là trường Picking Zone trong modal (viền tím nét đứt), bảng Tiers giữ nguyên. Tên bảng giá lấy kiểu đặt tên thật, mã shop và phần lớn giá là dữ liệu mẫu.</p>
+</section>
+
+<section id="setup">
+  <div class="sec-h"><span class="n">04</span><h2>Cấu hình GIP113 sau khi release</h2><p>Việc của vận hành và kế toán, không cần dev thêm</p></div>
+  <div class="steps">
+    <div class="step"><div><h5>Tạo Warehouse ảo “Malolos” <span class="dep you">Vận hành</span></h5><div class="v">Địa chỉ ở Bulacan, phải nhập đúng vì địa chỉ quyết định Picking Zone. <b>Verify:</b> Bulacan thuộc zone LUZON trong Zone Setting J&amp;T.</div></div></div>
+    <div class="step"><div><h5>Tách shop POS, kết nối kiểu Courier <span class="dep you">Khách + Vận hành</span></h5><div class="v">Duyệt shop GIP113 Malolos, gán Warehouse “Malolos”. Khách không đồng ý tách thì cần kết nối đa kho (#193), ngoài phạm vi trang này.</div></div></div>
+    <div class="step"><div><h5>Tạo bảng giá Malolos <span class="dep you">Kế toán</span></h5><div class="v">Shops = GIP113 Malolos, Picking Zone = LUZON, nhập bộ giá Malolos. Tạo Reconciliation Account cho GIP113 Malolos × J&amp;T. <b>Verify:</b> import lại file J&amp;T ngày 09/10, đơn Malolos ra 95, đơn kho cũ vẫn 42.</div></div></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong mảng rates + bộ lọc + bản nháp đang sửa; mọi thao tác cập nhật rồi vẽ lại.
+(() => {
+  const root = document.getElementById('proto');
+  const $ = (id) => document.getElementById(id);
+  const ZONES = ['METRO MANILA', 'ISLAND', 'VISAYAS', 'MINDANAO', 'LUZON'];
+  const OLD = { 'METRO MANILA':[42,52,72,92,92,110,110,110], ISLAND:[65,85,115,145,145,181,181,181], VISAYAS:[65,85,115,145,145,181,181,181], MINDANAO:[65,85,115,145,145,181,181,181], LUZON:[55,70,95,120,120,154,154,154] };
+  const MAL = { 'METRO MANILA':[95,110,130,150,150,170,170,170], ISLAND:[90,110,140,170,170,205,205,205], VISAYAS:[90,110,140,170,170,205,205,205], MINDANAO:[90,110,140,170,170,205,205,205], LUZON:[85,100,120,140,140,165,165,165] };
+  const r = (id, name, courier, start, end, status, shop, pz, prices, hl) => ({ id, name, courier, start, end, status, shop, pz, prices, hl });
+  const rates = [
+    r(69, 'BẢNG GIÁ J&T GIP 113 MALOLOS TỪ NGÀY 23/03/2026', 'JNT', '23/03/2026', '31/12/2026', 'Active', '152 - 1290188113 - GIP 113 Malolos - PHILIPPINES', ['LUZON'], MAL, true),
+    r(68, 'BẢNG GIÁ J&T GIP 113 TỪ NGÀY 23/03/2026', 'JNT', '23/03/2026', '31/12/2026', 'Active', '118 - 1290175113 - GIP 113 - PHILIPPINES', [...ZONES], OLD),
+    r(67, 'Bảng giá SPX - KH', 'SPX', '01/01/2026', '31/12/2026', 'Active', '147 - 1942249454 - GIP 85 - PHILIPPINES', [...ZONES], OLD),
+    r(49, 'BẢNG GIÁ GPX - KH - Bắt đầu từ 01/09/2025 - 22/03/2026', 'GPX', '01/09/2025', '22/03/2026', 'Expired', '141 - 1290175640 - GIP 180 - PHILIPPINES', [...ZONES], OLD),
+    r(48, 'BẢNG GIÁ GPX-J&T GIP 180 TỪ NGÀY 23/03/2026', 'GPX', '23/03/2026', '31/12/2026', 'Active', '141 - 1290175640 - GIP 180 - PHILIPPINES', [...ZONES], OLD),
+    r(13, 'BẢNG GIÁ ĐỒNG GIÁ DƯỚI 3KG J&T', 'JNT', '01/09/2025', '31/12/2026', 'Active', '120 - 1290170021 - GIP 21 - PHILIPPINES', [...ZONES], OLD),
+  ];
+  const F = { courier: '', status: '' };
+  let cur = null, draft = null;
+  const toast = (t, bad) => { const el = $('toast2'); el.textContent = t; el.className = 'toast2 show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => el.className = 'toast2', 1800); };
+  const chip = (t, k) => `<span class="ach">${t}${k ? `<span class="cx" data-x="${k}">✕</span>` : ''}</span>`;
+  const PEN = '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>';
+  const BIN = '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+  function renderList() {
+    const q = $('q').value.trim().toLowerCase();
+    const list = rates.map((x, i) => [x, i]).filter(([x]) => (!q || x.name.toLowerCase().includes(q) || x.shop.toLowerCase().includes(q)) && (!F.courier || x.courier === F.courier) && (!F.status || x.status === F.status));
+    $('rows').innerHTML = list.map(([x, i]) => `<tr><td>${x.id}</td><td>${x.name}</td><td><span class="crr ${x.courier}">${x.courier}</span></td><td>${x.start}</td><td>${x.end}</td><td><span class="st ${x.status}">${x.status}</span></td><td><div class="acts"><span data-edit="${i}" title="Edit">${PEN}</span><span class="del" data-del="${i}" title="Delete">${BIN}</span></div></td></tr>`).join('')
+      || '<tr><td colspan="7" class="empty">No data</td></tr>';
+    $('v-courier').innerHTML = F.courier ? `<span class="crr ${F.courier}">${F.courier}</span>` : '<span class="pl">Select Courier</span>';
+    $('v-status').innerHTML = F.status || '<span class="pl">Select Status</span>';
+    $('dd-courier').innerHTML = ['', 'JNT', 'GPX', 'SPX'].map((c) => `<div class="${F.courier === c ? 'on' : ''}" data-f="courier" data-v="${c}">${c || 'All'}</div>`).join('');
+    $('dd-status').innerHTML = ['', 'Active', 'Expired'].map((c) => `<div class="${F.status === c ? 'on' : ''}" data-f="status" data-v="${c}">${c || 'All'}</div>`).join('');
+  }
+  function renderPz() {
+    $('m-pz').innerHTML = draft.pz.length ? draft.pz.map((z) => chip(z, z)).join('') : '<span class="pl">Select picking zone</span>';
+    $('pz-dd').innerHTML = ZONES.map((z) => `<div class="${draft.pz.includes(z) ? 'on' : ''}" data-pz="${z}">${z}</div>`).join('');
+  }
+  function renderModal() {
+    $('m-title').textContent = draft.name || 'CREATE CUSTOMER SHIPPING RATE';
+    $('m-act').style.display = cur === null ? 'none' : ''; $('m-act').className = 'st ' + draft.status; $('m-act').textContent = draft.status;
+    $('in-name').value = draft.name;
+    $('m-courier').innerHTML = `<span class="crr ${draft.courier}">${draft.courier}</span>`;
+    $('m-shop').innerHTML = chip(draft.shop, 'shop');
+    $('m-zone').innerHTML = ZONES.map((z) => chip(z, 'z')).join('');
+    $('m-start').innerHTML = draft.start + '<span class="cal"></span>'; $('m-end').innerHTML = draft.end + '<span class="cal"></span>';
+    renderPz();
+    let h = '<thead><tr><th>Tiers</th><th>First unit</th><th>Last unit</th>' + ZONES.map((z) => `<th>${z}</th>`).join('') + '</tr></thead><tbody>';
+    for (let t = 0; t < 8; t++) {
+      h += `<tr><td><span class="trs">🗑</span>Tier ${t + 1}</td><td>${t === 0 ? '0g' : (t * 1000).toLocaleString('de-DE') + 'g +'}</td>` +
+        `<td><div class="ip l"><span>${((t + 1) * 1000).toLocaleString('de-DE')}</span><i>g</i></div></td>` +
+        ZONES.map((z) => `<td><div class="ip ${draft.hl && t === 0 && (z === 'METRO MANILA' || z === 'LUZON') ? 'hl' : ''}"><span>${draft.prices[z][t]}</span><i>₱</i></div></td>`).join('') + '</tr>';
+    }
+    $('tiers').innerHTML = h + '</tbody>';
+  }
+  function open(i) {
+    cur = i;
+    draft = i === null ? r(0, '', 'JNT', '23/03/2026', '31/12/2026', 'Active', '152 - 1290188113 - GIP 113 Malolos - PHILIPPINES', [], MAL) : JSON.parse(JSON.stringify(rates[i]));
+    $('f-name').classList.remove('err'); $('f-pz').classList.remove('err'); $('pz-dd').classList.remove('on');
+    renderModal(); root.classList.add('open');
+    setTimeout(() => $('in-name').focus({ preventScroll: true }), 220);
+  }
+  const closeDd = (except) => ['dd-courier', 'dd-status', 'pz-dd'].forEach((id) => { if (id !== except) $(id).classList.remove('on'); });
+  root.addEventListener('click', (e) => {
+    const ed = e.target.closest('[data-edit]'); if (ed) { open(+ed.dataset.edit); return; }
+    const dl = e.target.closest('[data-del]'); if (dl) { const x = rates.splice(+dl.dataset.del, 1)[0]; renderList(); toast(`Deleted ${x.name}`); return; }
+    const fo = e.target.closest('[data-f]'); if (fo) { F[fo.dataset.f] = fo.dataset.v; closeDd(); renderList(); return; }
+    const x = e.target.closest('[data-x]');
+    if (x) { const z = x.dataset.x; if (x.closest('#m-pz')) { draft.pz = draft.pz.filter((v) => v !== z); renderPz(); } e.stopPropagation(); return; }
+    const o = e.target.closest('[data-pz]');
+    if (o) { const z = o.dataset.pz; draft.pz = draft.pz.includes(z) ? draft.pz.filter((v) => v !== z) : [...draft.pz, z]; $('f-pz').classList.remove('err'); renderPz(); return; }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'dd-courier' || act === 'dd-status') { closeDd(act); $(act).classList.toggle('on'); return; }
+    if (act === 'pzdd') { closeDd('pz-dd'); $('pz-dd').classList.toggle('on'); return; }
+    if (!e.target.closest('.dd')) closeDd();
+    if (act === 'reload') { F.courier = ''; F.status = ''; $('q').value = ''; renderList(); toast('Reloaded'); }
+    if (act === 'create') open(null);
+    if (act === 'close') root.classList.remove('open');
+    if (act === 'save') {
+      draft.name = $('in-name').value.trim();
+      $('f-name').classList.toggle('err', !draft.name);
+      $('f-pz').classList.toggle('err', !draft.pz.length);
+      if (!draft.name || !draft.pz.length) { toast('Please fill in all required fields', true); return; }
+      if (cur === null) { draft.id = Math.max(...rates.map((v) => v.id)) + 1; rates.unshift(draft); } else rates[cur] = draft;
+      root.classList.remove('open'); renderList(); toast('Saved successfully');
+    }
+  });
+  $('q').addEventListener('input', renderList);
+  $('in-name').addEventListener('input', () => $('f-name').classList.remove('err'));
+  renderList();
+})();
+</script>
+</body>
+</html>

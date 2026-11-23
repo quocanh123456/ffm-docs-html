@@ -1,0 +1,3313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GIP CRM — Đặc tả cấu hình tổ chức trên FFM (Phòng ban · Vai trò · Team · Người dùng)</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; color: #1f2328; line-height: 1.55; }
+  nav { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; overflow-y: auto; background: #f6f8fa; border-right: 1px solid #d0d7de; padding: 16px 12px; font-size: 13px; box-sizing: border-box; }
+  nav a { display: block; color: #1f2328; text-decoration: none; padding: 3px 6px; border-radius: 4px; }
+  nav a:hover { background: #e7ecf2; }
+  nav a.l2 { font-weight: 600; margin-top: 10px; }
+  nav a.l3 { padding-left: 16px; color: #424a53; }
+  main { margin-left: 290px; max-width: 1180px; padding: 20px 28px 80px; }
+  .meta { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 10px 14px; font-size: 13.5px; margin-bottom: 18px; }
+  h1 { font-size: 25px; margin: 0 0 12px; }
+  h2 { font-size: 20px; margin-top: 44px; border-bottom: 2px solid #d0d7de; padding-bottom: 6px; scroll-margin-top: 10px; }
+  h3 { font-size: 16.5px; margin-top: 30px; scroll-margin-top: 10px; }
+  h4 { font-size: 15px; margin-top: 24px; scroll-margin-top: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin: 8px 0 14px; display: block; overflow-x: auto; }
+  th, td { border: 1px solid #e1e4e8; padding: 5px 9px; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  code { background: #f2f4f7; padding: 1px 4px; border-radius: 4px; font-size: 12.5px; }
+  blockquote { margin: 8px 0; padding: 6px 14px; border-left: 4px solid #d0d7de; color: #59636e; background: #fafbfc; }
+  img { max-width: 100%; border: 1px solid #e1e4e8; border-radius: 6px; margin: 8px 0; }
+  hr { border: none; border-top: 1px solid #d0d7de; margin: 28px 0; }
+  @media (max-width: 900px) { nav { display: none; } main { margin-left: 0; } }
+</style>
+</head>
+<body>
+<nav><div style="font-weight:700;margin-bottom:6px">Mục lục</div><a class="l2" href="#1-thong-tin-tai-lieu">1. THÔNG TIN TÀI LIỆU</a><a class="l2" href="#2-tong-quan-chuc-nang">2. TỔNG QUAN CHỨC NĂNG</a><a class="l2" href="#3-ieu-kien-thuc-hien">3. ĐIỀU KIỆN THỰC HIỆN</a><a class="l2" href="#4-luong-nghiep-vu">4. LUỒNG NGHIỆP VỤ</a><a class="l3" href="#41-uc_pb01-xem-danh-sach-phong-ban">4.1. UC_PB01 — Xem danh sách phòng ban</a><a class="l3" href="#42-uc_pb02-them-phong-ban">4.2. UC_PB02 — Thêm phòng ban</a><a class="l3" href="#43-uc_pb03-sua-phong-ban">4.3. UC_PB03 — Sửa phòng ban</a><a class="l3" href="#44-uc_vt01-xem-danh-muc-vai-tro">4.4. UC_VT01 — Xem danh mục vai trò</a><a class="l3" href="#45-uc_vt02-them-sua-ngung-dung-vai-tro">4.5. UC_VT02 — Thêm / sửa / ngừng dùng vai trò</a><a class="l3" href="#46-uc_pb04-xem-tim-kiem-loc-danh-sach-team">4.6. UC_PB04 — Xem, tìm kiếm, lọc danh sách team</a><a class="l3" href="#47-uc_pb05-them-team">4.7. UC_PB05 — Thêm team</a><a class="l3" href="#48-uc_pb06-sua-team">4.8. UC_PB06 — Sửa team</a><a class="l3" href="#49-uc_nd01-xem-tim-kiem-loc-danh-sach-nguoi-dung">4.9. UC_ND01 — Xem, tìm kiếm, lọc danh sách người dùng</a><a class="l3" href="#410-uc_nd02-them-nguoi-dung">4.10. UC_ND02 — Thêm người dùng</a><a class="l3" href="#411-uc_nd03-sua-nguoi-dung">4.11. UC_ND03 — Sửa người dùng</a><a class="l3" href="#412-uc_nd04-ngung-hoat-ong-nguoi-dung">4.12. UC_ND04 — Ngừng hoạt động người dùng</a><a class="l2" href="#5-giao-dien-va-hanh-vi">5. GIAO DIỆN VÀ HÀNH VI</a><a class="l3" href="#51-mockup">5.1. Mockup</a><a class="l3" href="#52-ac-ta-truong-du-lieu">5.2. Đặc tả trường dữ liệu</a><a class="l3" href="#53-ac-ta-thao-tac">5.3. Đặc tả thao tác</a><a class="l3" href="#54-trang-thai-giao-dien">5.4. Trạng thái giao diện</a><a class="l2" href="#6-quy-tac-nghiep-vu-va-kiem-tra-du-lieu">6. QUY TẮC NGHIỆP VỤ VÀ KIỂM TRA DỮ LIỆU</a><a class="l3" href="#61-business-rules">6.1. Business Rules</a><a class="l3" href="#62-validation-rules">6.2. Validation Rules</a><a class="l2" href="#7-phan-quyen">7. PHÂN QUYỀN</a><a class="l2" href="#8-du-lieu-va-tich-hop">8. DỮ LIỆU VÀ TÍCH HỢP</a><a class="l2" href="#9-thong-bao-va-lich-su-thao-tac">9. THÔNG BÁO VÀ LỊCH SỬ THAO TÁC</a><a class="l3" href="#91-thong-bao">9.1. Thông báo</a><a class="l3" href="#92-lich-su-thao-tac">9.2. Lịch sử thao tác</a><a class="l2" href="#10-tieu-chi-nghiem-thu-acceptance-criteria">10. TIÊU CHÍ NGHIỆM THU — ACCEPTANCE CRITERIA</a><a class="l2" href="#11-yeu-cau-phi-chuc-nang-lien-quan">11. YÊU CẦU PHI CHỨC NĂNG LIÊN QUAN</a></nav>
+<main>
+<div class="meta"><b>GIP CRM · Đặc tả cấu hình tổ chức trên FFM</b> · Mã tài liệu ORG-FFM · Phiên bản 0.6 · Cập nhật 19/10/2026<br>
+Phần phân quyền trong CRM nằm ở tài liệu riêng ORG-PQ.</div>
+<h1 id="ac-ta-chuc-nang-cau-hinh-to-chuc-tren-ffm-phong-ban-vai-tro-team-nguoi-dung">Đặc tả chức năng — CẤU HÌNH TỔ CHỨC TRÊN FFM (Phòng ban · Vai trò · Team · Người dùng)</h1>
+<blockquote>
+<p>Khung đặc tả của dự án GIP CRM · Bản nháp v0.6 · Tiếng Việt
+Nhãn: <strong>Đã xác nhận</strong> (có căn cứ trong tài liệu nguồn hoặc người dùng đã xác nhận) · <strong>Giả định cần xác nhận</strong> (lấy từ thiết kế hoặc dùng tạm) · <strong>Đề xuất</strong> (phương án BA / thiết kế đưa ra để xem xét) · <strong>Chưa xác định</strong> (thiếu dữ liệu, kèm mã câu hỏi Q_xx).
+Câu hỏi cần xác nhận nằm ở file riêng <code>ORG_van-de-can-xac-nhan_v0.5.md</code>. Bảng phòng ban, vai trò, danh mục quyền và danh sách màn được sinh từ <code>tools/org_permissions.py</code>, <code>tools/org_screen_numbers.py</code> bằng <code>tools/build_org_v04.py</code>.</p>
+<p>Tách từ <code>ORG_dac-ta-cau-hinh-to-chuc_v0.6.md</code> (15/10/2026): CRM là cửa sổ con của FFM, phòng ban, vai trò, team, người dùng cấu hình trên FFM. Nội dung, mã BR / VR / MSG / OP / AC / A và số màn giữ nguyên như bản gốc; mã không có trong tài liệu này nằm ở <code>ORG-PQ_phan-quyen_v0.6.md</code>.</p>
+</blockquote>
+<hr />
+<h2 id="1-thong-tin-tai-lieu">1. THÔNG TIN TÀI LIỆU</h2>
+<table>
+<thead>
+<tr>
+<th>Mục</th>
+<th>Nội dung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dự án</td>
+<td>GIP CRM</td>
+</tr>
+<tr>
+<td>Module</td>
+<td>Cài đặt hệ thống · nhóm Tổ chức</td>
+</tr>
+<tr>
+<td>Mã tài liệu</td>
+<td>ORG-FFM</td>
+</tr>
+<tr>
+<td>Tên tài liệu</td>
+<td>Cấu hình tổ chức trên FFM — phòng ban, vai trò, team, người dùng (tách từ ORG v0.6; phần phân quyền ở ORG-PQ)</td>
+</tr>
+<tr>
+<td>Phiên bản</td>
+<td>0.6</td>
+</tr>
+<tr>
+<td>Người viết</td>
+<td>Hứa Quốc Anh</td>
+</tr>
+<tr>
+<td>Ngày cập nhật</td>
+<td>15/10/2026</td>
+</tr>
+<tr>
+<td>Người phê duyệt</td>
+<td>Chưa xác định</td>
+</tr>
+<tr>
+<td>Trạng thái</td>
+<td>Bản nháp</td>
+</tr>
+<tr>
+<td>Thiết kế</td>
+<td>Figma "[GIP] CRM", page "02. Cấu hình hệ thống", section 02.01 · màn 02.01.01 – 02.01.17; khung "Luồng · Cấu hình tổ chức" đặt cạnh section; các cấu hình khác ở section 02.02 – 02.04 cùng page</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lịch sử thay đổi</strong></p>
+<table>
+<thead>
+<tr>
+<th>Phiên bản</th>
+<th>Ngày</th>
+<th>Nội dung thay đổi</th>
+<th>Người cập nhật</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1 – 0.2</td>
+<td>08/10/2026</td>
+<td>Gộp ADM_004, ADM_002, ADM_003 thành tài liệu Cấu hình tổ chức; tách team khỏi người dùng.</td>
+<td>Chưa xác định</td>
+</tr>
+<tr>
+<td>0.3</td>
+<td>13/10/2026</td>
+<td>Vai trò thành danh mục theo phòng ban (9 vai trò); 5 phòng ban; 74 quyền / 13 nhóm; thêm phạm vi Được giao, Chỉ xem; quy tắc ED-01 – ED-07; Kho phụ trách.</td>
+<td>Chưa xác định</td>
+</tr>
+<tr>
+<td>0.4</td>
+<td>13/10/2026</td>
+<td>Viết lại toàn bộ theo thiết kế hiện tại: menu <strong>Tổ chức &amp; người dùng</strong> (4 tab Phòng ban · Vai trò · Team · Người dùng) và <strong>Phân quyền</strong> (2 tab Quyền hạn theo vai trò · Danh mục quyền); <strong>phạm vi dữ liệu chọn một lần cho cả vai trò</strong>; quyền chỉ cấp theo vai trò; nhóm quyền xếp 4 khối phân hệ; tên nhóm (module) của Khách hàng, Handover, P.TNKH bằng tiếng Anh theo file TNKH, tên quyền bằng tiếng Việt (VD “Xem Health &amp; Risk”, “Ghi kết quả Renewal”); thêm sơ đồ UC_VT01, UC_VT02, vẽ lại mọi sơ đồ; trường Mã danh mục GIP ở drawer phòng ban; chuẩn hoá dữ liệu mẫu trên Figma. Đánh số lại BR / VR / MSG / OP / AC (không giữ bảng đối chiếu với v0.3).</td>
+<td>Chưa xác định</td>
+</tr>
+<tr>
+<td>0.4.1</td>
+<td>14/10/2026</td>
+<td>Tạm hoãn phòng Kho vận, DSP, Technology cùng các vai trò Kho, DSP, Quản trị hệ thống (người dùng 14/10/2026): còn 2 phòng ban, 6 vai trò; bỏ phạm vi Được giao và trường Kho phụ trách; PKD Master giữ quyền quản trị cấu hình (<code>system.org_manage</code>, <code>system.role_manage</code>); bỏ màn ví dụ người quản trị, Kho; danh mục quyền thành 02.01.16. Tên quyền bằng tiếng Việt, chỉ tên module (bước) của Khách hàng, Handover, P.TNKH giữ tiếng Anh.</td>
+<td>Chưa xác định</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>15/10/2026</td>
+<td>Thêm vai trò <strong>System Admin</strong> (người dùng 15/10/2026): cấp mới Quản trị hệ thống, không thuộc phòng ban, không thuộc team, vào được toàn bộ Cài đặt hệ thống; giữ 7 quyền (<code>system.org_manage</code>, <code>system.role_manage</code>, <code>system.config</code>, <code>master.sync</code>, <code>master.edit_tnkh</code>, <code>master.view</code>, <code>quote.manage_template</code>). PKD Master trở lại vai trò nghiệp vụ (23 quyền, bỏ quyền cấu hình). GIP00 = System Admin. Thêm màn 02.01.17, mục “Quản trị hệ thống” ở Bước 1 màn Phân quyền; BR_41; sửa BR_01, BR_10, BR_11, BR_17, BR_22, BR_25, BR_33, BR_34, VR_06, VR_14, VR_21, A9, A13, A14, A20, AC_19, AC_29, AC_30; thêm AC_33 – AC_35.</td>
+<td>Chưa xác định</td>
+</tr>
+<tr>
+<td>0.6</td>
+<td>15/10/2026</td>
+<td>Bỏ các quyền hệ thống khỏi danh mục (nhóm Dashboard và Danh mục &amp; cài đặt — 7 quyền): danh mục còn <strong>67 quyền / 11 nhóm / 3 khối</strong>; quyền vào Cài đặt hệ thống gắn cố định với vai trò System Admin, không cấu hình ở Phân quyền. Màn Phân quyền: Phạm vi dữ liệu chỉ đọc (đổi ở Vai trò), bỏ khung “Quy tắc luôn áp dụng”. Drawer team bỏ danh sách chọn thành viên — thành viên team gán ở trường Team của người dùng. Theo prototype người dùng sửa 15/10/2026.</td>
+<td>Hứa Quốc Anh</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Danh sách use case</strong></p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Use case</th>
+<th>Màn hình</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC_PB01</td>
+<td>Xem danh sách phòng ban</td>
+<td>02.01.01</td>
+<td>Yêu cầu người dùng 08/10/2026 — <strong>Đã xác nhận</strong></td>
+</tr>
+<tr>
+<td>UC_PB02</td>
+<td>Thêm phòng ban</td>
+<td>02.01.02</td>
+<td>Như trên</td>
+</tr>
+<tr>
+<td>UC_PB03</td>
+<td>Sửa phòng ban</td>
+<td>02.01.02 (chế độ sửa)</td>
+<td>Chế độ sửa dùng chung drawer — <strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>UC_VT01</td>
+<td>Xem danh mục vai trò</td>
+<td>02.01.03</td>
+<td>File TNKH sheet 09 mục A; người dùng 12/10/2026</td>
+</tr>
+<tr>
+<td>UC_VT02</td>
+<td>Thêm / sửa / ngừng dùng vai trò</td>
+<td>02.01.04</td>
+<td>Như trên — <strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>UC_PB04</td>
+<td>Xem, tìm kiếm, lọc danh sách team</td>
+<td>02.01.05</td>
+<td>Team dạng bảng: người dùng 08/10/2026 — <strong>Đã xác nhận</strong>; tìm kiếm, lọc: <strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>UC_PB05</td>
+<td>Thêm team</td>
+<td>02.01.07</td>
+<td>Thiết kế — <strong>Giả định cần xác nhận</strong></td>
+</tr>
+<tr>
+<td>UC_PB06</td>
+<td>Sửa team</td>
+<td>02.01.06</td>
+<td>Như trên</td>
+</tr>
+<tr>
+<td>UC_ND01</td>
+<td>Xem, tìm kiếm, lọc danh sách người dùng</td>
+<td>02.01.08</td>
+<td>Spec ("Quản trị thêm / đổi role user") + thiết kế</td>
+</tr>
+<tr>
+<td>UC_ND02</td>
+<td>Thêm người dùng</td>
+<td>02.01.10</td>
+<td>Như trên</td>
+</tr>
+<tr>
+<td>UC_ND03</td>
+<td>Sửa người dùng</td>
+<td>02.01.09, 02.01.11</td>
+<td>Như trên</td>
+</tr>
+<tr>
+<td>UC_ND04</td>
+<td>Ngừng hoạt động người dùng</td>
+<td>02.01.09, 02.01.11, 02.01.12</td>
+<td>Thiết kế — <strong>Giả định cần xác nhận</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phụ thuộc với chức năng khác</strong></p>
+<table>
+<thead>
+<tr>
+<th>Chức năng</th>
+<th>Quan hệ</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Đăng nhập / mật khẩu</td>
+<td>Phụ thuộc hai chiều</td>
+<td>Trạng thái tài khoản quyết định ai đăng nhập được; cách cấp mật khẩu chưa có đặc tả (Q_06).</td>
+</tr>
+<tr>
+<td>Leads &amp; Pipeline, Báo giá, Hợp đồng, Handover, Customer 360, Contacts, Onboarding, Health &amp; Risk, Renewal, Growth, Issue, Dashboard</td>
+<td>Hạ nguồn</td>
+<td>Mọi thao tác kiểm tra quyền của vai trò và phạm vi dữ liệu (BR_31). Dropdown PIC, AM, trưởng nhóm lấy người dùng và team ở đây.</td>
+</tr>
+<tr>
+<td>Danh mục dùng chung / danh mục GIP</td>
+<td>Thượng nguồn</td>
+<td>Mã danh mục GIP của phòng ban.</td>
+</tr>
+<tr>
+<td>Các cấu hình khác của Cài đặt hệ thống (Danh mục dùng chung, Pipeline &amp; Deal Status, SLA &amp; cảnh báo, Kiểm tra trùng, Mẫu &amp; quy tắc báo giá, Hợp đồng &amp; hồ sơ KH, Thông báo &amp; Telegram, Lưu trữ &amp; cài đặt chung, Nhật ký hoạt động)</td>
+<td>Liên quan</td>
+<td>Cùng người thực hiện System Admin (vào theo vai trò, không cấu hình ở Phân quyền); màn 02.02.01 – 02.04.03.</td>
+</tr>
+<tr>
+<td>Thông báo &amp; Telegram</td>
+<td>Hạ nguồn</td>
+<td>Dùng Telegram cá nhân và Chat ID nhóm Telegram của team.</td>
+</tr>
+<tr>
+<td>Nhật ký hoạt động</td>
+<td>Liên quan</td>
+<td>Nơi xem lịch sử thay đổi phòng ban, vai trò, team, người dùng, quyền.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-tong-quan-chuc-nang">2. TỔNG QUAN CHỨC NĂNG</h2>
+<p><strong>Mục tiêu:</strong> Cho người quản trị khai báo <strong>tổ chức dùng hệ thống</strong> (phòng ban, vai trò, team, người dùng) và <strong>mỗi vai trò được làm gì, trên dữ liệu nào</strong>, để phân công đúng người và giới hạn dữ liệu đúng phạm vi.</p>
+<p><strong>Bối cảnh</strong>
+- Hệ thống được nhiều phòng ban dùng chung: Phòng Kinh doanh (Leads → Pipeline → Báo giá → Hợp đồng → Handover), Phòng Trải nghiệm khách hàng (Customer 360, Onboarding, Health &amp; Risk, Renewal, Growth, Issue). — <strong>Đã xác nhận</strong> (file TNKH; người dùng 08/10, 12/10/2026).
+- Phòng Kho vận, DSP, Technology và các vai trò Kho, DSP <strong>tạm hoãn</strong>, chưa khai báo trong bản này. — <strong>Đã xác nhận</strong> (người dùng 14/10/2026).
+- Người quản trị cấu hình là vai trò <strong>System Admin</strong>: không thuộc phòng ban, không thuộc team, vào được toàn bộ Cài đặt hệ thống. — <strong>Đã xác nhận</strong> (người dùng 15/10/2026).
+- Quyền gán theo <strong>vai trò</strong>; mỗi vai trò thuộc một phòng ban và có cấp. Không cấp quyền riêng cho từng người. — <strong>Đã xác nhận</strong> (người dùng 12/10, 13/10/2026).
+- Phạm vi dữ liệu chọn <strong>một lần cho cả vai trò</strong>. — <strong>Đã xác nhận</strong> (người dùng 13/10/2026).</p>
+<p><strong>Cấu trúc trên giao diện</strong> (Cài đặt hệ thống › menu Cài đặt › nhóm Tổ chức) — <strong>Đã xác nhận</strong> (người dùng 13/10/2026)</p>
+<table>
+<thead>
+<tr>
+<th>Mục menu</th>
+<th>Tab</th>
+<th>Dùng để</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tổ chức &amp; người dùng</td>
+<td>Phòng ban · Vai trò · Team · Người dùng</td>
+<td>Khai báo ai, thuộc phòng nào, giữ vai trò gì, ở team nào</td>
+</tr>
+<tr>
+<td>Phân quyền</td>
+<td>Quyền hạn theo vai trò · Danh mục quyền</td>
+<td>Khai báo vai trò được làm gì, trên phạm vi dữ liệu nào</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Thứ tự thiết lập lần đầu:</strong> (System Admin GIP00 có sẵn) Phòng ban → Vai trò → Phân quyền cho vai trò → Người dùng cấp Quản lý → Team → Nhân viên → người dùng đăng nhập lần đầu. Phải có người dùng cấp Quản lý trước khi tạo team vì team cần trưởng nhóm. — <strong>Đề xuất</strong></p>
+<p><strong>Vai trò sử dụng:</strong> người quản trị — người dùng giữ vai trò <strong>System Admin</strong>; quyền vào Cài đặt hệ thống gắn cố định với vai trò này (người dùng 15/10/2026 — <strong>Đã xác nhận</strong>; trưởng phòng tự quản lý người dùng của phòng mình: Q_01). Trong tài liệu, “người quản trị” chỉ người này.
+<strong>Đối tượng chịu ảnh hưởng:</strong> mọi người dùng (đăng nhập được hay không, thao tác được phép, dữ liệu nhìn thấy); trưởng nhóm (phạm vi Cả team); các deal có PIC là người bị ngừng hoạt động.</p>
+<p><strong>Trong phạm vi</strong>
+- Phòng ban: xem; thêm; sửa (tên, mã danh mục GIP, trưởng phòng, mô tả).
+- Vai trò: xem danh mục; thêm, sửa, ngừng dùng vai trò; sao chép quyền từ vai trò khác khi tạo. Vai trò System Admin có sẵn, không thêm được vai trò khác ở cấp Quản trị hệ thống.
+- Team: xem, tìm, lọc; thêm; sửa (phòng ban, trưởng nhóm, thành viên, nhóm Telegram).
+- Người dùng: xem, tìm, lọc; thêm; sửa (phòng ban, vai trò, team, Telegram); ngừng hoạt động kèm chuyển PIC deal đang mở.</p>
+<p><strong>Ngoài phạm vi</strong></p>
+<table>
+<thead>
+<tr>
+<th>Hạng mục</th>
+<th>Lý do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ngừng dùng / xoá phòng ban</td>
+<td>Chưa có thiết kế (Q_04).</td>
+</tr>
+<tr>
+<td>Xoá người dùng</td>
+<td>Không xoá để giữ lịch sử (BR_20).</td>
+</tr>
+<tr>
+<td>Kích hoạt lại người dùng đã ngừng</td>
+<td>Chưa có thiết kế (Q_05).</td>
+</tr>
+<tr>
+<td>Ngừng dùng / xoá team</td>
+<td>Chưa có thiết kế (Q_04).</td>
+</tr>
+<tr>
+<td>Cấp quyền riêng cho từng người</td>
+<td>Đã chốt chỉ cấp theo vai trò (BR_28).</td>
+</tr>
+<tr>
+<td>Thêm / sửa / xoá quyền trong danh mục trên giao diện</td>
+<td>Quyền gắn với chức năng trong mã nguồn; danh mục chỉ xem — <strong>Đề xuất</strong> (Q_02).</td>
+</tr>
+<tr>
+<td>Đăng nhập, cấp / đặt lại mật khẩu, SSO</td>
+<td>Chưa có đặc tả (Q_06).</td>
+</tr>
+<tr>
+<td>Cấp chi nhánh (Bắc / Nam)</td>
+<td>Chưa chốt mô hình (Q_07).</td>
+</tr>
+<tr>
+<td>Phòng Kho vận, DSP, Technology; vai trò Kho, DSP; phạm vi Được giao; trường Kho phụ trách</td>
+<td>Tạm hoãn (người dùng 14/10/2026) · Q_11.</td>
+</tr>
+<tr>
+<td>Quyền nghiệp vụ của System Admin (xem / sửa lead, deal, khách hàng…)</td>
+<td>System Admin chỉ giữ quyền cấu hình (BR_41) · Q_15.</td>
+</tr>
+<tr>
+<td>Màn Nhật ký hoạt động</td>
+<td>Chỉ quy định dữ liệu cần ghi (mục 9.2).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>User Story</strong>
+- Là người quản trị, tôi muốn xem các phòng ban đang dùng hệ thống kèm số team, số người, trưởng phòng, để nắm cơ cấu tổ chức. (UC_PB01)
+- Là người quản trị, tôi muốn thêm hoặc sửa phòng ban, để mở hệ thống cho phòng mới hoặc cập nhật khi tổ chức thay đổi. (UC_PB02, UC_PB03)
+- Là người quản trị, tôi muốn xem và khai báo vai trò theo từng phòng ban kèm cấp và phạm vi mặc định, để mỗi phòng có bộ vai trò đúng thực tế. (UC_VT01, UC_VT02)
+- Là người quản trị, tôi muốn lập team với trưởng nhóm và thành viên, để trưởng nhóm quản lý được dữ liệu của team mình. (UC_PB04 – UC_PB06)
+- Là người quản trị, tôi muốn thêm, sửa, ngừng hoạt động người dùng và gán phòng ban, vai trò, team, để mỗi người dùng đúng quyền và không khách hàng nào bị bỏ sót khi có người nghỉ việc. (UC_ND01 – UC_ND04)</p>
+<hr />
+<h2 id="3-ieu-kien-thuc-hien">3. ĐIỀU KIỆN THỰC HIỆN</h2>
+<p><strong>Chung cho mọi use case:</strong> người thực hiện đã đăng nhập, Đang hoạt động, giữ vai trò System Admin (BR_01). Khi khởi tạo hệ thống đã có: tài khoản người quản trị đầu tiên (GIP00, vai trò System Admin), 2 phòng ban, 7 vai trò (6 vai trò của phòng ban + System Admin), danh mục 67 quyền và quyền mặc định (BR_06, BR_10, BR_27, BR_32). — <strong>Đề xuất</strong></p>
+<table>
+<thead>
+<tr>
+<th>Use case</th>
+<th>Điểm kích hoạt</th>
+<th>Điều kiện trước</th>
+<th>Kết quả khi thành công</th>
+<th>Kết quả khi thất bại / huỷ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC_PB01</td>
+<td>Cài đặt › Tổ chức &amp; người dùng (tab Phòng ban mặc định)</td>
+<td>—</td>
+<td>Bảng phòng ban hiển thị</td>
+<td>Lỗi tải: hiển thị lỗi, cho tải lại</td>
+</tr>
+<tr>
+<td>UC_PB02</td>
+<td>“+ Thêm phòng ban”</td>
+<td>Ở tab Phòng ban</td>
+<td>Phòng ban mới, chưa có vai trò, team, người dùng (BR_08)</td>
+<td>Không tạo gì</td>
+</tr>
+<tr>
+<td>UC_PB03</td>
+<td>⋯ › Sửa trên dòng phòng ban</td>
+<td>Phòng ban tồn tại</td>
+<td>Tên, mã GIP, trưởng phòng, mô tả cập nhật; mã giữ nguyên (BR_07)</td>
+<td>Không đổi gì</td>
+</tr>
+<tr>
+<td>UC_VT01</td>
+<td>Tab Vai trò</td>
+<td>—</td>
+<td>Bảng vai trò hiển thị</td>
+<td>Lỗi tải: cho tải lại</td>
+</tr>
+<tr>
+<td>UC_VT02</td>
+<td>“+ Thêm vai trò” / ⋯ › Sửa / ⋯ › Ngừng dùng</td>
+<td>Phòng ban đang hoạt động</td>
+<td>Vai trò mới / được cập nhật / ngừng dùng</td>
+<td>Không đổi gì</td>
+</tr>
+<tr>
+<td>UC_PB04</td>
+<td>Tab Team</td>
+<td>—</td>
+<td>Bảng team theo từ khoá, bộ lọc</td>
+<td>Lỗi tải: cho tải lại</td>
+</tr>
+<tr>
+<td>UC_PB05</td>
+<td>Tab Team › “+ Thêm team”</td>
+<td>Có người dùng cấp Quản lý đang hoạt động, chưa làm trưởng nhóm team khác (VR_08)</td>
+<td>Team mới thuộc phòng ban đã chọn</td>
+<td>Không tạo gì</td>
+</tr>
+<tr>
+<td>UC_PB06</td>
+<td>Tab Team › ⋯ › Sửa team</td>
+<td>Team tồn tại</td>
+<td>Trưởng nhóm, thành viên, phòng ban mới có hiệu lực ngay (BR_26)</td>
+<td>Không đổi gì</td>
+</tr>
+<tr>
+<td>UC_ND01</td>
+<td>Tab Người dùng</td>
+<td>—</td>
+<td>Bảng người dùng theo từ khoá, bộ lọc</td>
+<td>Lỗi tải: cho tải lại</td>
+</tr>
+<tr>
+<td>UC_ND02</td>
+<td>“+ Thêm người dùng”</td>
+<td>Phòng ban có ít nhất 1 vai trò đang dùng</td>
+<td>Tài khoản mới, Chưa kích hoạt (BR_19)</td>
+<td>Không tạo gì</td>
+</tr>
+<tr>
+<td>UC_ND03</td>
+<td>⋯ › Sửa người dùng</td>
+<td>Người dùng tồn tại</td>
+<td>Thông tin mới có hiệu lực từ thao tác kế tiếp (BR_26)</td>
+<td>Không đổi gì</td>
+</tr>
+<tr>
+<td>UC_ND04</td>
+<td>⋯ › Ngừng hoạt động / nút trong drawer sửa</td>
+<td>Người dùng Chưa kích hoạt hoặc Đang hoạt động</td>
+<td>Ngừng hoạt động, không đăng nhập được; deal đang mở đã chuyển PIC (BR_21)</td>
+<td>Trạng thái, PIC giữ nguyên</td>
+</tr>
+</tbody>
+</table>
+<p>Mọi thay đổi thành công được ghi nhật ký (BR_04). Mỗi lần lưu là trọn vẹn: thất bại / huỷ thì không lưu phần nào (BR_03).</p>
+<hr />
+<h2 id="4-luong-nghiep-vu">4. LUỒNG NGHIỆP VỤ</h2>
+<p>Mỗi use case trình bày bằng một bảng; luồng sự kiện chính đi theo các bước của sơ đồ hoạt động (AD) đặt dưới bảng. Sơ đồ sinh bằng <code>tools/flow_drawio.py</code> từ <code>tools/diagrams_org_v04.py</code> (bản sửa được: <code>diagrams/ORG_so-do-hoat-dong_v0.5.drawio</code>). Mã luồng phụ / exception A1 – A23 dùng chung cho toàn tài liệu.</p>
+<h3 id="41-uc_pb01-xem-danh-sach-phong-ban">4.1. UC_PB01 — Xem danh sách phòng ban</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_PB01 — Xem danh sách phòng ban</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Cho người quản trị xem các phòng ban đang dùng hệ thống và quy mô từng phòng.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Mở Cài đặt › Tổ chức &amp; người dùng; tab Phòng ban mở mặc định, hiển thị bảng: phòng ban (tên, mã), mã, mã GIP, trưởng phòng, số team, số người dùng, trạng thái, phạm vi chức năng; ghi chú quan hệ Phòng ban → Team → Người dùng.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Đã đăng nhập, là System Admin (BR_01).</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Mở Cài đặt › Tổ chức &amp; người dùng (OP_01).<br>2. Hệ thống: Là System Admin? Có → bước 3. Không → A2.<br>3. Hệ thống: Đọc phòng ban, trưởng phòng, số team, số người dùng (BR_09).<br>4. Hệ thống: Đọc được? Có → bước 5. Không → A1.<br>5. Hệ thống: Hiển thị bảng phòng ban và ghi chú.<br>6. Người quản trị: Xem; hoặc “+ Thêm phòng ban” → UC_PB02; ⋯ › Sửa → UC_PB03; chọn tab khác → UC_VT01 / UC_PB04 / UC_ND01.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>Không có.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A1 — Lỗi tải (tại bước 4): hiển thị lỗi MSG_11, nút Tải lại → bước 3.<br>A2 — Không có quyền (tại bước 2): không hiển thị mục Tổ chức trong menu Cài đặt; truy cập bằng đường dẫn → không hiển thị nội dung → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Dữ liệu không thay đổi.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_PB01" src="images/ORG_UC_PB01_xem-phong-ban_activity.png" /></p>
+<h3 id="42-uc_pb02-them-phong-ban">4.2. UC_PB02 — Thêm phòng ban</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_PB02 — Thêm phòng ban</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Khai báo phòng ban mới dùng hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Bấm “+ Thêm phòng ban”, nhập tên, mã, mã danh mục GIP, trưởng phòng, mô tả. Phòng ban mới chưa có vai trò, team, người dùng; người quản trị tạo vai trò ở UC_VT02 rồi cấp quyền ở UC_PQ02.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Đang ở tab Phòng ban.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Bấm “+ Thêm phòng ban” (OP_02).<br>2. Hệ thống: Mở drawer Thêm phòng ban (trống).<br>3. Người quản trị: Nhập Tên, Mã, Mã danh mục GIP, Trưởng phòng, Mô tả.<br>4. Người quản trị: Bấm “Thêm phòng ban” (OP_03).<br>5. Hệ thống: Hợp lệ, tên và mã không trùng (VR_01 – VR_03)? Có → bước 6. Không → A4.<br>6. Hệ thống: Tạo phòng ban; ghi nhật ký (BR_08, BR_04).<br>7. Hệ thống: Đóng drawer, thêm dòng vào bảng, hiển thị MSG_01.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A3 — Bấm “Hủy” / ✕ (tại bước 3, 4): đóng drawer, không lưu → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A4 — Dữ liệu không hợp lệ / trùng (tại bước 5): lỗi tại trường (MSG_10), giữ dữ liệu → bước 3.<br>A5 — Lỗi hệ thống (tại bước 6): không tạo, MSG_11, giữ dữ liệu → bước 4.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Có phòng ban mới, Đang hoạt động, 0 vai trò, 0 team, 0 người dùng.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_PB02" src="images/ORG_UC_PB02_them-phong-ban_activity.png" /></p>
+<h3 id="43-uc_pb03-sua-phong-ban">4.3. UC_PB03 — Sửa phòng ban</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_PB03 — Sửa phòng ban</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Cập nhật tên, mã danh mục GIP, trưởng phòng, mô tả.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Từ ⋯ trên dòng phòng ban chọn “Sửa”; mở drawer 02.01.02 ở chế độ sửa: tiêu đề “Sửa phòng ban · {Tên}”, Mã chỉ đọc, nút “Lưu thay đổi”. — <strong>Đề xuất</strong> (chưa có màn riêng).</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Phòng ban tồn tại.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Bấm ⋯ trên dòng phòng ban, chọn “Sửa” (OP_04).<br>2. Hệ thống: Mở drawer chế độ sửa với dữ liệu hiện tại; Mã chỉ đọc (BR_07).<br>3. Người quản trị: Sửa Tên, Mã danh mục GIP, Trưởng phòng, Mô tả.<br>4. Người quản trị: Bấm “Lưu thay đổi” (OP_03).<br>5. Hệ thống: Hợp lệ, tên không trùng (VR_01, VR_03)? Có → bước 6. Không → A4.<br>6. Hệ thống: Lưu; ghi nhật ký cũ → mới (BR_04).<br>7. Hệ thống: Đóng drawer, cập nhật dòng, hiển thị MSG_01.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A3 — Hủy / ✕ (tại bước 3, 4): đóng drawer, không lưu → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A4 — Không hợp lệ / trùng (tại bước 5): lỗi tại trường (MSG_10) → bước 3.<br>A5 — Lỗi hệ thống (tại bước 6): MSG_11 → bước 4.<br>A6 — Hai người sửa cùng lúc (tại bước 6): Chưa xác định (Q_08).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Thông tin phòng ban cập nhật; vai trò, team, người dùng của phòng không đổi.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_PB03" src="images/ORG_UC_PB03_sua-phong-ban_activity.png" /></p>
+<h3 id="44-uc_vt01-xem-danh-muc-vai-tro">4.4. UC_VT01 — Xem danh mục vai trò</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_VT01 — Xem danh mục vai trò</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Xem các vai trò của từng phòng ban, cấp, phạm vi mặc định, số người dùng và số quyền đang bật.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Tab Vai trò hiển thị bảng vai trò: vai trò (tên, mã), phòng ban (System Admin: “Toàn hệ thống”), cấp, phạm vi mặc định, số người dùng, số quyền đang bật / 67, trạng thái; nút “+ Thêm vai trò” ở đầu bảng.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Là System Admin (BR_01).</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Mở Cài đặt › Tổ chức &amp; người dùng, chọn tab Vai trò (OP_05).<br>2. Hệ thống: Là System Admin? Có → bước 3. Không → A2.<br>3. Hệ thống: Đọc vai trò, số người dùng, số quyền đang bật của từng vai trò.<br>4. Hệ thống: Đọc được? Có → bước 5. Không → A1.<br>5. Hệ thống: Hiển thị bảng vai trò.<br>6. Người quản trị: Xem; hoặc “+ Thêm vai trò” / ⋯ › Sửa / ⋯ › Ngừng dùng → UC_VT02; ⋯ › Xem quyền hạn → UC_PQ02 với vai trò đó.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>Không có.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A1 — Lỗi tải (tại bước 4): MSG_11, Tải lại → bước 3.<br>A2 — Không có quyền (tại bước 2): tab Vai trò không hiển thị → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Dữ liệu không thay đổi.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_VT01" src="images/ORG_UC_VT01_xem-vai-tro_activity.png" /></p>
+<h3 id="45-uc_vt02-them-sua-ngung-dung-vai-tro">4.5. UC_VT02 — Thêm / sửa / ngừng dùng vai trò</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_VT02 — Thêm / sửa / ngừng dùng vai trò</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Tạo vai trò mới cho một phòng ban, hoặc sửa / ngừng dùng vai trò có sẵn.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Drawer gồm Phòng ban, Tên vai trò, Mã vai trò, Cấp, Phạm vi dữ liệu mặc định, Sao chép quyền từ vai trò, Mô tả. Vai trò mới chưa có quyền nào, trừ khi chọn sao chép (BR_12). Chế độ sửa: Phòng ban, Mã chỉ đọc. — <strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống; người dùng giữ vai trò (chịu ảnh hưởng khi sửa).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Là System Admin; phòng ban đang hoạt động.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Bấm “+ Thêm vai trò” hoặc ⋯ › Sửa (OP_06).<br>2. Hệ thống: Mở drawer; chế độ sửa: Phòng ban, Mã chỉ đọc.<br>3. Người quản trị: Nhập Phòng ban, Tên, Mã, Cấp, Phạm vi dữ liệu mặc định; chọn vai trò để sao chép quyền (tuỳ chọn); Mô tả.<br>4. Người quản trị: Bấm “Thêm vai trò” / “Lưu thay đổi” (OP_07).<br>5. Hệ thống: Hợp lệ, tên và mã không trùng trong phòng (VR_04 – VR_06)? Có → bước 6. Không → A4.<br>6. Hệ thống: Lưu vai trò; nếu chọn sao chép thì chép quyền đã tích của vai trò nguồn; ghi nhật ký (BR_12, BR_04).<br>7. Hệ thống: Đóng drawer, cập nhật bảng, hiển thị MSG_02.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A3 — Hủy / ✕ (tại bước 3, 4): không lưu → kết thúc.<br>A7 — ⋯ › Ngừng dùng (tại bước 1): vai trò còn người dùng → chặn, hiển thị “Chuyển {n} người dùng sang vai trò khác trước khi ngừng dùng.” (MSG_10); không còn người dùng → hỏi xác nhận, đổi trạng thái Ngừng dùng, ghi nhật ký (BR_13) → kết thúc.<br>A8 — Sửa Phạm vi dữ liệu mặc định của vai trò đã có quyền (tại bước 3): phạm vi của vai trò đổi theo, có hiệu lực sau khi lưu (BR_29, BR_37).</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A4 — Không hợp lệ / trùng (tại bước 5): lỗi tại trường (MSG_10) → bước 3.<br>A5 — Lỗi hệ thống (tại bước 6): MSG_11 → bước 4.<br>A9 — Sửa Cấp / Phòng ban của System Admin, hoặc chọn cấp Quản trị hệ thống cho vai trò khác (tại bước 5): chặn, lỗi tại trường Cấp (MSG_10) → bước 3 (BR_33, BR_41).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Có vai trò mới hoặc vai trò được cập nhật; quyền chỉnh tiếp ở UC_PQ02. Vai trò Ngừng dùng không chọn được cho người dùng.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_VT02" src="images/ORG_UC_VT02_them-sua-vai-tro_activity.png" /></p>
+<h3 id="46-uc_pb04-xem-tim-kiem-loc-danh-sach-team">4.6. UC_PB04 — Xem, tìm kiếm, lọc danh sách team</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_PB04 — Xem, tìm kiếm, lọc danh sách team</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Xem và tìm nhanh các team của mọi phòng ban.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Tab Team hiển thị bảng team (team · phòng ban, trưởng nhóm, thành viên cấp Nhân viên, nhóm Telegram, trạng thái), ô tìm kiếm, bộ lọc Phòng ban / Trưởng nhóm / Trạng thái, phân trang và ghi chú phạm vi “Cả team”.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Là System Admin.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Chọn tab Team; nhập từ khoá / chọn bộ lọc (OP_08, OP_09).<br>2. Hệ thống: Có quyền? Có → bước 3. Không → A2.<br>3. Hệ thống: Đọc team theo từ khoá và bộ lọc (BR_05).<br>4. Hệ thống: Đọc được? Có → bước 5. Không → A1.<br>5. Hệ thống: Hiển thị bảng team và phân trang.<br>6. Người quản trị: Xem; hoặc “+ Thêm team” → UC_PB05; ⋯ › Sửa team → UC_PB06.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A10 — Không có team khớp (tại bước 5): bảng hiển thị MSG_12, giữ từ khoá, bộ lọc → bước 1.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A1 — Lỗi tải (tại bước 4): MSG_11, Tải lại → bước 3.<br>A2 — Không có quyền (tại bước 2): không hiển thị nội dung → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Dữ liệu không thay đổi.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_PB04" src="images/ORG_UC_PB04_xem-team_activity.png" /></p>
+<h3 id="47-uc_pb05-them-team">4.7. UC_PB05 — Thêm team</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_PB05 — Thêm team</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Lập team mới của một phòng ban, có trưởng nhóm và thành viên, để xác định phạm vi “Cả team” của trưởng nhóm.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Tab Team › “+ Thêm team”: nhập tên, chọn phòng ban, trưởng nhóm (cấp Quản lý cùng phòng), nhập Chat ID nhóm Telegram. Thành viên không chọn ở đây: người dùng vào team qua trường Team ở drawer người dùng (UC_ND02, UC_ND03).</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống; trưởng nhóm, thành viên (chịu ảnh hưởng).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Có ít nhất 1 người dùng cấp Quản lý đang hoạt động, chưa làm trưởng nhóm team khác (VR_08).</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Tab Team: bấm “+ Thêm team” (OP_10).<br>2. Hệ thống: Mở drawer team trống.<br>3. Người quản trị: Nhập Tên team; chọn Phòng ban, Trưởng nhóm; nhập Chat ID Telegram.<br>4. Người quản trị: Bấm “Thêm team” (OP_12).<br>5. Hệ thống: Hợp lệ (VR_07, VR_08, VR_10)? Có → bước 6. Không → A4.<br>6. Hệ thống: Tạo team; ghi nhật ký (BR_04).<br>7. Hệ thống: Đóng drawer, thêm dòng vào bảng team, hiển thị MSG_06.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A3 — Hủy / ✕ (tại bước 3, 4): không lưu → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A4 — Không hợp lệ (tại bước 5): lỗi tại trường (MSG_10) → bước 3.<br>A5 — Lỗi hệ thống (tại bước 6): MSG_11 → bước 4.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Có team mới, chưa có thành viên; gán thành viên ở trường Team của người dùng (BR_15).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_PB05" src="images/ORG_UC_PB05_them-team_activity.png" /></p>
+<h3 id="48-uc_pb06-sua-team">4.8. UC_PB06 — Sửa team</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_PB06 — Sửa team</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Đổi tên, phòng ban, trưởng nhóm, thành viên, nhóm Telegram của team.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Tab Team › ⋯ › Sửa team: drawer mở với dữ liệu hiện tại (tiêu đề “Sửa team · {Tên team}”). Đổi thành viên có hiệu lực ngay với phạm vi của trưởng nhóm.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống; trưởng nhóm, thành viên (chịu ảnh hưởng).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Team tồn tại.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Tab Team: bấm ⋯ › Sửa team (OP_11).<br>2. Hệ thống: Mở drawer với dữ liệu hiện tại.<br>3. Người quản trị: Sửa Tên, Phòng ban, Trưởng nhóm, Chat ID Telegram.<br>4. Người quản trị: Bấm “Lưu team” (OP_12).<br>5. Hệ thống: Hợp lệ (VR_07, VR_08, VR_10)? Có → bước 6. Không → A4.<br>6. Hệ thống: Lưu; trưởng nhóm mới có hiệu lực ngay; ghi nhật ký (BR_26, BR_04).<br>7. Hệ thống: Đóng drawer, cập nhật dòng team, hiển thị MSG_06.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A3 — Hủy / ✕ (tại bước 3, 4): không lưu → kết thúc.<br>A12 — Đổi Phòng ban khi team còn thành viên (tại bước 4): chặn, yêu cầu gỡ hết thành viên hoặc chuyển họ sang phòng ban mới trước (vì vai trò của thành viên thuộc phòng cũ) — <strong>Đề xuất</strong> (BR_14).</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A4 — Không hợp lệ (tại bước 5): lỗi tại trường (MSG_10) → bước 3.<br>A5 — Lỗi hệ thống (tại bước 6): MSG_11 → bước 4.<br>A6 — Hai người sửa cùng lúc (tại bước 6): Chưa xác định (Q_08).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Team cập nhật; thành viên bị gỡ không thuộc team nào cho đến khi được gán team khác (VR_15 áp dụng khi sửa người đó).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_PB06" src="images/ORG_UC_PB06_sua-team_activity.png" /></p>
+<h3 id="49-uc_nd01-xem-tim-kiem-loc-danh-sach-nguoi-dung">4.9. UC_ND01 — Xem, tìm kiếm, lọc danh sách người dùng</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_ND01 — Xem, tìm kiếm, lọc danh sách người dùng</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Nắm ai đang dùng hệ thống; tìm nhanh một người theo tên, email, mã PIC, vai trò, phòng ban, team, trạng thái.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Tab Người dùng hiển thị bảng người dùng (nhân viên, mã PIC, vai trò, phòng ban · team, Telegram, trạng thái, đăng nhập gần nhất), ô tìm kiếm, 4 bộ lọc, phân trang.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Là System Admin.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Chọn tab Người dùng; nhập từ khoá / chọn bộ lọc (OP_13, OP_14).<br>2. Hệ thống: Có quyền? Có → bước 3. Không → A2.<br>3. Hệ thống: Đọc người dùng theo từ khoá và bộ lọc (BR_05).<br>4. Hệ thống: Đọc được? Có → bước 5. Không → A1.<br>5. Hệ thống: Hiển thị bảng người dùng và phân trang.<br>6. Người quản trị: Xem; hoặc “+ Thêm người dùng” → UC_ND02; ⋯ › Sửa người dùng → UC_ND03; ⋯ › Ngừng hoạt động → UC_ND04.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A10 — Không có người dùng khớp (tại bước 5): MSG_12, giữ từ khoá, bộ lọc → bước 1.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A1 — Lỗi tải (tại bước 4): MSG_11, Tải lại → bước 3.<br>A2 — Không có quyền (tại bước 2): không hiển thị nội dung → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Dữ liệu không thay đổi.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_ND01" src="images/ORG_UC_ND01_xem-nguoi-dung_activity.png" /></p>
+<h3 id="410-uc_nd02-them-nguoi-dung">4.10. UC_ND02 — Thêm người dùng</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_ND02 — Thêm người dùng</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Tạo tài khoản cho nhân viên mới với mã PIC, phòng ban, vai trò, team để bắt đầu làm việc.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>“+ Thêm người dùng”: nhập họ tên, email, mã PIC; chọn phòng ban rồi vai trò (chỉ vai trò thuộc phòng đó); chọn team (bắt buộc với cấp Nhân viên), Telegram. Tài khoản mới ở trạng thái Chưa kích hoạt.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Đang ở tab Người dùng; phòng ban có ít nhất 1 vai trò đang dùng.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Bấm “+ Thêm người dùng” (OP_15).<br>2. Hệ thống: Mở drawer trống.<br>3. Người quản trị: Nhập Họ tên, Email, Mã PIC; chọn Phòng ban → Vai trò; chọn Team, nhập Telegram.<br>4. Người quản trị: Bấm “Thêm người dùng” (OP_16).<br>5. Hệ thống: Hợp lệ (VR_11 – VR_15)? Có → bước 6. Không → A4.<br>6. Hệ thống: Tạo tài khoản Chưa kích hoạt; ghi nhật ký (BR_19, BR_04).<br>7. Hệ thống: Đóng drawer, thêm dòng, cập nhật số người của phòng / team / vai trò, hiển thị MSG_03.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A3 — Hủy / ✕ (tại bước 3, 4): không lưu → kết thúc.<br>A13 — Đổi Phòng ban (tại bước 3): xoá Vai trò, Team đã chọn; danh sách Vai trò, Team lọc theo phòng mới. Chọn Phòng ban “Không thuộc phòng ban” → Vai trò chỉ còn System Admin.<br>A14 — Chọn vai trò cấp Trưởng phòng hoặc System Admin (tại bước 3): trường Team khoá, hiển thị “—” (BR_11).</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A4 — Không hợp lệ / trùng (tại bước 5): lỗi tại trường (MSG_10), giữ dữ liệu → bước 3.<br>A5 — Lỗi hệ thống (tại bước 6): MSG_11 → bước 4.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Có người dùng mới, Chưa kích hoạt; nếu cấp Nhân viên thì là thành viên team đã chọn, trưởng nhóm thấy dữ liệu của người đó (BR_16). Cách nhận mật khẩu / kích hoạt: Q_06.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_ND02" src="images/ORG_UC_ND02_them-nguoi-dung_activity.png" /></p>
+<h3 id="411-uc_nd03-sua-nguoi-dung">4.11. UC_ND03 — Sửa người dùng</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_ND03 — Sửa người dùng</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Cập nhật thông tin, đổi phòng ban, vai trò hoặc team của một người.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>⋯ › Sửa người dùng: drawer với dữ liệu hiện tại; Mã PIC, Trạng thái, Đăng nhập gần nhất chỉ đọc. Đổi vai trò / team có hiệu lực từ thao tác kế tiếp với phạm vi dữ liệu của người đó và của trưởng nhóm liên quan.</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống; người dùng được sửa, trưởng nhóm cũ / mới (chịu ảnh hưởng).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Người dùng tồn tại.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Bấm ⋯ cuối dòng, chọn “Sửa người dùng” (OP_17).<br>2. Hệ thống: Mở drawer với dữ liệu hiện tại; Mã PIC, Trạng thái, Đăng nhập gần nhất chỉ đọc (BR_18).<br>3. Người quản trị: Sửa Họ tên, Email, Phòng ban, Vai trò, Team, Telegram.<br>4. Người quản trị: Bấm “Lưu thay đổi” (OP_18).<br>5. Hệ thống: Hợp lệ (VR_11, VR_12, VR_14 – VR_17)? Có → bước 6. Không → A4 / A15.<br>6. Hệ thống: Lưu; vai trò, team mới có hiệu lực từ thao tác kế tiếp; ghi nhật ký cũ → mới (BR_26, BR_04).<br>7. Hệ thống: Đóng drawer, cập nhật dòng, hiển thị MSG_04.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A3 — Hủy / ✕ (tại bước 3, 4): không lưu → kết thúc.<br>A13 — Đổi Phòng ban (tại bước 3): như UC_ND02.<br>A16 — Bấm “Ngừng hoạt động” trong drawer (tại bước 3): chuyển sang UC_ND04; thay đổi đang nhập không được lưu.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A4 — Không hợp lệ / trùng (tại bước 5): lỗi tại trường (MSG_10) → bước 3.<br>A15 — Làm mất System Admin đang hoạt động cuối cùng, System Admin tự đổi mình sang vai trò khác, hoặc đổi vai trò / chuyển team của trưởng nhóm team còn thành viên (tại bước 5): chặn lưu, lỗi tại trường Vai trò / Team (MSG_10) → bước 3 (BR_22, BR_23, BR_34).<br>A5 — Lỗi hệ thống (tại bước 6): MSG_11 → bước 4.<br>A6 — Hai người sửa cùng lúc: Chưa xác định (Q_08).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Thông tin người dùng cập nhật. Phiên đang đăng nhập nhận quyền mới khi nào: Q_09. Bản ghi cũ khi người dùng chuyển team: Q_03.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_ND03" src="images/ORG_UC_ND03_sua-nguoi-dung_activity.png" /></p>
+<h3 id="412-uc_nd04-ngung-hoat-ong-nguoi-dung">4.12. UC_ND04 — Ngừng hoạt động người dùng</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Use case: UC_ND04 — Ngừng hoạt động người dùng</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mục đích:</strong></td>
+<td>Khoá tài khoản người nghỉ việc mà không mất lịch sử, và giao lại deal đang mở để không khách hàng nào bị bỏ sót.</td>
+</tr>
+<tr>
+<td><strong>Mô tả:</strong></td>
+<td>Chọn “Ngừng hoạt động” từ ⋯ hoặc drawer sửa. Hộp thoại hiển thị cảnh báo, số deal đang phụ trách và ô chọn người nhận. Xác nhận → chuyển PIC các deal đang mở, đổi trạng thái, người đó không đăng nhập được nữa. — <strong>Đề xuất</strong> (Q_10).</td>
+</tr>
+<tr>
+<td><strong>Tác nhân:</strong></td>
+<td>Chính: Người quản trị (System Admin).<br>Phụ: Hệ thống; người bị ngừng hoạt động, người nhận deal (chịu ảnh hưởng).</td>
+</tr>
+<tr>
+<td><strong>Điều kiện trước:</strong></td>
+<td>Người dùng Chưa kích hoạt hoặc Đang hoạt động.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện chính (Basic flows)</strong></td>
+<td>1. Người quản trị: Chọn “Ngừng hoạt động” (menu ⋯ hoặc drawer sửa) (OP_19).<br>2. Hệ thống: Mở hộp thoại: cảnh báo, số deal đang phụ trách, ô chọn người nhận (BR_21).<br>3. Người quản trị: Chọn người nhận các deal đang mở.<br>4. Người quản trị: Bấm “Ngừng hoạt động” (OP_20).<br>5. Hệ thống: Được phép (không phải System Admin đang hoạt động cuối cùng; không là trưởng nhóm team còn thành viên; đã chọn người nhận khi còn deal đang mở — BR_22, BR_23, VR_18)? Có → bước 6. Không → A17.<br>6. Hệ thống: Chuyển PIC các deal đang mở sang người nhận; ghi nhật ký từng deal (BR_21).<br>7. Hệ thống: Đổi trạng thái Ngừng hoạt động; ghi nhật ký (BR_19, BR_04).<br>8. Hệ thống: Đóng hộp thoại, hiển thị MSG_05.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện phụ (Alternative Flows):</strong></td>
+<td>A18 — Hủy / ✕ (tại bước 3, 4): trạng thái, PIC giữ nguyên → kết thúc.</td>
+</tr>
+<tr>
+<td><strong>Luồng sự kiện exception (Exception Flows)</strong></td>
+<td>A17 — Không được phép (tại bước 5): hiển thị lý do (MSG_10) → bước 3.<br>A5 — Lỗi hệ thống (tại bước 6, 7): không chuyển deal nào, trạng thái giữ nguyên (BR_03), MSG_11 → bước 4.</td>
+</tr>
+<tr>
+<td><strong>Điều kiện sau:</strong></td>
+<td>Tài khoản Ngừng hoạt động; không còn trong danh sách chọn người dùng (BR_24); deal đang mở có PIC mới; deal đã đóng, nhật ký giữ nguyên (BR_20). Khách hàng có AM Owner là người này: Q_10.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sơ đồ hoạt động (AD)</strong></p>
+<p><img loading="lazy" alt="UC_ND04" src="images/ORG_UC_ND04_ngung-hoat-dong_activity.png" /></p>
+<h2 id="5-giao-dien-va-hanh-vi">5. GIAO DIỆN VÀ HÀNH VI</h2>
+<h3 id="51-mockup">5.1. Mockup</h3>
+<p><strong>Đường dẫn truy cập:</strong> Sidebar › Cài đặt hệ thống › menu Cài đặt › nhóm Tổ chức: <strong>Tổ chức &amp; người dùng</strong> · <strong>Phân quyền</strong>. Mỗi màn bên dưới có ảnh chụp kèm số chú thích; số trong cột "Thông tin" khớp với số trên ảnh.</p>
+<table>
+<thead>
+<tr>
+<th>Số màn</th>
+<th>Màn hình</th>
+<th>Mã SCR</th>
+<th>Node Figma</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>02.01.01</td>
+<td>Tổ chức &amp; người dùng · Tab Phòng ban</td>
+<td>SCR_ADM_DEP_01</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61158">667:61158</a></td>
+</tr>
+<tr>
+<td>02.01.02</td>
+<td>Thêm phòng ban (drawer)</td>
+<td>SCR_ADM_DEP_02</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61619">667:61619</a></td>
+</tr>
+<tr>
+<td>02.01.03</td>
+<td>Tổ chức &amp; người dùng · Tab Vai trò</td>
+<td>SCR_ADM_ROLE_01</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=718-9885">718:9885</a></td>
+</tr>
+<tr>
+<td>02.01.04</td>
+<td>Thêm vai trò (drawer)</td>
+<td>SCR_ADM_ROLE_02</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=718-11183">718:11183</a></td>
+</tr>
+<tr>
+<td>02.01.05</td>
+<td>Tổ chức &amp; người dùng · Tab Team</td>
+<td>SCR_ADM_DEP_03</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61675">667:61675</a></td>
+</tr>
+<tr>
+<td>02.01.06</td>
+<td>Sửa team (drawer)</td>
+<td>SCR_ADM_DEP_04</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61878">667:61878</a></td>
+</tr>
+<tr>
+<td>02.01.07</td>
+<td>Thêm team (drawer)</td>
+<td>SCR_ADM_DEP_04</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61814">667:61814</a></td>
+</tr>
+<tr>
+<td>02.01.08</td>
+<td>Tổ chức &amp; người dùng · Tab Người dùng</td>
+<td>SCR_ADM_USR_01</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61528">667:61528</a></td>
+</tr>
+<tr>
+<td>02.01.09</td>
+<td>Menu thao tác người dùng</td>
+<td>SCR_ADM_USR_02</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61720">667:61720</a></td>
+</tr>
+<tr>
+<td>02.01.10</td>
+<td>Thêm người dùng (drawer)</td>
+<td>SCR_ADM_USR_03</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61418">667:61418</a></td>
+</tr>
+<tr>
+<td>02.01.11</td>
+<td>Sửa người dùng (drawer)</td>
+<td>SCR_ADM_USR_04</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61303">667:61303</a></td>
+</tr>
+<tr>
+<td>02.01.12</td>
+<td>Ngừng hoạt động (hộp thoại)</td>
+<td>SCR_ADM_USR_05</td>
+<td><a href="https://www.figma.com/design/Zs8xpdrbxgUWufVtNseJQR/?node-id=667-61202">667:61202</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="511-020101-to-chuc-nguoi-dung-tab-phong-ban-scr_adm_dep_01">5.1.1. 02.01.01 — Tổ chức &amp; người dùng · tab Phòng ban (SCR_ADM_DEP_01)</h4>
+<p><img loading="lazy" alt="02.01.01" src="images/ORG04_02.01.01_tab-phong-ban.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tổ chức &amp; người dùng</td>
+<td>Menu item</td>
+<td></td>
+<td>Onclick mở màn Tổ chức &amp; người dùng, tab Phòng ban; mục đang chọn được tô nổi. Nằm đầu nhóm Tổ chức, trên Phân quyền.</td>
+</tr>
+<tr>
+<td>(2) Tab Phòng ban · Vai trò · Team · Người dùng</td>
+<td>Tab</td>
+<td></td>
+<td>Hiển thị số lượng trên mỗi tab. Onclick chuyển tab (UC_PB01, UC_VT01, UC_PB04, UC_ND01).</td>
+</tr>
+<tr>
+<td>(3) + Thêm phòng ban</td>
+<td>Button</td>
+<td></td>
+<td>Onclick mở drawer Thêm phòng ban (UC_PB02).</td>
+</tr>
+<tr>
+<td>(4) Bảng phòng ban</td>
+<td>Table</td>
+<td></td>
+<td>Cột: Phòng ban (tên, mã) · Mã · Mã GIP · Trưởng phòng (mã PIC · tên, vai trò) · Team · Người dùng · Trạng thái · Phạm vi chức năng (mô tả).<br>- Số team, số người dùng tính theo BR_09.<br>- Phòng ban chưa có trưởng phòng hiển thị “—”.</td>
+</tr>
+<tr>
+<td>(5) ⋯</td>
+<td>Menu</td>
+<td></td>
+<td>Onclick mở menu “Sửa” (UC_PB03).</td>
+</tr>
+<tr>
+<td>(6) Ghi chú Phòng ban → Team → Người dùng</td>
+<td>Notice</td>
+<td></td>
+<td>Hiển thị: mỗi team thuộc một phòng ban; người dùng thuộc phòng ban, giữ một vai trò của phòng đó.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="512-020102-drawer-them-sua-phong-ban-scr_adm_dep_02">5.1.2. 02.01.02 — Drawer Thêm / sửa phòng ban (SCR_ADM_DEP_02)</h4>
+<p><img loading="lazy" alt="02.01.02" src="images/ORG04_02.01.02_them-phong-ban.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tiêu đề</td>
+<td>Label</td>
+<td></td>
+<td>“Thêm phòng ban” / “Sửa phòng ban · {Tên}”; dòng phụ “Cài đặt › Tổ chức &amp; người dùng · Phòng ban · Trường có dấu * là bắt buộc”. ✕ → như Hủy (A3).</td>
+</tr>
+<tr>
+<td>(2) Tên phòng ban</td>
+<td>Textbox</td>
+<td>x</td>
+<td>Cho phép người dùng nhập tên phòng ban. Không trùng phòng ban khác (VR_01).</td>
+</tr>
+<tr>
+<td>(3) Mã phòng ban</td>
+<td>Textbox</td>
+<td>x</td>
+<td>Viết hoa, không dấu (VR_02). Chỉ đọc ở chế độ sửa (BR_07).</td>
+</tr>
+<tr>
+<td>(4) Mã danh mục GIP</td>
+<td>Drop list</td>
+<td></td>
+<td>Cho phép người dùng chọn mã phòng ban trong danh mục GIP (VD PKD, AMD). Để trống nếu phòng chưa có mã.</td>
+</tr>
+<tr>
+<td>(5) Trưởng phòng</td>
+<td>Drop list</td>
+<td></td>
+<td>Danh sách người dùng đang hoạt động (VR_03). Mặc định: trống.</td>
+</tr>
+<tr>
+<td>(6) Mô tả</td>
+<td>Textbox</td>
+<td></td>
+<td>Chức năng chính của phòng; hiển thị ở cột Phạm vi chức năng.</td>
+</tr>
+<tr>
+<td>(7) Ghi chú phòng ban mới</td>
+<td>Notice</td>
+<td></td>
+<td>“Phòng ban mới chưa có quyền — sau khi tạo, thêm vai trò ở tab Vai trò rồi cấu hình quyền ở Phân quyền.”</td>
+</tr>
+<tr>
+<td>(8) Hủy</td>
+<td>Button</td>
+<td></td>
+<td>Đóng drawer, không lưu (A3).</td>
+</tr>
+<tr>
+<td>(9) Thêm phòng ban / Lưu thay đổi</td>
+<td>Button</td>
+<td></td>
+<td>Onclick kiểm tra VR_01 – VR_03 rồi lưu (UC_PB02 bước 5 – 7).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="513-020103-to-chuc-nguoi-dung-tab-vai-tro-scr_adm_role_01">5.1.3. 02.01.03 — Tổ chức &amp; người dùng · tab Vai trò (SCR_ADM_ROLE_01)</h4>
+<p><img loading="lazy" alt="02.01.03" src="images/ORG04_02.01.03_tab-vai-tro.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tab Vai trò</td>
+<td>Tab</td>
+<td></td>
+<td>Tab đang chọn; số = số vai trò.</td>
+</tr>
+<tr>
+<td>(2) + Thêm vai trò</td>
+<td>Button</td>
+<td></td>
+<td>Onclick mở drawer Thêm vai trò (UC_VT02).</td>
+</tr>
+<tr>
+<td>(3) Bảng vai trò</td>
+<td>Table</td>
+<td></td>
+<td>Cột: Vai trò (tên, mã) · Phòng ban · Cấp · Phạm vi mặc định · Người dùng · Quyền (đang bật / 67) · Trạng thái. Dữ liệu khởi tạo: bảng 5.2.2.</td>
+</tr>
+<tr>
+<td>(4) ⋯</td>
+<td>Menu</td>
+<td></td>
+<td>Sửa · Xem quyền hạn (mở UC_PQ02 với vai trò này) · Ngừng dùng (A7).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="514-020104-drawer-them-sua-vai-tro-scr_adm_role_02">5.1.4. 02.01.04 — Drawer Thêm / sửa vai trò (SCR_ADM_ROLE_02)</h4>
+<p><img loading="lazy" alt="02.01.04" src="images/ORG04_02.01.04_them-vai-tro.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tiêu đề</td>
+<td>Label</td>
+<td></td>
+<td>“Thêm vai trò” / “Sửa vai trò · {Tên}”; dòng phụ “Cài đặt › Tổ chức &amp; người dùng · Vai trò · Trường có dấu * là bắt buộc”.</td>
+</tr>
+<tr>
+<td>(2) Phòng ban</td>
+<td>Drop list</td>
+<td>x</td>
+<td>Danh sách phòng ban đang hoạt động. Chỉ đọc ở chế độ sửa.</td>
+</tr>
+<tr>
+<td>(3) Tên vai trò</td>
+<td>Textbox</td>
+<td>x</td>
+<td>Không trùng tên vai trò khác cùng phòng (VR_04).</td>
+</tr>
+<tr>
+<td>(4) Mã vai trò</td>
+<td>Textbox</td>
+<td>x</td>
+<td>Dạng <code>R-</code> + chữ hoa không dấu, không trùng (VR_05). Chỉ đọc ở chế độ sửa.</td>
+</tr>
+<tr>
+<td>(5) Cấp</td>
+<td>Drop list</td>
+<td>x</td>
+<td>Nhân viên · Quản lý · Trưởng phòng. Cấp quyết định team (BR_11).</td>
+</tr>
+<tr>
+<td>(6) Phạm vi dữ liệu mặc định</td>
+<td>Drop list</td>
+<td>x</td>
+<td>Của mình · Cả team · Tất cả · Chỉ xem (BR_29).</td>
+</tr>
+<tr>
+<td>(7) Sao chép quyền từ vai trò</td>
+<td>Drop list</td>
+<td></td>
+<td>Danh sách vai trò đang dùng; chọn → vai trò mới nhận sẵn các quyền đã tích của vai trò đó (BR_12). Chỉ ở chế độ thêm.</td>
+</tr>
+<tr>
+<td>(8) Mô tả</td>
+<td>Textbox</td>
+<td></td>
+<td>Mô tả công việc của vai trò.</td>
+</tr>
+<tr>
+<td>(9) Ghi chú sau khi tạo</td>
+<td>Notice</td>
+<td></td>
+<td>“Vào tab Quyền hạn theo vai trò để điều chỉnh quyền và phạm vi của vai trò mới, rồi gán vai trò cho người dùng ở tab Người dùng.”</td>
+</tr>
+<tr>
+<td>(10) Hủy · Thêm vai trò / Lưu thay đổi</td>
+<td>Button</td>
+<td></td>
+<td>Hủy: không lưu (A3). Thêm / Lưu: kiểm tra VR_04 – VR_06 rồi lưu (UC_VT02 bước 5 – 7).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="515-020105-to-chuc-nguoi-dung-tab-team-scr_adm_dep_03">5.1.5. 02.01.05 — Tổ chức &amp; người dùng · tab Team (SCR_ADM_DEP_03)</h4>
+<p><img loading="lazy" alt="02.01.05" src="images/ORG04_02.01.05_tab-team.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tab Team</td>
+<td>Tab</td>
+<td></td>
+<td>Tab đang chọn; số = số team.</td>
+</tr>
+<tr>
+<td>(2) + Thêm team</td>
+<td>Button</td>
+<td></td>
+<td>Onclick mở drawer Thêm team (UC_PB05).</td>
+</tr>
+<tr>
+<td>(3) Tìm kiếm</td>
+<td>Search</td>
+<td></td>
+<td>Tìm theo tên team, tên / mã PIC trưởng nhóm; khớp một phần, không phân biệt hoa / thường (BR_05).</td>
+</tr>
+<tr>
+<td>(4) Bộ lọc Phòng ban · Trưởng nhóm · Trạng thái</td>
+<td>Drop list</td>
+<td></td>
+<td>Mặc định “tất cả”; kết hợp với nhau và với từ khoá; đổi → về trang 1 (BR_05).</td>
+</tr>
+<tr>
+<td>(5) Ghi chú phạm vi “Cả team”</td>
+<td>Notice</td>
+<td></td>
+<td>“Quyền xem / sửa / gán PIC trong team của trưởng nhóm được xác định theo thành viên team.” (BR_16).</td>
+</tr>
+<tr>
+<td>(6) Bảng team</td>
+<td>Table</td>
+<td></td>
+<td>Cột: Team · Phòng ban · Trưởng nhóm (mã PIC · tên, vai trò) · Thành viên cấp Nhân viên (số người, mã PIC) · Nhóm Telegram (tên, Chat ID) · Trạng thái. Không khớp → MSG_12.</td>
+</tr>
+<tr>
+<td>(7) ⋯</td>
+<td>Menu</td>
+<td></td>
+<td>“Sửa team” (UC_PB06).</td>
+</tr>
+<tr>
+<td>(8) Phân trang</td>
+<td>Label</td>
+<td></td>
+<td>20 dòng / trang, chọn 10 – 100 (BR_05).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="516-020106-020107-drawer-sua-team-them-team-scr_adm_dep_04">5.1.6. 02.01.06 · 02.01.07 — Drawer Sửa team / Thêm team (SCR_ADM_DEP_04)</h4>
+<p><img loading="lazy" alt="02.01.06" src="images/ORG04_02.01.06_sua-team.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tiêu đề</td>
+<td>Label</td>
+<td></td>
+<td>“Sửa team · {Tên team}” / “Thêm team”; dòng phụ “Cài đặt › Tổ chức &amp; người dùng · Team”.</td>
+</tr>
+<tr>
+<td>(2) Tên team</td>
+<td>Textbox</td>
+<td>x</td>
+<td>Không trùng team khác (VR_07).</td>
+</tr>
+<tr>
+<td>(3) Phòng ban</td>
+<td>Drop list</td>
+<td>x</td>
+<td>Phòng ban đang hoạt động (VR_10). Đổi khi team còn thành viên: A12.</td>
+</tr>
+<tr>
+<td>(4) Trưởng nhóm (cấp Quản lý)</td>
+<td>Drop list</td>
+<td>x</td>
+<td>Người dùng cấp Quản lý của cùng phòng ban, đang hoạt động, chưa làm trưởng nhóm team khác (VR_08).</td>
+</tr>
+<tr>
+<td>(6) Chat ID nhóm Telegram</td>
+<td>Textbox</td>
+<td></td>
+<td>Nhóm nhận bản sao cảnh báo SLA của deal trong team.</td>
+</tr>
+<tr>
+<td>(7) Ghi chú hiệu lực</td>
+<td>Notice</td>
+<td></td>
+<td>“Đổi thành viên có hiệu lực ngay — trưởng nhóm thấy / mất quyền với dữ liệu của thành viên ngay sau khi lưu.”</td>
+</tr>
+<tr>
+<td>(8) Hủy · Lưu team / Thêm team</td>
+<td>Button</td>
+<td></td>
+<td>Hủy: không lưu. Lưu: kiểm tra VR_07, VR_08, VR_10 rồi lưu (UC_PB05 / UC_PB06 bước 5 – 7).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="517-020108-to-chuc-nguoi-dung-tab-nguoi-dung-scr_adm_usr_01">5.1.7. 02.01.08 — Tổ chức &amp; người dùng · tab Người dùng (SCR_ADM_USR_01)</h4>
+<p><img loading="lazy" alt="02.01.08" src="images/ORG04_02.01.08_tab-nguoi-dung.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tab Người dùng</td>
+<td>Tab</td>
+<td></td>
+<td>Tab đang chọn; số = số tài khoản.</td>
+</tr>
+<tr>
+<td>(2) + Thêm người dùng</td>
+<td>Button</td>
+<td></td>
+<td>Onclick mở drawer Thêm người dùng (UC_ND02).</td>
+</tr>
+<tr>
+<td>(3) Tìm kiếm</td>
+<td>Search</td>
+<td></td>
+<td>Tìm theo tên, email, mã PIC (BR_05).</td>
+</tr>
+<tr>
+<td>(4) Bộ lọc Vai trò · Phòng ban · Team · Trạng thái</td>
+<td>Drop list</td>
+<td></td>
+<td>Mặc định “tất cả”; kết hợp với nhau và với từ khoá (BR_05).</td>
+</tr>
+<tr>
+<td>(5) Bảng người dùng</td>
+<td>Table</td>
+<td></td>
+<td>Cột: Nhân viên (tên, email) · Mã PIC · Vai trò · Phòng ban · Team · Telegram · Trạng thái (Chưa kích hoạt / Đang hoạt động / Ngừng hoạt động) · Đăng nhập gần nhất.<br>- Người không thuộc team hiển thị “—”.<br>- Không khớp → MSG_12.</td>
+</tr>
+<tr>
+<td>(6) ⋯</td>
+<td>Menu</td>
+<td></td>
+<td>Sửa người dùng · Ngừng hoạt động (02.01.09).</td>
+</tr>
+<tr>
+<td>(7) Phân trang</td>
+<td>Label</td>
+<td></td>
+<td>Như tab Team.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="518-020109-menu-thao-tac-nguoi-dung-scr_adm_usr_02">5.1.8. 02.01.09 — Menu thao tác người dùng (SCR_ADM_USR_02)</h4>
+<p><img loading="lazy" alt="02.01.09" src="images/ORG04_02.01.09_menu-nguoi-dung.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Sửa người dùng</td>
+<td>Menu item</td>
+<td></td>
+<td>Onclick mở drawer sửa (UC_ND03).</td>
+</tr>
+<tr>
+<td>(2) Ngừng hoạt động</td>
+<td>Menu item</td>
+<td></td>
+<td>Chữ đỏ. Onclick mở hộp thoại ngừng hoạt động (UC_ND04). Ẩn khi người dùng đã Ngừng hoạt động.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="519-020110-020111-drawer-them-sua-nguoi-dung-scr_adm_usr_03-scr_adm_usr_04">5.1.9. 02.01.10 · 02.01.11 — Drawer Thêm / sửa người dùng (SCR_ADM_USR_03, SCR_ADM_USR_04)</h4>
+<p><img loading="lazy" alt="02.01.11" src="images/ORG04_02.01.11_sua-nguoi-dung.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tiêu đề</td>
+<td>Label</td>
+<td></td>
+<td>“Thêm người dùng” (dòng phụ “Cài đặt › Tổ chức &amp; người dùng · Người dùng · Trường có dấu * là bắt buộc”) / “Sửa người dùng” (dòng phụ: mã PIC · họ tên · đăng nhập gần nhất).</td>
+</tr>
+<tr>
+<td>(2) Họ tên</td>
+<td>Textbox</td>
+<td>x</td>
+<td>VR_11.</td>
+</tr>
+<tr>
+<td>(3) Email đăng nhập</td>
+<td>Textbox</td>
+<td>x</td>
+<td>Dùng để đăng nhập; không trùng (VR_12).</td>
+</tr>
+<tr>
+<td>(4) Phòng ban</td>
+<td>Drop list</td>
+<td>x</td>
+<td>Phòng ban đang hoạt động và mục “Không thuộc phòng ban” (chỉ dùng cho System Admin). Đổi → xoá Vai trò, Team đã chọn (A13).</td>
+</tr>
+<tr>
+<td>(5) Mã PIC</td>
+<td>Textbox</td>
+<td>x</td>
+<td>Duy nhất; hiển thị trên thẻ deal và dropdown PIC (VR_13). Chỉ đọc khi sửa (BR_18).</td>
+</tr>
+<tr>
+<td>(6) Vai trò</td>
+<td>Drop list</td>
+<td>x</td>
+<td>Chỉ vai trò đang dùng thuộc phòng ban đã chọn (VR_14).</td>
+</tr>
+<tr>
+<td>(7) Team</td>
+<td>Drop list</td>
+<td>x (vai trò cấp Nhân viên)</td>
+<td>Team của phòng ban đã chọn (VR_15). Vai trò cấp Quản lý: tuỳ chọn; Trưởng phòng, System Admin: khoá, “—” (BR_11, A14).</td>
+</tr>
+<tr>
+<td>(8) Telegram cá nhân</td>
+<td>Textbox</td>
+<td></td>
+<td>@username; nhận cảnh báo SLA của deal mình phụ trách.</td>
+</tr>
+<tr>
+<td>(9) Ghi chú</td>
+<td>Notice</td>
+<td></td>
+<td>Thêm: “Tài khoản ở trạng thái Chưa kích hoạt cho đến lần đăng nhập đầu tiên.” Sửa: “Đổi vai trò hoặc team có hiệu lực ngay — phạm vi dữ liệu của người này và trưởng nhóm thay đổi ngay sau khi lưu.”</td>
+</tr>
+<tr>
+<td>(10) Trạng thái · Đăng nhập gần nhất</td>
+<td>Label</td>
+<td></td>
+<td>Chỉ ở chế độ sửa, chỉ đọc.</td>
+</tr>
+<tr>
+<td>(11) Hủy · Ngừng hoạt động · Thêm người dùng / Lưu thay đổi</td>
+<td>Button</td>
+<td></td>
+<td>Hủy: không lưu. Ngừng hoạt động (chỉ khi sửa): sang UC_ND04 (A16). Thêm / Lưu: kiểm tra VR_11 – VR_17 rồi lưu.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="5110-020112-hop-thoai-ngung-hoat-ong-scr_adm_usr_05">5.1.10. 02.01.12 — Hộp thoại ngừng hoạt động (SCR_ADM_USR_05)</h4>
+<p><img loading="lazy" alt="02.01.12" src="images/ORG04_02.01.12_ngung-hoat-dong.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Thông tin</th>
+<th>Kiểu hiển thị</th>
+<th>Bắt buộc</th>
+<th>Mô tả</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) Tiêu đề</td>
+<td>Label</td>
+<td></td>
+<td>“Ngừng hoạt động {Mã PIC} · {Họ tên}?”; dòng phụ: vai trò · team.</td>
+</tr>
+<tr>
+<td>(2) Cảnh báo</td>
+<td>Notice</td>
+<td></td>
+<td>“Người dùng sẽ không đăng nhập được nữa. Tài khoản không bị xoá: lịch sử stage, nhật ký và PIC trên các deal đã đóng được giữ nguyên.”</td>
+</tr>
+<tr>
+<td>(3) Chuyển PIC các deal đang mở cho</td>
+<td>Drop list</td>
+<td>x (khi còn deal đang mở)</td>
+<td>Người dùng đang hoạt động, khác người bị ngừng (VR_18). Người nhận trở thành PIC của mọi deal đang mở của người này.</td>
+</tr>
+<tr>
+<td>(4) Hủy · Ngừng hoạt động</td>
+<td>Button</td>
+<td></td>
+<td>Hủy: giữ nguyên (A18). Ngừng hoạt động (đỏ): UC_ND04 bước 5 – 8.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="5113-so-o-ieu-huong">5.1.13. Sơ đồ điều hướng</h4>
+<table>
+<thead>
+<tr>
+<th>Từ</th>
+<th>Thao tác</th>
+<th>Đến</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Menu Cài đặt › Tổ chức &amp; người dùng</td>
+<td>Onclick</td>
+<td>02.01.01 (tab Phòng ban)</td>
+</tr>
+<tr>
+<td>Tab Phòng ban / Vai trò / Team / Người dùng</td>
+<td>Onclick</td>
+<td>02.01.01 / 02.01.03 / 02.01.05 / 02.01.08</td>
+</tr>
+<tr>
+<td>02.01.01 “+ Thêm phòng ban”, ⋯ › Sửa</td>
+<td>Onclick</td>
+<td>02.01.02 → đóng về 02.01.01</td>
+</tr>
+<tr>
+<td>02.01.03 “+ Thêm vai trò”, ⋯ › Sửa</td>
+<td>Onclick</td>
+<td>02.01.04 → đóng về 02.01.03</td>
+</tr>
+<tr>
+<td>02.01.03 ⋯ › Xem quyền hạn</td>
+<td>Onclick</td>
+<td>02.01.13 với vai trò đó</td>
+</tr>
+<tr>
+<td>02.01.05 “+ Thêm team” / ⋯ › Sửa team</td>
+<td>Onclick</td>
+<td>02.01.07 / 02.01.06 → đóng về 02.01.05</td>
+</tr>
+<tr>
+<td>02.01.08 “+ Thêm người dùng”</td>
+<td>Onclick</td>
+<td>02.01.10 → đóng về 02.01.08</td>
+</tr>
+<tr>
+<td>02.01.08 ⋯</td>
+<td>Onclick</td>
+<td>02.01.09 → Sửa: 02.01.11 · Ngừng hoạt động: 02.01.12</td>
+</tr>
+<tr>
+<td>02.01.11 “Ngừng hoạt động”</td>
+<td>Onclick</td>
+<td>02.01.12</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-ac-ta-truong-du-lieu">5.2. Đặc tả trường dữ liệu</h3>
+<h4 id="521-phong-ban">5.2.1. Phòng ban</h4>
+<table>
+<thead>
+<tr>
+<th>Mã trường</th>
+<th>Tên trường</th>
+<th>Thành phần UI</th>
+<th>Kiểu dữ liệu / Độ dài</th>
+<th>Bắt buộc</th>
+<th>Giá trị mặc định</th>
+<th>Nguồn / Danh sách giá trị</th>
+<th>Điều kiện hiển thị / Cho sửa</th>
+<th>Validation tham chiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D01</td>
+<td>Tên phòng ban</td>
+<td>Textbox</td>
+<td>Văn bản; độ dài: Chưa xác định</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>VR_01</td>
+</tr>
+<tr>
+<td>D02</td>
+<td>Mã phòng ban</td>
+<td>Textbox</td>
+<td>Chữ hoa, chữ số</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Chỉ đọc khi sửa</td>
+<td>VR_02</td>
+</tr>
+<tr>
+<td>D03</td>
+<td>Mã danh mục GIP</td>
+<td>Drop list</td>
+<td>Mã</td>
+<td>Không</td>
+<td>Trống</td>
+<td>Danh mục phòng ban GIP (VD BOD, PKD, AMD, ACC)</td>
+<td>Sửa được</td>
+<td>—</td>
+</tr>
+<tr>
+<td>D04</td>
+<td>Trưởng phòng</td>
+<td>Drop list</td>
+<td>Người dùng</td>
+<td>Không</td>
+<td>Trống</td>
+<td>Người dùng đang hoạt động</td>
+<td>Sửa được</td>
+<td>VR_03</td>
+</tr>
+<tr>
+<td>D05</td>
+<td>Mô tả</td>
+<td>Textbox</td>
+<td>Văn bản</td>
+<td>Không</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>—</td>
+</tr>
+<tr>
+<td>D06</td>
+<td>Trạng thái</td>
+<td>Label</td>
+<td>Đang hoạt động</td>
+<td>—</td>
+<td>Đang hoạt động</td>
+<td>Hệ thống</td>
+<td>Chỉ đọc</td>
+<td>—</td>
+</tr>
+<tr>
+<td>D07</td>
+<td>Số team, số người dùng</td>
+<td>Label</td>
+<td>Số</td>
+<td>—</td>
+<td>—</td>
+<td>Hệ thống tính (BR_09)</td>
+<td>Chỉ đọc</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phòng ban khởi tạo</strong> (BR_06)</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Phòng ban</th>
+<th>Mã danh mục GIP</th>
+<th>Phạm vi chức năng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PKD</td>
+<td>Phòng Kinh doanh</td>
+<td>PKD</td>
+<td>Lead, Pipeline, Báo giá, Hợp đồng, nộp bàn giao</td>
+</tr>
+<tr>
+<td>TNKH</td>
+<td>Phòng Trải nghiệm khách hàng</td>
+<td>AMD</td>
+<td>Customer 360, bàn giao, onboarding, sức khoẻ, gia hạn, tăng trưởng</td>
+</tr>
+</tbody>
+</table>
+<h4 id="522-vai-tro">5.2.2. Vai trò</h4>
+<table>
+<thead>
+<tr>
+<th>Mã trường</th>
+<th>Tên trường</th>
+<th>Thành phần UI</th>
+<th>Kiểu dữ liệu</th>
+<th>Bắt buộc</th>
+<th>Giá trị mặc định</th>
+<th>Nguồn / Danh sách giá trị</th>
+<th>Điều kiện hiển thị / Cho sửa</th>
+<th>Validation tham chiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V01</td>
+<td>Phòng ban</td>
+<td>Drop list</td>
+<td>Phòng ban</td>
+<td>Có (trừ System Admin)</td>
+<td>Trống</td>
+<td>Phòng ban đang hoạt động</td>
+<td>Chỉ đọc khi sửa</td>
+<td>VR_06</td>
+</tr>
+<tr>
+<td>V02</td>
+<td>Tên vai trò</td>
+<td>Textbox</td>
+<td>Văn bản</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>VR_04</td>
+</tr>
+<tr>
+<td>V03</td>
+<td>Mã vai trò</td>
+<td>Textbox</td>
+<td><code>R-</code> + chữ hoa</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Chỉ đọc khi sửa</td>
+<td>VR_05</td>
+</tr>
+<tr>
+<td>V04</td>
+<td>Cấp</td>
+<td>Drop list</td>
+<td>Danh sách</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Nhân viên · Quản lý · Trưởng phòng (cấp Quản trị hệ thống chỉ có System Admin, không chọn được)</td>
+<td>Sửa được; System Admin chỉ đọc</td>
+<td>VR_06</td>
+</tr>
+<tr>
+<td>V05</td>
+<td>Phạm vi dữ liệu</td>
+<td>Drop list</td>
+<td>Danh sách</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Của mình · Cả team · Tất cả · Chỉ xem</td>
+<td>Sửa ở drawer vai trò; màn Phân quyền chỉ hiển thị</td>
+<td>VR_06, VR_19</td>
+</tr>
+<tr>
+<td>V06</td>
+<td>Sao chép quyền từ vai trò</td>
+<td>Drop list</td>
+<td>Vai trò</td>
+<td>Không</td>
+<td>Trống</td>
+<td>Vai trò đang dùng</td>
+<td>Chỉ khi thêm</td>
+<td>—</td>
+</tr>
+<tr>
+<td>V07</td>
+<td>Mô tả</td>
+<td>Textbox</td>
+<td>Văn bản</td>
+<td>Không</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>—</td>
+</tr>
+<tr>
+<td>V08</td>
+<td>Trạng thái</td>
+<td>Label</td>
+<td>Đang dùng / Ngừng dùng</td>
+<td>—</td>
+<td>Đang dùng</td>
+<td>Hệ thống</td>
+<td>Đổi qua A7</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Vai trò khởi tạo</strong> (BR_10; file TNKH sheet 09 mục A)</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Vai trò</th>
+<th>Phòng ban</th>
+<th>Cấp</th>
+<th>Phạm vi dữ liệu</th>
+<th>Mô tả</th>
+<th>Quyền mặc định (✓ / ?)</th>
+<th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R-PKD-U</td>
+<td>PKD User (BD)</td>
+<td>Phòng Kinh doanh</td>
+<td>Nhân viên</td>
+<td>Của mình</td>
+<td>Lead, deal, báo giá, hợp đồng của mình</td>
+<td>24 / 6</td>
+<td>Đã xác nhận</td>
+</tr>
+<tr>
+<td>R-PKD-M</td>
+<td>PKD Manager</td>
+<td>Phòng Kinh doanh</td>
+<td>Quản lý</td>
+<td>Cả team</td>
+<td>Deal, báo giá, hợp đồng của team</td>
+<td>21 / 14</td>
+<td>Đã xác nhận</td>
+</tr>
+<tr>
+<td>R-PKD-MS</td>
+<td>PKD Master</td>
+<td>Phòng Kinh doanh</td>
+<td>Trưởng phòng</td>
+<td>Tất cả</td>
+<td>Toàn quyền dữ liệu PKD; quản lý mẫu báo giá; xoá lead, hợp đồng</td>
+<td>21 / 16</td>
+<td>Đã xác nhận</td>
+</tr>
+<tr>
+<td>R-AM</td>
+<td>AM</td>
+<td>Phòng Trải nghiệm khách hàng</td>
+<td>Nhân viên</td>
+<td>Của mình</td>
+<td>Khách hàng được phân công: onboarding, sức khoẻ, gia hạn, tăng trưởng, Issue</td>
+<td>25 / 7</td>
+<td>Đề xuất (file TNKH)</td>
+</tr>
+<tr>
+<td>R-AML</td>
+<td>AM Leader</td>
+<td>Phòng Trải nghiệm khách hàng</td>
+<td>Quản lý</td>
+<td>Cả team</td>
+<td>Giám sát danh mục team, phân công AM, duyệt G4</td>
+<td>27 / 11</td>
+<td>Đề xuất (file TNKH)</td>
+</tr>
+<tr>
+<td>R-TPTNKH</td>
+<td>TP.TNKH</td>
+<td>Phòng Trải nghiệm khách hàng</td>
+<td>Trưởng phòng</td>
+<td>Tất cả</td>
+<td>Quản trị nghiệp vụ và chất lượng dữ liệu P.TNKH</td>
+<td>30 / 10</td>
+<td>Đề xuất (file TNKH)</td>
+</tr>
+<tr>
+<td>R-SYSADMIN</td>
+<td>System Admin</td>
+<td>— (toàn hệ thống)</td>
+<td>Quản trị hệ thống</td>
+<td>Tất cả</td>
+<td>Vào được toàn bộ Cài đặt hệ thống: tổ chức, phân quyền, danh mục, pipeline, SLA, kiểm tra trùng, mẫu tài liệu, thông báo, lưu trữ, nhật ký</td>
+<td>1 / 0</td>
+<td>Đã xác nhận</td>
+</tr>
+</tbody>
+</table>
+<h4 id="523-team">5.2.3. Team</h4>
+<table>
+<thead>
+<tr>
+<th>Mã trường</th>
+<th>Tên trường</th>
+<th>Thành phần UI</th>
+<th>Kiểu dữ liệu</th>
+<th>Bắt buộc</th>
+<th>Giá trị mặc định</th>
+<th>Nguồn / Danh sách giá trị</th>
+<th>Điều kiện hiển thị / Cho sửa</th>
+<th>Validation tham chiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T01</td>
+<td>Tên team</td>
+<td>Textbox</td>
+<td>Văn bản</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>VR_07</td>
+</tr>
+<tr>
+<td>T02</td>
+<td>Phòng ban</td>
+<td>Drop list</td>
+<td>Phòng ban</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Phòng ban đang hoạt động</td>
+<td>Sửa được (A12)</td>
+<td>VR_10</td>
+</tr>
+<tr>
+<td>T03</td>
+<td>Trưởng nhóm</td>
+<td>Drop list</td>
+<td>Người dùng</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng cấp Quản lý cùng phòng, đang hoạt động</td>
+<td>Sửa được</td>
+<td>VR_08</td>
+</tr>
+<tr>
+<td>T05</td>
+<td>Chat ID nhóm Telegram</td>
+<td>Textbox</td>
+<td>Văn bản (VD <code>-100…</code>)</td>
+<td>Không</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h4 id="524-nguoi-dung">5.2.4. Người dùng</h4>
+<table>
+<thead>
+<tr>
+<th>Mã trường</th>
+<th>Tên trường</th>
+<th>Thành phần UI</th>
+<th>Kiểu dữ liệu</th>
+<th>Bắt buộc</th>
+<th>Giá trị mặc định</th>
+<th>Nguồn / Danh sách giá trị</th>
+<th>Điều kiện hiển thị / Cho sửa</th>
+<th>Validation tham chiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U01</td>
+<td>Họ tên</td>
+<td>Textbox</td>
+<td>Văn bản</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>VR_11</td>
+</tr>
+<tr>
+<td>U02</td>
+<td>Email đăng nhập</td>
+<td>Textbox</td>
+<td>Email</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>VR_12</td>
+</tr>
+<tr>
+<td>U03</td>
+<td>Mã PIC</td>
+<td>Textbox</td>
+<td><code>GIP</code> + số (Giả định)</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Chỉ đọc khi sửa</td>
+<td>VR_13</td>
+</tr>
+<tr>
+<td>U04</td>
+<td>Phòng ban</td>
+<td>Drop list</td>
+<td>Phòng ban</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Phòng ban đang hoạt động · “Không thuộc phòng ban” (System Admin)</td>
+<td>Sửa được (A13)</td>
+<td>VR_14</td>
+</tr>
+<tr>
+<td>U05</td>
+<td>Vai trò</td>
+<td>Drop list</td>
+<td>Vai trò</td>
+<td>Có</td>
+<td>Trống</td>
+<td>Vai trò đang dùng của phòng U04</td>
+<td>Sửa được</td>
+<td>VR_14, VR_16, VR_17</td>
+</tr>
+<tr>
+<td>U06</td>
+<td>Team</td>
+<td>Drop list</td>
+<td>Team</td>
+<td>Theo cấp (BR_11)</td>
+<td>Trống</td>
+<td>Team của phòng U04</td>
+<td>Sửa được</td>
+<td>VR_15, VR_17</td>
+</tr>
+<tr>
+<td>U07</td>
+<td>Telegram cá nhân</td>
+<td>Textbox</td>
+<td>@username</td>
+<td>Không</td>
+<td>Trống</td>
+<td>Người dùng nhập</td>
+<td>Sửa được</td>
+<td>—</td>
+</tr>
+<tr>
+<td>U08</td>
+<td>Trạng thái</td>
+<td>Label</td>
+<td>Chưa kích hoạt / Đang hoạt động / Ngừng hoạt động</td>
+<td>—</td>
+<td>Chưa kích hoạt</td>
+<td>Hệ thống (BR_19)</td>
+<td>Chỉ đọc</td>
+<td>—</td>
+</tr>
+<tr>
+<td>U09</td>
+<td>Đăng nhập gần nhất</td>
+<td>Label</td>
+<td>Ngày giờ (dd/mm/yyyy hh:mm, GMT+7)</td>
+<td>—</td>
+<td>Trống</td>
+<td>Hệ thống</td>
+<td>Chỉ đọc</td>
+<td>—</td>
+</tr>
+<tr>
+<td>N01</td>
+<td>Người nhận deal</td>
+<td>Drop list</td>
+<td>Người dùng</td>
+<td>Khi còn deal đang mở</td>
+<td>Trống</td>
+<td>Người dùng đang hoạt động, khác người bị ngừng</td>
+<td>Hộp thoại ngừng hoạt động</td>
+<td>VR_18</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-ac-ta-thao-tac">5.3. Đặc tả thao tác</h3>
+<table>
+<thead>
+<tr>
+<th>Mã thao tác</th>
+<th>Thành phần</th>
+<th>Điều kiện hiển thị / Kích hoạt</th>
+<th>Hành vi</th>
+<th>Kết quả / Điều hướng</th>
+<th>Quy tắc tham chiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OP_01</td>
+<td>Menu Tổ chức &amp; người dùng</td>
+<td>Người dùng giữ vai trò System Admin</td>
+<td>Mở màn, tab Phòng ban</td>
+<td>02.01.01</td>
+<td>BR_01</td>
+</tr>
+<tr>
+<td>OP_02</td>
+<td>+ Thêm phòng ban</td>
+<td>Tab Phòng ban</td>
+<td>Mở drawer trống</td>
+<td>02.01.02</td>
+<td>—</td>
+</tr>
+<tr>
+<td>OP_03</td>
+<td>Thêm phòng ban / Lưu thay đổi (drawer phòng ban)</td>
+<td>Drawer phòng ban</td>
+<td>Kiểm tra, lưu</td>
+<td>Đóng drawer, MSG_01</td>
+<td>VR_01 – VR_03</td>
+</tr>
+<tr>
+<td>OP_04</td>
+<td>⋯ › Sửa (phòng ban)</td>
+<td>Dòng phòng ban</td>
+<td>Mở drawer chế độ sửa</td>
+<td>02.01.02</td>
+<td>BR_07</td>
+</tr>
+<tr>
+<td>OP_05</td>
+<td>Tab Vai trò</td>
+<td>System Admin</td>
+<td>Hiển thị bảng vai trò</td>
+<td>02.01.03</td>
+<td>—</td>
+</tr>
+<tr>
+<td>OP_06</td>
+<td>+ Thêm vai trò / ⋯ › Sửa / ⋯ › Ngừng dùng</td>
+<td>Tab Vai trò</td>
+<td>Mở drawer / hỏi ngừng dùng</td>
+<td>02.01.04</td>
+<td>BR_13</td>
+</tr>
+<tr>
+<td>OP_07</td>
+<td>Thêm vai trò / Lưu thay đổi (drawer vai trò)</td>
+<td>Drawer vai trò</td>
+<td>Kiểm tra, lưu, sao chép quyền nếu chọn</td>
+<td>Đóng drawer, MSG_02</td>
+<td>VR_04 – VR_06, BR_12</td>
+</tr>
+<tr>
+<td>OP_08</td>
+<td>Tìm kiếm (team)</td>
+<td>Tab Team</td>
+<td>Lọc theo từ khoá</td>
+<td>Về trang 1</td>
+<td>BR_05</td>
+</tr>
+<tr>
+<td>OP_09</td>
+<td>Bộ lọc team</td>
+<td>Tab Team</td>
+<td>Lọc kết hợp</td>
+<td>Về trang 1</td>
+<td>BR_05</td>
+</tr>
+<tr>
+<td>OP_10</td>
+<td>+ Thêm team</td>
+<td>Tab Team</td>
+<td>Mở drawer trống</td>
+<td>02.01.07</td>
+<td>—</td>
+</tr>
+<tr>
+<td>OP_11</td>
+<td>⋯ › Sửa team</td>
+<td>Dòng team</td>
+<td>Mở drawer sửa</td>
+<td>02.01.06</td>
+<td>—</td>
+</tr>
+<tr>
+<td>OP_12</td>
+<td>Thêm team / Lưu team</td>
+<td>Drawer team</td>
+<td>Kiểm tra, lưu</td>
+<td>Đóng drawer, MSG_06</td>
+<td>VR_07 – VR_10</td>
+</tr>
+<tr>
+<td>OP_13</td>
+<td>Tìm kiếm (người dùng)</td>
+<td>Tab Người dùng</td>
+<td>Lọc theo từ khoá</td>
+<td>Về trang 1</td>
+<td>BR_05</td>
+</tr>
+<tr>
+<td>OP_14</td>
+<td>Bộ lọc người dùng</td>
+<td>Tab Người dùng</td>
+<td>Lọc kết hợp</td>
+<td>Về trang 1</td>
+<td>BR_05</td>
+</tr>
+<tr>
+<td>OP_15</td>
+<td>+ Thêm người dùng</td>
+<td>Tab Người dùng</td>
+<td>Mở drawer trống</td>
+<td>02.01.10</td>
+<td>—</td>
+</tr>
+<tr>
+<td>OP_16</td>
+<td>Thêm người dùng</td>
+<td>Drawer thêm</td>
+<td>Kiểm tra, tạo Chưa kích hoạt</td>
+<td>Đóng drawer, MSG_03</td>
+<td>VR_11 – VR_15</td>
+</tr>
+<tr>
+<td>OP_17</td>
+<td>⋯ › Sửa người dùng</td>
+<td>Dòng người dùng</td>
+<td>Mở drawer sửa</td>
+<td>02.01.11</td>
+<td>BR_18</td>
+</tr>
+<tr>
+<td>OP_18</td>
+<td>Lưu thay đổi (người dùng)</td>
+<td>Drawer sửa</td>
+<td>Kiểm tra, lưu</td>
+<td>Đóng drawer, MSG_04</td>
+<td>VR_11 – VR_17</td>
+</tr>
+<tr>
+<td>OP_19</td>
+<td>⋯ › Ngừng hoạt động / nút trong drawer</td>
+<td>Người dùng chưa Ngừng hoạt động</td>
+<td>Mở hộp thoại</td>
+<td>02.01.12</td>
+<td>—</td>
+</tr>
+<tr>
+<td>OP_20</td>
+<td>Ngừng hoạt động (hộp thoại)</td>
+<td>Hộp thoại</td>
+<td>Kiểm tra, chuyển PIC, đổi trạng thái</td>
+<td>MSG_05</td>
+<td>BR_21 – BR_23, VR_18</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-trang-thai-giao-dien">5.4. Trạng thái giao diện</h3>
+<table>
+<thead>
+<tr>
+<th>Trạng thái</th>
+<th>Điều kiện xuất hiện</th>
+<th>Cách hiển thị</th>
+<th>Thao tác được phép</th>
+<th>Điều kiện kết thúc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Đang tải</td>
+<td>Mở tab / đổi bộ lọc</td>
+<td>Khung bảng hiển thị trạng thái tải</td>
+<td>Không</td>
+<td>Có dữ liệu hoặc lỗi</td>
+</tr>
+<tr>
+<td>Không có dữ liệu</td>
+<td>Tìm kiếm / lọc không khớp</td>
+<td>Bảng trống kèm MSG_12</td>
+<td>Đổi từ khoá, bộ lọc</td>
+<td>Có kết quả</td>
+</tr>
+<tr>
+<td>Lỗi tải</td>
+<td>Không đọc được dữ liệu</td>
+<td>MSG_11 kèm nút Tải lại</td>
+<td>Tải lại</td>
+<td>Tải được</td>
+</tr>
+<tr>
+<td>Đang nhập</td>
+<td>Drawer / hộp thoại mở</td>
+<td>Các trường cho nhập</td>
+<td>Nhập, Hủy, Lưu</td>
+<td>Lưu hoặc Hủy</td>
+</tr>
+<tr>
+<td>Lỗi validation</td>
+<td>Lưu không hợp lệ</td>
+<td>Viền đỏ, thông báo tại trường (MSG_10)</td>
+<td>Sửa, Hủy</td>
+<td>Hợp lệ</td>
+</tr>
+<tr>
+<td>Đang lưu</td>
+<td>Bấm Lưu</td>
+<td>Nút Lưu ở trạng thái đang xử lý, khoá thao tác</td>
+<td>Không</td>
+<td>Lưu xong / lỗi</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-quy-tac-nghiep-vu-va-kiem-tra-du-lieu">6. QUY TẮC NGHIỆP VỤ VÀ KIỂM TRA DỮ LIỆU</h2>
+<h3 id="61-business-rules">6.1. Business Rules</h3>
+<p><strong>Chung</strong></p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Điều kiện áp dụng</th>
+<th>Kết quả xử lý</th>
+<th>Nguồn / Trạng thái xác nhận</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR_01</td>
+<td>Nhóm Tổ chức (Tổ chức &amp; người dùng, Phân quyền) và toàn bộ Cài đặt hệ thống chỉ System Admin vào được; quyền này gắn cố định với vai trò, không có ô quyền để cấp / bỏ. Vai trò khác không thấy menu Cài đặt hệ thống.</td>
+<td>Mọi use case</td>
+<td>Không phải System Admin: mục không hiển thị, gọi trực tiếp → từ chối</td>
+<td><strong>Đã xác nhận</strong> (người dùng 15/10/2026) · Q_01</td>
+</tr>
+<tr>
+<td>BR_02</td>
+<td>Nhóm Tổ chức gồm 2 mục: Tổ chức &amp; người dùng (Phòng ban · Vai trò · Team · Người dùng) và Phân quyền (Quyền hạn theo vai trò · Danh mục quyền).</td>
+<td>Mọi lúc</td>
+<td>—</td>
+<td><strong>Đã xác nhận</strong> (người dùng 13/10/2026)</td>
+</tr>
+<tr>
+<td>BR_03</td>
+<td>Mỗi lần lưu là trọn vẹn; riêng ngừng hoạt động: chuyển PIC và đổi trạng thái cùng thành công hoặc cùng không.</td>
+<td>Mọi thao tác lưu</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_04</td>
+<td>Mọi thay đổi ghi Nhật ký hoạt động: người thực hiện, thời điểm, đối tượng, trường, giá trị cũ → mới.</td>
+<td>Mọi thao tác lưu</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_05</td>
+<td>Danh sách team, người dùng: tìm kiếm khớp một phần, không phân biệt hoa / thường; bộ lọc kết hợp với nhau và với từ khoá; phân trang 20 dòng / trang (chọn 10 – 100); đổi từ khoá / bộ lọc → về trang 1.</td>
+<td>UC_PB04, UC_ND01</td>
+<td>—</td>
+<td><strong>Đề xuất</strong> (theo màn Leads)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phòng ban</strong></p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Điều kiện áp dụng</th>
+<th>Kết quả xử lý</th>
+<th>Nguồn / Trạng thái xác nhận</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR_06</td>
+<td>Khởi tạo có 2 phòng ban PKD, TNKH kèm mã danh mục GIP (bảng 5.2.1); Kho vận, DSP, Technology tạm hoãn. Phòng ban khởi tạo không xoá.</td>
+<td>Khởi tạo</td>
+<td>—</td>
+<td>Phòng ban, mã GIP: <strong>Đã xác nhận</strong> (file TNKH sheet 04, 09; tạm hoãn: người dùng 14/10/2026) · Không xoá: <strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_07</td>
+<td>Mã phòng ban không sửa sau khi tạo; tên, mã danh mục GIP, trưởng phòng, mô tả sửa được.</td>
+<td>UC_PB03</td>
+<td>Mã chỉ đọc</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_08</td>
+<td>Phòng ban mới chưa có vai trò, team, người dùng; người dùng chưa chọn được phòng này cho đến khi phòng có ít nhất một vai trò đang dùng.</td>
+<td>UC_PB02</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_09</td>
+<td>Số team = số team của phòng; số người dùng = số người dùng chưa Ngừng hoạt động thuộc phòng.</td>
+<td>Hiển thị</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Vai trò</strong></p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Điều kiện áp dụng</th>
+<th>Kết quả xử lý</th>
+<th>Nguồn / Trạng thái xác nhận</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR_10</td>
+<td>Vai trò là danh mục theo phòng ban: mỗi vai trò thuộc đúng 1 phòng ban (trừ System Admin), có cấp và phạm vi dữ liệu; khởi tạo 7 vai trò (bảng 5.2.2).</td>
+<td>Mọi lúc</td>
+<td>—</td>
+<td><strong>Đã xác nhận</strong> (người dùng 12/10/2026; file TNKH sheet 09 mục A)</td>
+</tr>
+<tr>
+<td>BR_11</td>
+<td>Cấp quyết định team: Nhân viên — bắt buộc thuộc 1 team; Quản lý — làm trưởng nhóm, chọn team tuỳ chọn (để thêm được trước khi có team); Trưởng phòng, Quản trị hệ thống — không thuộc team.</td>
+<td>UC_ND02, UC_ND03, UC_PB05</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_12</td>
+<td>Sao chép quyền khi tạo vai trò: chép các quyền đã tích của vai trò nguồn; phạm vi lấy theo trường Phạm vi dữ liệu mặc định của vai trò mới. Không chọn → vai trò mới chưa có quyền nào.</td>
+<td>UC_VT02</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_13</td>
+<td>Vai trò đang có người dùng không xoá, không ngừng dùng; ngừng dùng chỉ khi không còn người dùng.</td>
+<td>UC_VT02</td>
+<td>Chặn, hiện lý do</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Team</strong></p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Điều kiện áp dụng</th>
+<th>Kết quả xử lý</th>
+<th>Nguồn / Trạng thái xác nhận</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR_14</td>
+<td>Mỗi team thuộc đúng 1 phòng ban, có đúng 1 trưởng nhóm cấp Quản lý của cùng phòng; thành viên là người dùng cấp Nhân viên của cùng phòng. Không đổi phòng ban của team còn thành viên.</td>
+<td>UC_PB05, UC_PB06</td>
+<td>Chặn (A12)</td>
+<td><strong>Giả định cần xác nhận</strong></td>
+</tr>
+<tr>
+<td>BR_15</td>
+<td>Mỗi người dùng thuộc tối đa 1 team (chọn ở trường Team của người dùng); mỗi trưởng nhóm phụ trách tối đa 1 team. Đổi Team của người dùng → rời team cũ. Drawer team không có danh sách chọn thành viên.</td>
+<td>UC_PB05, UC_PB06, UC_ND02, UC_ND03</td>
+<td>—</td>
+<td><strong>Giả định cần xác nhận</strong> · bỏ chọn thành viên ở drawer team: <strong>Đã xác nhận</strong> (người dùng 15/10/2026)</td>
+</tr>
+<tr>
+<td>BR_16</td>
+<td>Team quyết định phạm vi “Cả team”: trưởng nhóm thấy bản ghi của mình và của thành viên team.</td>
+<td>Mọi kiểm tra phạm vi Cả team</td>
+<td>—</td>
+<td>File TNKH sheet 09 mục B · <strong>Đề xuất</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Người dùng</strong></p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Điều kiện áp dụng</th>
+<th>Kết quả xử lý</th>
+<th>Nguồn / Trạng thái xác nhận</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR_17</td>
+<td>Mỗi người dùng giữ đúng 1 vai trò; thuộc đúng 1 phòng ban của vai trò đó, trừ người giữ System Admin (không thuộc phòng ban).</td>
+<td>Mọi lúc</td>
+<td>—</td>
+<td><strong>Đã xác nhận</strong> (người dùng 12/10, 15/10/2026)</td>
+</tr>
+<tr>
+<td>BR_18</td>
+<td>Mỗi người dùng có 1 mã PIC duy nhất, không sửa sau khi tạo.</td>
+<td>UC_ND02, UC_ND03</td>
+<td>Chỉ đọc khi sửa</td>
+<td>GIP01 – GIP06: <strong>Đã xác nhận</strong> (Spec) · còn lại: <strong>Giả định cần xác nhận</strong></td>
+</tr>
+<tr>
+<td>BR_19</td>
+<td>Vòng đời tài khoản: Chưa kích hoạt (vừa tạo) → Đang hoạt động (đăng nhập lần đầu) → Ngừng hoạt động (người quản trị ngừng).</td>
+<td>UC_ND02, UC_ND04</td>
+<td>—</td>
+<td><strong>Giả định cần xác nhận</strong> (thiết kế) · Q_05, Q_06</td>
+</tr>
+<tr>
+<td>BR_20</td>
+<td>Không xoá người dùng; lịch sử stage, nhật ký, PIC trên deal đã đóng giữ nguyên.</td>
+<td>UC_ND04</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_21</td>
+<td>Ngừng hoạt động người còn deal đang mở (stage khác Closed Won / Closed Lost): người quản trị chọn người nhận; hệ thống đổi PIC các deal đó, ghi nhật ký từng deal.</td>
+<td>UC_ND04</td>
+<td>—</td>
+<td><strong>Đề xuất</strong> · Q_10</td>
+</tr>
+<tr>
+<td>BR_22</td>
+<td>Luôn còn ít nhất 1 người dùng Đang hoạt động giữ vai trò System Admin.</td>
+<td>UC_ND03, UC_ND04</td>
+<td>Chặn</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_23</td>
+<td>Trưởng nhóm của team còn thành viên: không ngừng hoạt động, không đổi vai trò khỏi cấp Quản lý, không chuyển team; phải đổi trưởng nhóm trước.</td>
+<td>UC_ND03, UC_ND04</td>
+<td>Chặn, hiện lý do</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_24</td>
+<td>Người dùng Ngừng hoạt động không có trong danh sách chọn người dùng (PIC, trưởng phòng, trưởng nhóm, thành viên, người nhận); người Chưa kích hoạt vẫn chọn được.</td>
+<td>Mọi danh sách chọn người dùng</td>
+<td>—</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>BR_25</td>
+<td>Tài khoản khởi tạo GIP00 (Admin GIP) giữ vai trò System Admin, là người quản trị đầu tiên.</td>
+<td>Khởi tạo</td>
+<td>—</td>
+<td><strong>Giả định cần xác nhận</strong></td>
+</tr>
+<tr>
+<td>BR_26</td>
+<td>Đổi phòng ban, vai trò, team, thành viên team có hiệu lực từ thao tác kế tiếp của người liên quan.</td>
+<td>UC_ND03, UC_PB05, UC_PB06</td>
+<td>—</td>
+<td><strong>Đề xuất</strong> · Q_09</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phân quyền</strong></p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Quy tắc</th>
+<th>Điều kiện áp dụng</th>
+<th>Kết quả xử lý</th>
+<th>Nguồn / Trạng thái xác nhận</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR_41</td>
+<td>System Admin là vai trò duy nhất ở cấp Quản trị hệ thống: không thuộc phòng ban, không thuộc team, phạm vi Tất cả; mặc định chỉ có quyền Quản lý mẫu báo giá trong danh mục, không có quyền nghiệp vụ; vào được toàn bộ Cài đặt hệ thống (02.01 – 02.04). Không tạo thêm, không ngừng dùng, không đổi cấp / phòng ban của vai trò này.</td>
+<td>UC_VT02, UC_ND02, UC_ND03, UC_PQ02</td>
+<td>Chặn (A9)</td>
+<td>Vai trò: <strong>Đã xác nhận</strong> (người dùng 15/10/2026) · không có quyền nghiệp vụ: <strong>Đề xuất</strong> · Q_15</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-validation-rules">6.2. Validation Rules</h3>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Trường / Đối tượng</th>
+<th>Điều kiện hợp lệ</th>
+<th>Thời điểm kiểm tra</th>
+<th>Cách xử lý khi vi phạm</th>
+<th>Mã thông báo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VR_01</td>
+<td>D01 Tên phòng ban</td>
+<td>Không trống; không trùng phòng ban khác (không phân biệt hoa / thường)</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_02</td>
+<td>D02 Mã phòng ban</td>
+<td>Không trống; chữ hoa không dấu, chữ số; không trùng</td>
+<td>Khi thêm</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_03</td>
+<td>D04 Trưởng phòng</td>
+<td>Nếu chọn: người dùng chưa Ngừng hoạt động</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_04</td>
+<td>V02 Tên vai trò</td>
+<td>Không trống; không trùng vai trò khác cùng phòng</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_05</td>
+<td>V03 Mã vai trò</td>
+<td>Không trống; dạng <code>R-</code> + chữ hoa không dấu / chữ số / gạch nối; không trùng toàn hệ thống</td>
+<td>Khi thêm</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_06</td>
+<td>V01, V04, V05</td>
+<td>Bắt buộc chọn (V01 trừ System Admin); không chọn cấp Quản trị hệ thống (BR_41); V05 không rộng hơn vai trò cấp cao hơn cùng phòng (BR_35)</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_07</td>
+<td>T01 Tên team</td>
+<td>Không trống; không trùng</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_08</td>
+<td>T03 Trưởng nhóm</td>
+<td>Cấp Quản lý, cùng phòng ban, chưa Ngừng hoạt động, chưa làm trưởng nhóm team khác (BR_15)</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_10</td>
+<td>T02 Phòng ban</td>
+<td>Bắt buộc; đang hoạt động; không đổi khi team còn thành viên (BR_14)</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_11</td>
+<td>U01 Họ tên</td>
+<td>Không rỗng (sau khi bỏ khoảng trắng đầu / cuối)</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_12</td>
+<td>U02 Email</td>
+<td>Đúng định dạng email; không trùng (không phân biệt hoa / thường)</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_13</td>
+<td>U03 Mã PIC</td>
+<td>Không rỗng; không trùng; định dạng <code>GIP</code> + số — <strong>Giả định</strong></td>
+<td>Khi thêm</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_14</td>
+<td>U04, U05</td>
+<td>Phòng ban đang hoạt động; vai trò đang dùng và thuộc phòng U04; U04 = “Không thuộc phòng ban” chỉ đi với System Admin</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_15</td>
+<td>U06 Team</td>
+<td>Bắt buộc với vai trò cấp Nhân viên; team đang hoạt động thuộc phòng U04</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_16</td>
+<td>U05 khi System Admin sửa chính mình</td>
+<td>Không đổi sang vai trò khác (BR_34)</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường Vai trò</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_17</td>
+<td>U05, U06 khi người dùng là trưởng nhóm hoặc System Admin đang hoạt động cuối cùng</td>
+<td>BR_22, BR_23</td>
+<td>Khi lưu</td>
+<td>Lỗi tại trường Vai trò / Team</td>
+<td>MSG_10</td>
+</tr>
+<tr>
+<td>VR_18</td>
+<td>N01 Người nhận deal</td>
+<td>Bắt buộc khi còn deal đang mở; khác người bị ngừng; đang hoạt động</td>
+<td>Bấm Ngừng hoạt động</td>
+<td>Lỗi tại trường</td>
+<td>MSG_10</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-phan-quyen">7. PHÂN QUYỀN</h2>
+<table>
+<thead>
+<tr>
+<th>Vai trò</th>
+<th>Hành động được phép</th>
+<th>Phạm vi dữ liệu</th>
+<th>Điều kiện bổ sung</th>
+<th>Hành vi khi không đủ quyền</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>System Admin</td>
+<td>Xem, thêm, sửa phòng ban, vai trò, team, người dùng; ngừng hoạt động người dùng; xem danh mục quyền; cấu hình quyền hạn theo vai trò; các cấu hình khác của Cài đặt hệ thống (02.02 – 02.04)</td>
+<td>Toàn hệ thống (PKD, TNKH)</td>
+<td>BR_22, BR_23, BR_34</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Vai trò khác (kể cả PKD Master, TP.TNKH)</td>
+<td>Không có</td>
+<td>—</td>
+<td>—</td>
+<td>Không thấy nhóm Tổ chức trong menu Cài đặt; gọi trực tiếp → từ chối (BR_31). PKD Master vẫn quản lý mẫu báo giá nếu được cấp <code>quote.manage_template</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Quyền nghiệp vụ của từng vai trò trong các module khác: bảng 5.2.6.</p>
+<hr />
+<h2 id="8-du-lieu-va-tich-hop">8. DỮ LIỆU VÀ TÍCH HỢP</h2>
+<table>
+<thead>
+<tr>
+<th>Use case</th>
+<th>Dữ liệu đọc</th>
+<th>Dữ liệu tạo / cập nhật</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC_PB01 – UC_PB03</td>
+<td>Phòng ban, người dùng (trưởng phòng), số team / người dùng</td>
+<td>Phòng ban (D01 – D05); nhật ký</td>
+</tr>
+<tr>
+<td>UC_VT01, UC_VT02</td>
+<td>Vai trò, số người dùng, số quyền đang bật</td>
+<td>Vai trò (V01 – V08); quyền sao chép; nhật ký</td>
+</tr>
+<tr>
+<td>UC_PB04 – UC_PB06</td>
+<td>Team, phòng ban, người dùng</td>
+<td>Team (T01 – T03, T05); nhật ký</td>
+</tr>
+<tr>
+<td>UC_ND01 – UC_ND03</td>
+<td>Người dùng, phòng ban, vai trò, team</td>
+<td>Người dùng (U01 – U07); nhật ký</td>
+</tr>
+<tr>
+<td>UC_ND04</td>
+<td>Deal đang mở của người dùng</td>
+<td>Trạng thái người dùng; PIC của deal đang mở; nhật ký từng deal</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Điều chỉnh cần có ở thiết kế CSDL</strong> (DB v0.5 vẫn theo mô hình 3 vai trò cố định) — <strong>Đề xuất cho DB v0.6</strong>
+- Thêm bảng vai trò (phòng ban — cho phép trống với System Admin, mã, tên, cấp gồm Quản trị hệ thống, phạm vi dữ liệu, trạng thái); người dùng tham chiếu vai trò thay cho cột vai trò dạng liệt kê; <code>users.department_id</code> cho phép trống với System Admin.
+- Bảng cấp quyền theo vai trò (vai trò, mã quyền, được cấp, giá trị mặc định); bỏ bảng phạm vi theo (phòng ban, vai trò) vì phạm vi nằm trên vai trò.
+- Phòng ban thêm mã danh mục GIP.</p>
+<p><strong>Tích hợp:</strong> danh mục phòng ban GIP lấy từ nguồn GIP (không tự tạo mã). Telegram: chỉ lưu @username và Chat ID ở đây; việc gửi tin thuộc chức năng Thông báo &amp; Telegram. Cách lấy chat ID cá nhân từ @username: Chưa xác định (Q_12).</p>
+<hr />
+<h2 id="9-thong-bao-va-lich-su-thao-tac">9. THÔNG BÁO VÀ LỊCH SỬ THAO TÁC</h2>
+<h3 id="91-thong-bao">9.1. Thông báo</h3>
+<p>Nội dung là <strong>nội dung đề xuất</strong> (chưa có văn bản chính thức).</p>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Tình huống</th>
+<th>Nội dung</th>
+<th>Vị trí / Cách hiển thị</th>
+<th>Cách đóng / Thời gian tồn tại</th>
+<th>Hành động tiếp theo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSG_01</td>
+<td>Thêm / sửa phòng ban thành công</td>
+<td>“Đã thêm phòng ban “{Tên}”.” / “Đã lưu thay đổi phòng ban “{Tên}”.”</td>
+<td>Toast</td>
+<td>Tự đóng (thời gian: Chưa xác định)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MSG_02</td>
+<td>Lưu vai trò thành công</td>
+<td>“Đã lưu vai trò “{Tên}”.”</td>
+<td>Toast</td>
+<td>Như trên</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MSG_03</td>
+<td>Thêm người dùng thành công</td>
+<td>“Đã thêm {Họ tên} · {Mã PIC}. Tài khoản ở trạng thái Chưa kích hoạt.”</td>
+<td>Toast</td>
+<td>Như trên</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MSG_04</td>
+<td>Sửa người dùng thành công</td>
+<td>“Đã lưu thông tin {Họ tên}.”</td>
+<td>Toast</td>
+<td>Như trên</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MSG_05</td>
+<td>Ngừng hoạt động thành công</td>
+<td>“Đã ngừng hoạt động {Họ tên}. {n} deal đã chuyển cho {người nhận}.”</td>
+<td>Toast</td>
+<td>Như trên</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MSG_06</td>
+<td>Thêm / sửa team thành công</td>
+<td>“Đã lưu {Tên team}.”</td>
+<td>Toast</td>
+<td>Như trên</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MSG_10</td>
+<td>Lỗi validation</td>
+<td>Theo từng quy tắc, VD: “Tên phòng ban đã tồn tại.” · “Mã PIC đã được dùng cho người dùng khác.” · “Hệ thống cần ít nhất một System Admin đang hoạt động.” · “Đổi trưởng nhóm của {Tên team} trước khi đổi vai trò người này.” · “Chọn người nhận các deal đang mở.” · “Phạm vi của {vai trò} không được rộng hơn {vai trò cấp trên}.” · “Cần quyền xem của nhóm {nhóm} trước.”</td>
+<td>Tại trường / ô vi phạm</td>
+<td>Mất khi sửa đúng</td>
+<td>Sửa dữ liệu</td>
+</tr>
+<tr>
+<td>MSG_11</td>
+<td>Lỗi hệ thống / lưu thất bại / lỗi tải</td>
+<td>“Chưa thực hiện được. Vui lòng thử lại.”</td>
+<td>Toast lỗi (lỗi tải: trong khung bảng, có nút Tải lại)</td>
+<td>Tự đóng / khi tải lại</td>
+<td>Thử lại</td>
+</tr>
+<tr>
+<td>MSG_12</td>
+<td>Danh sách trống sau tìm kiếm / lọc</td>
+<td>“Không tìm thấy {team / người dùng} phù hợp. Thử đổi từ khoá hoặc bộ lọc.”</td>
+<td>Vùng bảng</td>
+<td>Mất khi có kết quả</td>
+<td>Đổi từ khoá / bộ lọc</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-lich-su-thao-tac">9.2. Lịch sử thao tác</h3>
+<table>
+<thead>
+<tr>
+<th>Sự kiện</th>
+<th>Thông tin ghi nhận</th>
+<th>Người được xem</th>
+<th>Quy tắc tham chiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thêm / sửa phòng ban</td>
+<td>Người thực hiện, thời điểm, các trường; cũ → mới</td>
+<td>Người quản trị</td>
+<td>BR_04</td>
+</tr>
+<tr>
+<td>Thêm / sửa / ngừng dùng vai trò</td>
+<td>Các trường V01 – V08; vai trò nguồn khi sao chép</td>
+<td>Người quản trị</td>
+<td>BR_04, BR_12</td>
+</tr>
+<tr>
+<td>Thêm / sửa team</td>
+<td>Trường thay đổi</td>
+<td>Người quản trị</td>
+<td>BR_04</td>
+</tr>
+<tr>
+<td>Thêm / sửa người dùng</td>
+<td>Trường thay đổi, cũ → mới (VD “PKD User → PKD Manager”, “Team Bán hàng 1 → Team Bán hàng 2”)</td>
+<td>Người quản trị</td>
+<td>BR_04</td>
+</tr>
+<tr>
+<td>Ngừng hoạt động</td>
+<td>Trạng thái cũ → mới; người nhận; danh sách deal đã chuyển PIC</td>
+<td>Người quản trị</td>
+<td>BR_04, BR_21</td>
+</tr>
+<tr>
+<td>Chuyển PIC do ngừng hoạt động</td>
+<td>Với từng deal: PIC cũ → mới, lý do “Ngừng hoạt động {Mã PIC}”</td>
+<td>Người xem được deal theo quyền</td>
+<td>BR_21</td>
+</tr>
+</tbody>
+</table>
+<p>Thời gian lưu nhật ký: Chưa xác định (Q_13). Đây là lịch sử nghiệp vụ, tách khỏi log kỹ thuật.</p>
+<hr />
+<h2 id="10-tieu-chi-nghiem-thu-acceptance-criteria">10. TIÊU CHÍ NGHIỆM THU — ACCEPTANCE CRITERIA</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Given — Điều kiện ban đầu</th>
+<th>When — Hành động</th>
+<th>Then — Kết quả mong đợi</th>
+<th>Yêu cầu / Quy tắc tham chiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AC_01</td>
+<td>Người dùng vai trò PKD User đăng nhập</td>
+<td>Mở Cài đặt</td>
+<td>Không thấy nhóm Tổ chức; gọi trực tiếp đường dẫn → bị từ chối</td>
+<td>BR_01, BR_31</td>
+</tr>
+<tr>
+<td>AC_02</td>
+<td>System Admin</td>
+<td>Mở Cài đặt › Tổ chức &amp; người dùng</td>
+<td>Tab Phòng ban mở mặc định, 4 tab có số lượng; bảng có 2 phòng ban khởi tạo</td>
+<td>BR_02, BR_06</td>
+</tr>
+<tr>
+<td>AC_03</td>
+<td>Tab Phòng ban</td>
+<td>Thêm phòng ban trùng tên “Phòng Kinh doanh”</td>
+<td>Không lưu; lỗi “Tên phòng ban đã tồn tại.” tại trường Tên</td>
+<td>VR_01</td>
+</tr>
+<tr>
+<td>AC_04</td>
+<td>Phòng ban PKD</td>
+<td>Mở ⋯ › Sửa</td>
+<td>Trường Mã chỉ đọc; sửa được Tên, Mã danh mục GIP, Trưởng phòng, Mô tả</td>
+<td>BR_07</td>
+</tr>
+<tr>
+<td>AC_05</td>
+<td>Phòng ban mới vừa tạo</td>
+<td>Mở drawer Thêm người dùng, chọn phòng ban mới</td>
+<td>Phòng mới chưa chọn được (chưa có vai trò đang dùng)</td>
+<td>BR_08</td>
+</tr>
+<tr>
+<td>AC_06</td>
+<td>Tab Vai trò</td>
+<td>Thêm vai trò “Chuyên viên onboarding”, phòng TNKH, cấp Nhân viên, phạm vi Của mình, sao chép quyền từ AM</td>
+<td>Vai trò mới có đúng các quyền đã tích của AM, phạm vi Của mình; MSG_02</td>
+<td>BR_12</td>
+</tr>
+<tr>
+<td>AC_07</td>
+<td>Vai trò AM đang có 1 người dùng</td>
+<td>⋯ › Ngừng dùng</td>
+<td>Bị chặn: “Chuyển 1 người dùng sang vai trò khác trước khi ngừng dùng.”</td>
+<td>BR_13</td>
+</tr>
+<tr>
+<td>AC_08</td>
+<td>Drawer Thêm vai trò</td>
+<td>Mở danh sách Phạm vi dữ liệu mặc định</td>
+<td>Có đúng 4 giá trị Của mình · Cả team · Tất cả · Chỉ xem</td>
+<td>BR_29</td>
+</tr>
+<tr>
+<td>AC_09</td>
+<td>Tab Team</td>
+<td>Thêm team chọn trưởng nhóm GIP02 đang là trưởng nhóm Team Bán hàng 1</td>
+<td>Không lưu; lỗi tại Trưởng nhóm</td>
+<td>VR_08, BR_15</td>
+</tr>
+<tr>
+<td>AC_10</td>
+<td>GIP01 thuộc Team Bán hàng 1</td>
+<td>Sửa người dùng GIP01, đổi Team sang Team Bán hàng 2, Lưu</td>
+<td>GIP01 rời Team Bán hàng 1, vào Team Bán hàng 2; trưởng nhóm Team 2 thấy deal của GIP01 ngay</td>
+<td>BR_15, BR_16, BR_26</td>
+</tr>
+<tr>
+<td>AC_11</td>
+<td>Team Bán hàng 1 còn thành viên</td>
+<td>Đổi Phòng ban của team</td>
+<td>Bị chặn, yêu cầu gỡ thành viên trước</td>
+<td>BR_14</td>
+</tr>
+<tr>
+<td>AC_12</td>
+<td>Tab Team / Người dùng</td>
+<td>Nhập từ khoá không khớp</td>
+<td>Bảng trống kèm MSG_12; bộ lọc giữ nguyên</td>
+<td>BR_05</td>
+</tr>
+<tr>
+<td>AC_13</td>
+<td>Drawer Thêm người dùng</td>
+<td>Chọn phòng Kinh doanh</td>
+<td>Vai trò chỉ gồm PKD User, PKD Manager, PKD Master</td>
+<td>VR_14</td>
+</tr>
+<tr>
+<td>AC_14</td>
+<td>Drawer Thêm người dùng, vai trò PKD User</td>
+<td>Lưu khi chưa chọn Team</td>
+<td>Không lưu; lỗi tại Team</td>
+<td>VR_15, BR_11</td>
+</tr>
+<tr>
+<td>AC_15</td>
+<td>Drawer Thêm người dùng</td>
+<td>Chọn vai trò PKD Master</td>
+<td>Trường Team khoá, hiển thị “—”; lưu được khi không có team</td>
+<td>BR_11, A14</td>
+</tr>
+<tr>
+<td>AC_16</td>
+<td>Drawer Thêm người dùng</td>
+<td>Nhập mã PIC GIP01 đã tồn tại</td>
+<td>Lỗi “Mã PIC đã được dùng cho người dùng khác.”</td>
+<td>VR_13</td>
+</tr>
+<tr>
+<td>AC_17</td>
+<td>Thêm người dùng hợp lệ</td>
+<td>Bấm Thêm người dùng</td>
+<td>Tài khoản trạng thái Chưa kích hoạt; MSG_03; ghi nhật ký</td>
+<td>BR_19, BR_04</td>
+</tr>
+<tr>
+<td>AC_18</td>
+<td>Drawer Sửa người dùng</td>
+<td>Mở</td>
+<td>Mã PIC, Trạng thái, Đăng nhập gần nhất chỉ đọc</td>
+<td>BR_18</td>
+</tr>
+<tr>
+<td>AC_19</td>
+<td>GIP00 là System Admin đang hoạt động duy nhất</td>
+<td>Người quản trị khác (nếu có) đổi vai trò GIP00 sang PKD Manager hoặc ngừng hoạt động GIP00</td>
+<td>Bị chặn: “Hệ thống cần ít nhất một System Admin đang hoạt động.”</td>
+<td>BR_22</td>
+</tr>
+<tr>
+<td>AC_20</td>
+<td>GIP02 là trưởng nhóm Team Bán hàng 1 còn thành viên</td>
+<td>Ngừng hoạt động GIP02</td>
+<td>Bị chặn: “Đổi trưởng nhóm của Team Bán hàng 1 trước …”</td>
+<td>BR_23</td>
+</tr>
+<tr>
+<td>AC_21</td>
+<td>GIP05 có 3 deal đang mở, 2 deal Closed Won</td>
+<td>Ngừng hoạt động GIP05, chọn người nhận GIP04</td>
+<td>3 deal đang mở đổi PIC sang GIP04, mỗi deal có nhật ký; 2 deal đã đóng giữ PIC GIP05; GIP05 không đăng nhập được</td>
+<td>BR_21, BR_20</td>
+</tr>
+<tr>
+<td>AC_22</td>
+<td>Ngừng hoạt động khi còn deal đang mở</td>
+<td>Bấm Ngừng hoạt động khi chưa chọn người nhận</td>
+<td>Không thực hiện; lỗi tại ô người nhận</td>
+<td>VR_18</td>
+</tr>
+<tr>
+<td>AC_23</td>
+<td>GIP05 đã Ngừng hoạt động</td>
+<td>Mở danh sách chọn PIC ở màn Leads</td>
+<td>Không có GIP05</td>
+<td>BR_24</td>
+</tr>
+<tr>
+<td>AC_33</td>
+<td>Hệ thống mới</td>
+<td>Mở tab Vai trò</td>
+<td>7 dòng; System Admin: Phòng ban “Toàn hệ thống”, Cấp “Quản trị hệ thống”, Tất cả, 1 người dùng, 1/67 quyền</td>
+<td>BR_10, BR_41</td>
+</tr>
+<tr>
+<td>AC_34</td>
+<td>GIP11 (PKD Master) đăng nhập</td>
+<td>Mở Cài đặt hệ thống</td>
+<td>Không thấy nhóm Tổ chức và các mục cấu hình; gọi trực tiếp → từ chối</td>
+<td>BR_01, BR_33</td>
+</tr>
+<tr>
+<td>AC_35</td>
+<td>Drawer Thêm người dùng</td>
+<td>Chọn Phòng ban “Không thuộc phòng ban”</td>
+<td>Vai trò chỉ còn System Admin; Team khoá “—”; lưu được</td>
+<td>BR_17, A13, A14</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-yeu-cau-phi-chuc-nang-lien-quan">11. YÊU CẦU PHI CHỨC NĂNG LIÊN QUAN</h2>
+<table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Yêu cầu</th>
+<th>Nguồn / Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR_01</td>
+<td>Kiểm tra quyền và phạm vi ở máy chủ cho mọi thao tác; giao diện chỉ ẩn / khoá để hướng dẫn người dùng.</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+<tr>
+<td>NFR_02</td>
+<td>Thay đổi quyền hạn, vai trò, team có hiệu lực từ thao tác kế tiếp mà không cần khởi động lại hệ thống.</td>
+<td><strong>Đề xuất</strong> · Q_09</td>
+</tr>
+<tr>
+<td>NFR_03</td>
+<td>Danh sách người dùng, team mở trong thời gian hợp lý với vài trăm bản ghi; ngưỡng cụ thể: Chưa xác định.</td>
+<td><strong>Chưa xác định</strong></td>
+</tr>
+<tr>
+<td>NFR_04</td>
+<td>Nhật ký thay đổi cấu hình không sửa, không xoá từ giao diện.</td>
+<td><strong>Đề xuất</strong></td>
+</tr>
+</tbody>
+</table>
+</main>
+</body>
+</html>

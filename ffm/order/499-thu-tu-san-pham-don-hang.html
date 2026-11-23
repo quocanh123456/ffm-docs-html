@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#499 Cấu hình thứ tự sắp xếp sản phẩm trong đơn hàng từ POS</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+    --primary: #1677ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--pos)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #0369a1 55%, #0284c7 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(14,165,233,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #bae6fd; font-weight: 600; }
+  .hero h1 { font-size: 28px; line-height: 1.25; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #e0f2fe; max-width: 820px; margin: 0; font-size: 15px; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #f0f9ff; border: 1px solid rgba(255,255,255,.16); }
+  .chip a { color: #fff; font-weight: 500; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 20px; letter-spacing: -.01em; color: var(--ink); }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 9px 12px; border-bottom: 1px solid var(--line); background: #fafafa; }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t tr:hover td { background: #fafcff; }
+
+  /* Prototype container */
+  .proto-wrap { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; box-shadow: var(--shadow); }
+  .proto-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--ink2); }
+  .proto-bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #cbd5e1; }
+  .proto-body { padding: 20px; background: #f5f5f5; }
+
+  /* Modal UI mockup */
+  .mock-modal { background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,.08); border: 1px solid #e2e8f0; overflow: hidden; }
+  .mock-header { height: 50px; padding: 0 18px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+  .mock-header h3 { font-size: 15px; margin: 0; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .badge-approved { background: #1677ff; color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+  
+  .mock-sec { padding: 16px 18px; border-bottom: 1px solid #f0f0f0; }
+  .mock-sec:last-child { border-bottom: none; }
+  .mock-sec h4 { margin: 0 0 12px; font-size: 13.5px; font-weight: 600; color: #1f1f1f; }
+  
+  .mock-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px; }
+  .mock-label { display: flex; align-items: center; gap: 6px; color: #1f1f1f; }
+  
+  /* Radios */
+  .mock-radios { display: flex; gap: 16px; align-items: center; }
+  .m-radio { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; font-size: 13px; }
+  .m-dot { width: 15px; height: 15px; border: 1px solid #d9d9d9; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #fff; }
+  .m-radio.checked .m-dot { border-color: #1677ff; }
+  .m-radio.checked .m-dot::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #1677ff; }
+  .m-radio.checked span { color: #1677ff; font-weight: 500; }
+
+  /* Tooltip */
+  .tip-icon { color: #1677ff; cursor: pointer; position: relative; font-size: 13px; }
+  .tip-box { display: none; position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); background: #1f1f1f; color: #fff; padding: 7px 10px; border-radius: 4px; font-size: 11.5px; line-height: 1.4; width: 280px; z-index: 10; white-space: normal; }
+  .tip-icon:hover .tip-box { display: block; }
+
+  /* Switch */
+  .m-sw { width: 42px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; vertical-align: middle; }
+  .m-sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .m-sw.on { background: #1677ff; } .m-sw.on::after { left: 24px; }
+
+  /* Toast demo */
+  .toast { position: fixed; top: 20px; right: 20px; background: #fff; border-left: 4px solid var(--green); box-shadow: 0 6px 16px rgba(0,0,0,0.12); padding: 10px 16px; border-radius: 4px; font-size: 13px; display: none; z-index: 99; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>FFM · #499</div>
+  <nav class="nav">
+    <a href="#hien-trang">Hiện trạng</a>
+    <a href="#giai-thich">Giải thích 2 kiểu sắp xếp</a>
+    <a href="#prototype">Prototype cấu hình</a>
+    <a href="#quy-tac">Business rules</a>
+    <a href="#dev">Cho dev</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Order · Đặc tả & Prototype</div>
+  <h1>Cấu hình thứ tự sắp xếp sản phẩm trong đơn hàng từ POS</h1>
+  <p>Cho phép từng shop tự cấu hình kiểu sắp xếp sản phẩm trong đơn hàng đồng bộ từ POS về FFM. Giúp shop ghi nhận đúng sản phẩm chính của combo (được nhân viên chọn vào đơn đầu tiên trên POS) để tính doanh số và KPI marketing chính xác.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i499" target="_blank">Pancakework #499</a></span>
+    <span class="chip">Shop yêu cầu: AFG Thailand / Ruza</span>
+    <span class="chip">Tech lead: Sơn Hoàng</span>
+    <span class="chip">Cập nhật: 11/11/2026</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>2 tùy chọn</b><span>Newest to oldest & Oldest to newest</span></div>
+  <div class="kpi"><b>Mặc định</b><span>Newest to oldest (giữ nguyên FFM)</span></div>
+  <div class="kpi"><b>Vị trí</b><span>Cài đặt shop › Order sync</span></div>
+  <div class="kpi"><b>SaaS Opt-in</b><span>Chỉ áp dụng cho shop chủ động chọn</span></div>
+</div>
+
+<section id="hien-trang">
+  <div class="sec-h"><span class="n">01</span><h2>Hiện trạng & Vấn đề</h2><p>Lệch thứ tự sản phẩm giữa POS và FFM</p></div>
+  <div class="card">
+    <table class="t">
+      <tr><th style="width: 220px;">Hệ thống / Góc nhìn</th><th>Mô tả chi tiết</th></tr>
+      <tr>
+        <td><b>Trên Pancake POS</b></td>
+        <td>Thứ tự sản phẩm trong đơn hàng lưu và hiển thị đúng theo <b>thời điểm nhân viên thêm vào đơn</b>: Sản phẩm nào bấm chọn trước sẽ nằm ở dòng đầu tiên (dòng 1), các sản phẩm chọn sau nằm ở các dòng tiếp theo. Thông thường, nhân viên bán hàng luôn chọn <b>sản phẩm chính của combo</b> lên đầu tiên.</td>
+      </tr>
+      <tr>
+        <td><b>Trên Pancake FFM (Lỗi)</b></td>
+        <td>Khi đồng bộ đơn sang FFM, thứ tự mảng sản phẩm bị đảo ngược: Sản phẩm thêm đầu tiên trên POS bị đẩy xuống dòng cuối cùng, sản phẩm thêm sau cùng lại nhảy lên dòng đầu tiên.</td>
+      </tr>
+      <tr>
+        <td><b>Nỗi đau của Shop</b></td>
+        <td>Shop tính doanh số và KPI cho đội ngũ marketing theo sản phẩm chính của combo (dòng 1). Do thứ tự bị đảo lộn trên FFM, việc thống kê doanh số marketing bị sai lệch; nhân viên kho và CS cũng bị nhầm lẫn khi đối soát đơn giữa hai màn hình.</td>
+      </tr>
+      <tr>
+        <td><b>Giải pháp kiến trúc (SaaS)</b></td>
+        <td>Không hardcode áp đặt một chiều cho mọi shop. Bổ sung cấu hình <b>Sort products by</b> trong Cài đặt shop (Connected Shop detail) để shop tự chọn kiểu sắp xếp mong muốn. Mặc định giữ nguyên cơ chế FFM hiện tại để không ảnh hưởng các client khác.</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<section id="giai-thich">
+  <div class="sec-h"><span class="n">02</span><h2>Giải thích 2 kiểu sắp xếp</h2><p>Dựa trên thời điểm nhân viên thao tác chọn sản phẩm vào đơn trên POS</p></div>
+  <div class="card">
+    <table class="t">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Tùy chọn sắp xếp</th>
+          <th>Bản chất nghiệp vụ</th>
+          <th>Ví dụ thực tế (Đơn OWMYZMM)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <b>Newest to oldest</b><br>
+            <span class="pill p-info">Mặc định của FFM</span>
+          </td>
+          <td>
+            Giữ nguyên cơ chế hiện tại của FFM. Sản phẩm được chọn vào đơn <b>sau cùng</b> trên POS sẽ hiển thị ở dòng trên cùng.
+          </td>
+          <td>
+            Nhân viên POS chọn: Áo A082 (chọn trước) → Quần 390 (chọn sau).<br>
+            → Trên FFM hiển thị: <b>Quần 390 ở trên, Áo A082 ở dưới cùng</b>.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <b>Oldest to newest</b><br>
+            <span class="pill p-ok">Theo thứ tự POS</span>
+          </td>
+          <td>
+            Hiển thị đúng theo thứ tự thao tác trên POS. Sản phẩm được chọn vào đơn <b>trước</b> trên POS sẽ hiển thị ở dòng trên cùng.
+          </td>
+          <td>
+            Nhân viên POS chọn: Áo A082 (chọn trước) → Quần 390 (chọn sau).<br>
+            → Trên FFM hiển thị: <b>Áo A082 ở trên (dòng 1), Quần 390 ở dưới</b> (đúng nhu cầu shop).
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">03</span><h2>Prototype — Cài đặt Shop</h2><p>Bấm thử: Chọn giữa "Newest to oldest" và "Oldest to newest" để xem phản hồi</p></div>
+
+  <div class="proto-wrap">
+    <div class="proto-bar">
+      <i></i><i></i><i></i>
+      <span>fulfillment.pancake.vn/admin/setting/shop › Connected Shop: AFG TH 25 - Ruza Thailand</span>
+    </div>
+    
+    <div class="proto-body">
+      <div class="mock-modal">
+        <div class="mock-header">
+          <h3>
+            851 - 408116196 - AFG TH 25 - Ruza Thailand
+            <span class="badge-approved">Approved ▾</span>
+          </h3>
+          <span style="margin-left:auto; cursor:pointer; color:#94a3b8;">✕</span>
+        </div>
+
+        <!-- Section: Connection -->
+        <div class="mock-sec">
+          <h4>Connection</h4>
+          <div class="mock-row">
+            <span class="mock-label">Connect type</span>
+            <div class="mock-radios">
+              <label class="m-radio checked"><span class="m-dot"></span><span>Fulfillment</span></label>
+              <label class="m-radio"><span class="m-dot"></span><span>Shipping Courier</span></label>
+            </div>
+          </div>
+          <div class="mock-row">
+            <span class="mock-label">FFM warehouse</span>
+            <span style="border:1px solid #d9d9d9; padding:4px 10px; border-radius:4px; font-size:12px; background:#fff;">
+              AFG Thailand - เลขที่ 25 ซอยลาดปลาเค้า 14 แขวงจรเข้บัว... ▾
+            </span>
+          </div>
+        </div>
+
+        <!-- Section: Order sync -->
+        <div class="mock-sec" style="background: #fafcff;">
+          <h4 style="color:#0369a1;">Order sync</h4>
+          
+          <div class="mock-row">
+            <span class="mock-label">Auto Sync Order <span class="tip-icon">ⓘ<span class="tip-box">Tự động đồng bộ đơn từ POS sang FFM</span></span></span>
+            <span class="m-sw on"></span>
+          </div>
+
+          <div class="mock-row">
+            <span class="mock-label">Auto Sync Marketplace Order <span class="tip-icon">ⓘ<span class="tip-box">Tự động đồng bộ đơn sàn</span></span></span>
+            <span class="m-sw on"></span>
+          </div>
+
+          <!-- MỤC CẤU HÌNH MỚI BỔ SUNG -->
+          <div class="mock-row" style="background:#eff6ff; padding:10px 12px; border-radius:6px; border:1px solid #bfdbfe; margin-top:6px;">
+            <span class="mock-label" style="font-weight:600; color:#1e40af;">
+              Sort products by
+              <span class="tip-icon">ⓘ
+                <span class="tip-box">
+                  Chọn thứ tự hiển thị sản phẩm trong chi tiết đơn hàng:<br>
+                  • <b>Newest to oldest (mặc định):</b> Sản phẩm thêm vào đơn sau trên POS sẽ nằm ở trên.<br>
+                  • <b>Oldest to newest:</b> Sản phẩm thêm vào đơn trước trên POS sẽ nằm ở trên (chuẩn theo POS).
+                </span>
+              </span>
+            </span>
+            
+            <div class="mock-radios">
+              <label class="m-radio checked" id="radioNewest" onclick="setSortMode('newest')">
+                <span class="m-dot"></span>
+                <span>Newest to oldest <small style="color:#64748b;">(Mặc định FFM)</small></span>
+              </label>
+              <label class="m-radio" id="radioOldest" onclick="setSortMode('oldest')">
+                <span class="m-dot"></span>
+                <span>Oldest to newest <small style="color:#059669; font-weight:600;">(Theo POS)</small></span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Section: Inventory & Shipping -->
+        <div class="mock-sec">
+          <h4>Inventory & Shipping</h4>
+          <div class="mock-row">
+            <span class="mock-label">Use FFM warehouse as inventory source</span>
+            <span class="m-sw"></span>
+          </div>
+          <div class="mock-row">
+            <span class="mock-label">Return manually</span>
+            <span class="m-sw on"></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <p class="caption">Giao diện sử dụng Ant Design v5 chuẩn hệ thống Pancake FFM. Nhóm 2 lựa chọn dạng Radio button giúp người dùng nhìn thấy và chọn trực tiếp, không mất thêm thao tác mở dropdown.</p>
+</section>
+
+<section id="quy-tac">
+  <div class="sec-h"><span class="n">04</span><h2>Business rules</h2><p>Quy tắc nghiệp vụ của cấu hình</p></div>
+  <div class="card">
+    <table class="t">
+      <tr><th style="width: 220px;">Tiêu chí</th><th>Nội dung quy tắc</th></tr>
+      <tr>
+        <td><b>Phạm vi áp dụng</b></td>
+        <td>Cấu hình theo từng shop (<code>shop_id</code>), độc lập giữa các shop và không phụ thuộc country hay <code>app_id</code>.</td>
+      </tr>
+      <tr>
+        <td><b>Giá trị mặc định</b></td>
+        <td><code>newest_to_oldest</code> (Newest to oldest) cho toàn bộ shop hiện tại và shop kết nối mới.</td>
+      </tr>
+      <tr>
+        <td><b>Phạm vi hiển thị</b></td>
+        <td>Áp dụng đồng bộ thứ tự sắp xếp trên: Màn hình chi tiết đơn hàng (Order details) tại FFM Admin, Seller Portal, Mẫu in phiếu đóng gói/vận đơn và Màn hình bốc hàng/đóng gói kho WMS.</td>
+      </tr>
+      <tr>
+        <td><b>Tính toán tài chính & kho</b></td>
+        <td>Cấu hình chỉ thay đổi vị trí hiển thị của các dòng sản phẩm; <b>không thay đổi</b> số lượng, đơn giá, chiết khấu, COD, phí vận chuyển hay logic trừ tồn kho.</td>
+      </tr>
+      <tr>
+        <td><b>Xử lý đơn cũ</b></td>
+        <td>Áp dụng cho các đơn hàng đồng bộ từ POS sau thời điểm cấu hình được lưu. Không tự động chạy lại cho các đơn cũ trừ khi có yêu cầu hỗ trợ riêng.</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<section id="dev">
+  <div class="sec-h"><span class="n">05</span><h2>Cho dev</h2><p>Đặc tả kỹ thuật triển khai BE và FE</p></div>
+  <div class="card">
+    <table class="t">
+      <tr><th style="width: 220px;">Phần</th><th>Nội dung kỹ thuật</th></tr>
+      <tr>
+        <td><b>Database</b></td>
+        <td>Thêm cột cấu hình vào bảng <code>shops</code>: <code>item_sort_order</code> kiểu string, giá trị enum <code>["newest_to_oldest", "oldest_to_newest"]</code>, default <code>"newest_to_oldest"</code>.</td>
+      </tr>
+      <tr>
+        <td><b>API Shop Settings</b></td>
+        <td>Trong <code>ShopController</code> / <code>ShopAction</code>, bổ sung trường <code>item_sort_order</code> vào params được phép cập nhật và trả về trong response chi tiết shop.</td>
+      </tr>
+      <tr>
+        <td><b>Order Sync (POS → FFM)</b></td>
+        <td>Trong luồng tiếp nhận đơn <code>OrderAction.create</code> và <code>OrderAction.update</code>: Kiểm tra <code>shop.item_sort_order</code>. Khi lưu hoặc query danh sách <code>order_items</code>, sắp xếp thứ tự mảng sản phẩm tương ứng với cấu hình trước khi trả ra giao diện chi tiết đơn.</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<div class="toast" id="toastMsg"></div>
+
+<script>
+function setSortMode(mode) {
+  const isNewest = mode === 'newest';
+  document.getElementById('radioNewest').className = 'm-radio' + (isNewest ? ' checked' : '');
+  document.getElementById('radioOldest').className = 'm-radio' + (isNewest ? '' : ' checked');
+  showToast(isNewest 
+    ? 'Đã chọn "Newest to oldest" (Mặc định FFM) – Sản phẩm thêm sau trên POS sẽ nằm ở trên.' 
+    : 'Đã chọn "Oldest to newest" (Theo POS) – Sản phẩm thêm trước trên POS sẽ nằm ở dòng 1.');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toastMsg');
+  t.innerHTML = '<strong>Đã cập nhật:</strong> ' + msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3200);
+}
+</script>
+
+</body>
+</html>

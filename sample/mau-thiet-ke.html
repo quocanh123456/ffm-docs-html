@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mẫu thiết kế trang ffm-docs-html</title>
+<!-- Trang mới: ghi email @pancake.vn của người phụ trách trang vào content (CLAUDE.md §6) -->
+<meta name="owner" content="">
+<!--
+  Mẫu thiết kế chuẩn của repo (CLAUDE.md §9). Trang mới: chép nguyên khối style dưới đây,
+  rồi lấy các thành phần cần dùng trong body. Không tự thêm màu, cỡ chữ, bo góc mới.
+  Comment này cố ý không ghi tên thẻ trong ngoặc nhọn: script tìm thẻ style đầu tiên sẽ cắt nhầm từ đây.
+-->
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+  /* Roadmap dính bên trái: trang có lộ trình phase hoặc danh sách đã / chưa xử lý (CLAUDE.md §9.2).
+     Đặt <aside class="roadmap"> là con đầu tiên của .wrap; lề phải để trống cho cột thẻ góp ý. */
+  body:has(.wrap > .roadmap) .top-in { max-width: 1500px; }
+  .wrap:has(> .roadmap) { max-width: 1500px; display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 28px; }
+  .wrap:has(> .roadmap) > * { grid-column: 2; min-width: 0; }
+  .wrap:has(> .roadmap) .phase .pill { white-space: normal; } /* cột nội dung hẹp hơn: nhãn trạng thái của phase được xuống dòng */
+  .wrap:has(> .roadmap) > .roadmap { grid-column: 1; grid-row: 1 / span 99; align-self: start; position: sticky; top: 68px; max-height: calc(100vh - 140px); overflow: auto; }
+  .roadmap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; font-size: 13px; }
+  .rm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .rm-h b { font-size: 14px; } .rm-h span { color: var(--ink3); font-size: 12px; white-space: nowrap; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li { position: relative; padding: 0 0 14px 30px; }
+  .rm-steps li::before { content: ""; position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; background: #fff; font: 700 11px/14px sans-serif; color: #fff; text-align: center; z-index: 1; }
+  .rm-steps li:not(:last-child)::after { content: ""; position: absolute; left: 8px; top: 20px; bottom: 0; width: 2px; background: #dbe1ec; }
+  .rm-steps li.done::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3l2.3 2.3 4.6-5' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--green); } /* dấu tích vẽ bằng SVG: ký tự ✓ lấy từ font dự phòng nên lệch tâm, to nhỏ khác nhau theo máy */
+  .rm-steps li.done:not(:last-child)::after { background: var(--green); }
+  .rm-steps li.cur::before { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.18); }
+  .rm-steps a { color: var(--ink); font-weight: 600; display: block; line-height: 1.35; }
+  .rm-steps li.todo a { color: var(--ink2); font-weight: 500; }
+  .rm-steps small { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+  .rm-steps li.cur small { color: var(--blue); font-weight: 600; }
+  .rm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .rm-sum a { border-radius: 10px; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+  .rm-sum a b { display: block; font-size: 20px; line-height: 1.1; }
+  .rm-sum .ok { background: var(--green-bg); color: var(--green); } .rm-sum .bad { background: var(--red-bg); color: var(--red); }
+  .rm-todo { margin: 10px 0 0; padding-left: 16px; color: var(--ink2); font-size: 12.5px; } .rm-todo li { margin-top: 4px; }
+  @media (max-width: 1100px) {
+    .wrap:has(> .roadmap) { display: block; }
+    .wrap:has(> .roadmap) > .roadmap { position: sticky; top: 50px; z-index: 15; max-height: none; margin-bottom: 16px; padding: 10px 12px; }
+    .rm-h { margin-bottom: 8px; }
+    body:has(.wrap > .roadmap) section { scroll-margin-top: 190px; } /* bấm mục lục: tiêu đề mục không nằm dưới dải roadmap */
+    .rm-steps { display: flex; gap: 10px; overflow-x: auto; }
+    .rm-steps li { padding: 0 0 0 24px; flex: 0 0 auto; max-width: 210px; }
+    .rm-steps li::after, .rm-steps small, .rm-todo { display: none; }
+    .rm-sum { display: flex; border: 0; padding-top: 8px; }
+    .rm-sum a { padding: 4px 10px; } .rm-sum a b { display: inline; font-size: 13px; margin-right: 4px; }
+  }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình kiểu antd (Bigate, trang FFM cũ), thao tác được. Màn FFM mới dùng khung .proto.ffm2 ở dưới (§9.4) */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { height: auto; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  /* Bigate (.proto.bgt): menu trái theo bigate-web src/styles/globals.css (.bigate-sider, .bigate-nav-menu); nút, tab, bảng giữ antd mặc định như app thật */
+  .proto.bgt .app { grid-template-columns: 230px 1fr; }
+  .proto.bgt .main { background: #f1f3f6; }
+  .proto.bgt .side { background: linear-gradient(180deg, #2a0e04 0%, #4a1a08 100%); color: rgba(255,255,255,.6); }
+  .proto.bgt .side .brand { border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 8px; padding-bottom: 12px; }
+  .proto.bgt .side .brand b { background: linear-gradient(135deg, #c74024, #d0631a); }
+  .proto.bgt .side a { color: rgba(255,255,255,.6); }
+  .proto.bgt .side a:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
+  .proto.bgt .side a.on { background: rgba(199,64,36,.18); color: #fff; font-weight: 700; box-shadow: inset -3px 0 0 #d0631a; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  /* Prototype màn FFM theo Design System FFM v2 (skill ffm-design ở skills/ffm-design/, §9.4): khung .proto.ffm2, class f2-*.
+     Biến --ffm-* trùng tên với skills/ffm-design/tokens/tokens.css (giá trị chép từ skill v1.2; skill đổi token thì chép lại).
+     Trong khung chỉ dùng biến --ffm-* cho màu, kích thước theo thang của skill (4 · 8 · 12 · 16 · 20 · 24 · 32; cao 56 / 44 / 52 / 40). */
+  .ffm2 {
+    --ffm-fg-base-primary: #0C0A09; --ffm-fg-base-secondary: #78716C; --ffm-fg-base-hint: #A8A29E; --ffm-fg-base-icon: #57534E; --ffm-fg-base-light-solid: #FFFFFF;
+    --ffm-bg-base-canvas: #FFFFFF; --ffm-bg-base-surface: #FAFAF9; --ffm-bg-base-surface-strong: #F5F5F4; --ffm-bg-base-hover: #EEEDEB; --ffm-bg-base-selected: #E7E5E4;
+    --ffm-border-base-default: #E7E5E4; --ffm-border-base-hover: #D6D3D1; --ffm-border-base-invalid: #EF4444; --ffm-bg-overlay-base-scrim: #0C0A0973;
+    --ffm-fg-brand-primary: #175CD3; --ffm-bg-brand-default: #1570EF; --ffm-bg-brand-hover: #175CD3; --ffm-shadow-ring-brand: 0 0 0 3px #1570EF75;
+    --ffm-fg-error-primary: #B91C1C; --ffm-fg-success-primary: #15803D; --ffm-bg-overlay-success-default: #16A34A1A;
+    --ffm-fg-info-primary: #1D4ED8; --ffm-bg-overlay-info-default: #2563EB1A; --ffm-fg-caution-primary: #B45309; --ffm-bg-overlay-caution-default: #D977061A;
+    --ffm-fg-status-0-primary: #0E7490; --ffm-bg-overlay-status-0-default: #0891B21A; --ffm-fg-status-2-primary: #6D28D9; --ffm-bg-overlay-status-2-default: #7C3AED1A;
+    --ffm-shadow-md: 0px 4px 6px -1px rgba(0,0,0,0.1), 0px 2px 4px -2px rgba(0,0,0,0.1); --ffm-shadow-lg: 0px 10px 15px -3px rgba(0,0,0,0.1), 0px 4px 6px -4px rgba(0,0,0,0.1);
+    --ffm-font-body: 'Inter', system-ui, sans-serif;
+  }
+  .f2-app { display: grid; grid-template-columns: 216px 1fr; min-height: 520px; font: 400 14px/20px var(--ffm-font-body); color: var(--ffm-fg-base-primary); background: var(--ffm-bg-base-canvas); }
+  .f2-side { background: var(--ffm-bg-base-surface); border-right: 1px solid var(--ffm-border-base-default); padding: 12px 8px; }
+  .f2-side .f2-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; padding: 4px 8px 16px; }
+  .f2-side .f2-brand b { width: 24px; height: 24px; border-radius: 6px; background: var(--ffm-bg-brand-default); color: var(--ffm-fg-base-light-solid); display: grid; place-items: center; font-size: 12px; }
+  .f2-side .f2-grp { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ffm-fg-base-secondary); padding: 12px 8px 4px; }
+  .f2-side a { display: block; padding: 6px 8px; border-radius: 6px; color: var(--ffm-fg-base-primary); cursor: pointer; }
+  .f2-side a:hover { background: var(--ffm-bg-base-hover); }
+  .f2-side a.on { background: var(--ffm-bg-base-selected); font-weight: 500; }
+  .f2-main { display: flex; flex-direction: column; min-width: 0; }
+  .f2-head { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--ffm-border-base-default); }
+  .f2-head h3 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; }
+  .f2-input { height: 32px; border: 1px solid var(--ffm-border-base-default); border-radius: 8px; padding: 0 12px; font: inherit; color: var(--ffm-fg-base-primary); background: var(--ffm-bg-base-canvas); outline: none; }
+  .f2-input::placeholder { color: var(--ffm-fg-base-hint); }
+  .f2-input:hover { border-color: var(--ffm-border-base-hover); }
+  .f2-input:focus { box-shadow: var(--ffm-shadow-ring-brand); }
+  .f2-views { height: 44px; display: flex; align-items: center; gap: 4px; padding: 0 20px; border-bottom: 1px solid var(--ffm-border-base-default); }
+  .f2-views a { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 8px; border-radius: 6px; color: var(--ffm-fg-base-secondary); cursor: pointer; font-weight: 500; }
+  .f2-views a:hover { background: var(--ffm-bg-base-hover); }
+  .f2-views a.on { background: var(--ffm-bg-base-selected); color: var(--ffm-fg-base-primary); }
+  .f2-views a sup { font-size: 12px; line-height: 16px; background: var(--ffm-bg-base-surface-strong); border-radius: 4px; padding: 0 4px; color: var(--ffm-fg-base-secondary); }
+  .f2-tool, .f2-filter { display: flex; align-items: center; gap: 8px; padding: 0 20px; }
+  .f2-tool { height: 52px; } .f2-filter { height: 48px; border-top: 1px solid var(--ffm-border-base-default); }
+  .f2-tool .f2-sp, .f2-filter .f2-sp, .f2-views .f2-sp { flex: 1; }
+  .f2-btn { height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--ffm-border-base-default); background: var(--ffm-bg-base-canvas); color: var(--ffm-fg-base-primary); font: 500 14px/20px var(--ffm-font-body); cursor: pointer; }
+  .f2-btn:hover { background: var(--ffm-bg-base-hover); }
+  .f2-btn.f2-pri { background: var(--ffm-bg-brand-default); border-color: var(--ffm-bg-brand-default); color: var(--ffm-fg-base-light-solid); }
+  .f2-btn.f2-pri:hover { background: var(--ffm-bg-brand-hover); }
+  .f2-btn.f2-ghost { border-color: transparent; background: transparent; }
+  .f2-btn.f2-ghost:hover { background: var(--ffm-bg-base-hover); }
+  .f2-btn sup { font-size: 12px; line-height: 16px; background: var(--ffm-bg-base-selected); border-radius: 4px; padding: 0 4px; }
+  .f2-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 8px 0 12px; border-radius: 8px; background: var(--ffm-bg-base-surface-strong); font-weight: 500; }
+  .f2-chip button { border: 0; background: none; cursor: pointer; color: var(--ffm-fg-base-icon); padding: 0 4px; font-size: 14px; }
+  .f2-wrap { flex: 1; border-top: 1px solid var(--ffm-border-base-default); }
+  table.f2-tbl { width: 100%; border-collapse: collapse; }
+  table.f2-tbl th, table.f2-tbl td { padding: 0 12px; border-bottom: 1px solid var(--ffm-border-base-default); border-right: 1px solid var(--ffm-border-base-default); text-align: left; white-space: nowrap; }
+  table.f2-tbl th:last-child, table.f2-tbl td:last-child { border-right: 0; }
+  table.f2-tbl th { height: 40px; background: var(--ffm-bg-base-surface-strong); font-weight: 600; }
+  table.f2-tbl td { height: 52px; }
+  table.f2-tbl tbody tr:nth-child(even) td { background: var(--ffm-bg-base-surface); }
+  table.f2-tbl tbody tr:hover td { background: var(--ffm-bg-base-hover); }
+  table.f2-tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.f2-tbl small { display: block; font-size: 12px; line-height: 16px; color: var(--ffm-fg-base-secondary); }
+  table.f2-tbl a { color: var(--ffm-fg-brand-primary); font-weight: 500; }
+  table.f2-tbl tfoot td { height: 40px; background: var(--ffm-bg-base-surface-strong); color: var(--ffm-fg-base-secondary); }
+  table.f2-tbl tfoot b { color: var(--ffm-fg-base-primary); font-weight: 600; }
+  .f2-empty { padding: 48px 20px; text-align: center; color: var(--ffm-fg-base-secondary); }
+  .f2-empty p { margin: 0 0 12px; }
+  .f2-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 6px; font-size: 12px; line-height: 16px; font-weight: 500; background: var(--ffm-bg-base-surface-strong); color: var(--ffm-fg-base-secondary); }
+  .f2-badge.st0 { background: var(--ffm-bg-overlay-status-0-default); color: var(--ffm-fg-status-0-primary); }
+  .f2-badge.info { background: var(--ffm-bg-overlay-info-default); color: var(--ffm-fg-info-primary); }
+  .f2-badge.caution { background: var(--ffm-bg-overlay-caution-default); color: var(--ffm-fg-caution-primary); }
+  .f2-badge.st2 { background: var(--ffm-bg-overlay-status-2-default); color: var(--ffm-fg-status-2-primary); }
+  .f2-badge.ok { background: var(--ffm-bg-overlay-success-default); color: var(--ffm-fg-success-primary); }
+  .f2-pag { height: 60px; display: flex; align-items: center; gap: 8px; padding: 0 20px; border-top: 1px solid var(--ffm-border-base-default); color: var(--ffm-fg-base-secondary); }
+  .f2-pag b { color: var(--ffm-fg-base-primary); font-weight: 500; }
+  .f2-pag .f2-sp { flex: 1; }
+  .f2-pag .f2-pg { min-width: 32px; height: 32px; border-radius: 8px; display: inline-grid; place-items: center; color: var(--ffm-fg-base-primary); }
+  .f2-pag .f2-pg.on { border: 1px solid var(--ffm-border-base-default); font-weight: 500; }
+  .f2-mask { position: absolute; inset: 0; background: var(--ffm-bg-overlay-base-scrim); display: none; z-index: 5; }
+  .f2-sheet { position: absolute; top: 0; right: 0; bottom: 0; width: 400px; background: var(--ffm-bg-base-canvas); z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; box-shadow: var(--ffm-shadow-lg); display: flex; flex-direction: column; font: 400 14px/20px var(--ffm-font-body); color: var(--ffm-fg-base-primary); }
+  .proto.ffm2.open .f2-mask { display: block; } .proto.ffm2.open .f2-sheet { transform: none; visibility: visible; }
+  .f2-sheet h4 { margin: 0; height: 56px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--ffm-border-base-default); font-size: 16px; line-height: 24px; font-weight: 600; }
+  .f2-sheet .f2-body { flex: 1; padding: 20px; }
+  .f2-sheet .f2-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--ffm-border-base-default); }
+  .f2-fld { margin-bottom: 16px; }
+  .f2-fld label { display: block; font-weight: 500; margin-bottom: 6px; }
+  .f2-fld .f2-input { width: 100%; height: 36px; }
+  .f2-fld .f2-msg { display: none; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--ffm-fg-error-primary); }
+  .f2-fld.err .f2-input { border-color: var(--ffm-border-base-invalid); } .f2-fld.err .f2-msg { display: block; }
+  .f2-toast { position: absolute; right: 20px; bottom: 20px; min-width: 280px; background: var(--ffm-bg-base-canvas); border: 1px solid var(--ffm-border-base-default); border-radius: 8px; box-shadow: var(--ffm-shadow-lg); padding: 12px 16px; font: 400 14px/20px var(--ffm-font-body); color: var(--ffm-fg-base-primary); opacity: 0; transform: translateY(8px); transition: .25s; z-index: 9; pointer-events: none; }
+  .f2-toast.show { opacity: 1; transform: none; }
+  .f2-toast b { display: block; font-weight: 600; }
+  .proto.ffm2 .bar .f2-lang { margin-left: auto; display: inline-flex; border: 1px solid var(--ffm-border-base-default); border-radius: 6px; overflow: hidden; background: var(--ffm-bg-base-canvas); }
+  .f2-lang button { border: 0; background: none; padding: 2px 10px; font: 500 12px/16px var(--ffm-font-body); color: var(--ffm-fg-base-secondary); cursor: pointer; }
+  .f2-lang button.on { background: var(--ffm-bg-base-selected); color: var(--ffm-fg-base-primary); }
+  .ffm2 [hidden] { display: none !important; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  /* Bảng kế hoạch dự án + Gantt theo sprint: .filters lọc, table.plan, thanh .bar theo ưu tiên p0–p3, cột mốc .pilot */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .filters span { color: var(--ink2); font-size: 13px; margin-right: 4px; }
+  .fbtn { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; color: var(--ink2); }
+  .fbtn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .plan-wrap { overflow-x: auto; }
+  table.plan { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  table.plan th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink3); font-weight: 700; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; background: #fff; }
+  table.plan td { padding: 8px 6px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+  table.plan td.no { color: var(--ink2); font-weight: 700; text-align: center; width: 28px; }
+  table.plan td.name { min-width: 220px; }
+  table.plan td.name b { display: block; font-size: 13px; }
+  table.plan td.name small { display: block; color: var(--ink2); font-size: 11.5px; line-height: 1.4; }
+  table.plan td.team, table.plan td.own { white-space: nowrap; color: var(--ink2); }
+  table.plan td.srcs { min-width: 92px; }
+  table.plan tr.grp td { background: var(--slate-bg); font-weight: 700; font-size: 12.5px; padding: 6px 10px; }
+  table.plan th.g, table.plan td.g { width: 31px; min-width: 31px; padding: 8px 0; text-align: center; }
+  table.plan td.g { border-left: 1px solid #f1f3f8; }
+  table.plan .pilot { border-right: 2px dashed var(--green) !important; }
+  table.plan th.later, table.plan td.later { width: 40px; min-width: 40px; padding-right: 4px; }
+  .bar { display: block; height: 14px; }
+  .bar.st { border-top-left-radius: 5px; border-bottom-left-radius: 5px; margin-left: 3px; }
+  .bar.en { border-top-right-radius: 5px; border-bottom-right-radius: 5px; margin-right: 3px; }
+  .bar.p0 { background: var(--ink3); } .bar.p1 { background: var(--blue); } .bar.p2 { background: var(--ffm); }
+  .bar.p3 { background: var(--violet-bg); border: 1px dashed var(--violet); }
+  .pri:not(.btn) { display: inline-block; font-weight: 700; font-size: 11.5px; padding: 1px 7px; border-radius: 6px; }
+  .pri.p0 { background: var(--slate-bg); color: var(--ink2); } .pri.p1 { background: var(--blue); color: #fff; }
+  .pri.p2 { background: #e0f2fe; color: #0369a1; } .pri.p3 { background: var(--violet-bg); color: var(--violet); }
+  .src { display: inline-block; white-space: nowrap; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; margin: 1px 0; }
+  .src.d { background: var(--blue-bg); color: var(--blue); } .src.t { background: var(--green-bg); color: var(--green); }
+  .src.tn { background: var(--violet-bg); color: var(--violet); } .src.o { background: var(--slate-bg); color: var(--ink2); }
+  .muted { color: var(--ink3); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink2); margin-top: 12px; align-items: center; }
+  .legend .bar { display: inline-block; width: 26px; vertical-align: -2px; margin: 0 6px 0 0; border-radius: 5px; }
+  /* Lưới ánh xạ ngắn (vd take note → hạng mục) */
+  .tnmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tnmap div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; background: #fff; }
+  .tnmap div b { color: var(--violet); margin-right: 4px; }
+  .tnmap div span { display: block; color: var(--ink2); font-size: 12px; }
+
+  @media (max-width: 960px) {
+    .tnmap { grid-template-columns: 1fr 1fr; }
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>Mẫu thiết kế</div>
+  <nav class="nav">
+    <a href="#hien-trang">Hiện trạng</a><a href="#kien-truc">Kiến trúc</a><a href="#luong">Luồng</a><a href="#quyet-dinh">Quyết định</a>
+    <a href="#prototype">Prototype</a><a href="#du-lieu">Dữ liệu</a><a href="#plan">Plan</a><a href="#deploy">Deploy</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+<aside class="roadmap" aria-label="Lộ trình">
+  <div class="rm-h"><b>Lộ trình</b><span>1/4 xong</span></div>
+  <ol class="rm-steps">
+    <li class="done"><a href="#plan">Phase 1</a><small>Đã lên prod 20/10</small></li>
+    <li class="cur"><a href="#plan">Phase 2</a><small>Đang làm · chờ duyệt</small></li>
+    <li class="todo"><a href="#plan">Phase 3</a><small>Chưa làm</small></li>
+    <li class="todo"><a href="#plan">Phase 4</a><small>Chưa làm</small></li>
+  </ol>
+  <div class="rm-sum"><a class="ok" href="#hien-trang"><b>1</b>Đã xử lý</a><a class="bad" href="#hien-trang"><b>2</b>Chưa xử lý</a></div>
+  <ul class="rm-todo"><li>Hạng mục đang làm</li><li>Hạng mục chưa có</li></ul>
+</aside>
+
+
+<header class="hero">
+  <div class="eyebrow">Sản phẩm · Loại trang (phân tích / plan / luồng nghiệp vụ)</div>
+  <h1>Tiêu đề trang</h1>
+  <p>1–2 câu kết luận: trang này nói gì, người đọc cần làm gì. Người đọc chỉ đọc đoạn này vẫn nắm được ý chính.</p>
+  <div class="meta">
+    <span class="chip">Issue <a href="#">ffm_dev #000</a></span>
+    <span class="chip">Cập nhật 22/10/2026</span>
+    <span class="chip">Code: sea-fulfillment origin/develop abc1234</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>3</b><span>quyết định đã chốt</span></div>
+  <div class="kpi"><b>4 phase</b><span>BE → FE → …</span></div>
+  <div class="kpi"><b>9 bước</b><span>phase 1</span></div>
+  <div class="kpi"><b>0</b><span>dữ liệu bị ảnh hưởng</span></div>
+</div>
+
+<section id="hien-trang">
+  <div class="sec-h"><span class="n">01</span><h2>Hiện trạng</h2><p>Danh sách hạng mục + nhãn trạng thái</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Hạng mục đã xong</h4><span class="pill p-ok">Đã deploy</span></div><p>Mô tả ngắn, có <code>tên_trong_code</code> và vị trí file:dòng.</p></div>
+    <div class="row"><div><h4>Hạng mục đang làm</h4><span class="pill p-mid">Chưa commit</span></div><p>…</p></div>
+    <div class="row"><div><h4>Hạng mục chưa có</h4><span class="pill p-bad">Chưa có</span></div><p>…</p></div>
+  </div>
+</section>
+
+<section id="kien-truc">
+  <div class="sec-h"><span class="n">02</span><h2>Sơ đồ kiến trúc</h2><p>Khối theo sản phẩm, mũi tên có nhãn</p></div>
+  <div class="card">
+    <div class="arch">
+      <div class="zone z-pid"><div class="zt"><i>P</i>Pancake ID</div><div class="tile"><b>Xác thực</b><small>mô tả ngắn</small></div></div>
+      <div class="link"><div class="arrow back"><em>đăng nhập</em></div><div class="arrow"><em>pancake_id</em></div></div>
+      <div class="zone z-ffm"><div class="zt"><i>F</i>FFM</div><div class="tile"><b>users</b><small>mô tả ngắn</small></div><div class="tile"><b>API nội bộ</b><small>mô tả ngắn</small></div></div>
+      <div class="link"><div class="arrow back"><em>gọi API</em></div><div class="arrow"><em>dữ liệu trả về</em></div></div>
+      <div class="zone z-crm"><div class="zt"><i>C</i>CRM</div><div class="tile"><b>Bản sao người dùng</b><small>mô tả ngắn</small></div></div>
+    </div>
+    <p class="caption">1–2 câu nói sơ đồ cho thấy điều gì.</p>
+  </div>
+</section>
+
+<section id="luong">
+  <div class="sec-h"><span class="n">03</span><h2>Luồng nhiều bên</h2><p>Thay cho sequence diagram: mỗi bên 1 cột, mỗi bước 1 hàng, luồng lỗi màu đỏ</p></div>
+  <div class="card">
+    <div class="seq">
+      <span></span>
+      <div class="hd" style="background:var(--pos)">POS</div><div class="hd" style="background:var(--ffm)">FFM BE</div><div class="hd" style="background:#64748b">Courier</div>
+      <span class="no">1</span><div class="msg" style="--from:2;--to:4">Đẩy đơn sang FFM (<code>order_id</code>)</div><span></span>
+      <span class="no">2</span><span></span><div class="msg" style="--from:3;--to:5">Tạo vận đơn</div>
+      <span class="no">3</span><span></span><div class="msg rev" style="--from:3;--to:5">Trả mã vận đơn</div>
+      <span class="no">4</span><div class="msg rev err" style="--from:2;--to:4">Lỗi: báo POS, không đổi status</div><span></span>
+    </div>
+  </div>
+</section>
+
+<section id="quyet-dinh">
+  <div class="sec-h"><span class="n">04</span><h2>Quyết định</h2><p>Phương án chọn có dấu tích, phương án bỏ gạch ngang; câu hỏi chưa chốt màu tím</p></div>
+  <div class="dec">
+    <div class="dcard"><div class="q">Chủ đề</div><h4>Câu hỏi đã chốt</h4>
+      <div class="choice"><span class="ck">✓</span><div>Phương án đã chọn, kèm hệ quả.</div></div>
+      <div class="alt"><s>Phương án bỏ 1</s> · <s>Phương án bỏ 2</s></div></div>
+    <div class="dcard"><div class="q">Chủ đề</div><h4>Câu hỏi chưa chốt</h4>
+      <div class="choice open"><span class="ck">?</span><div>Đề xuất + lý do 1 câu. Người trả lời: BA.</div></div>
+      <div class="alt">Phương án khác: …</div></div>
+    <div class="dcard"><div class="q">Chủ đề</div><h4>…</h4>
+      <div class="choice"><span class="ck">✓</span><div>…</div></div></div>
+  </div>
+  <div class="note n-warn" style="margin-top:14px"><span class="ic">!</span><div><p><b>Cần duyệt:</b> điều đổi so với lần trước, kèm lý do.</p></div></div>
+</section>
+
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">05</span><h2>Prototype — người dùng thấy gì</h2><p>Bấm thử: EN / VI trên thanh địa chỉ (đổi ngôn ngữ), đổi tab trạng thái, tìm mã đơn / tên khách, Filter (lọc theo đơn vị vận chuyển, bấm × để bỏ), Create order (bỏ trống tên khách để xem lỗi)</p></div>
+  <!-- Màn FFM: Design System FFM v2 (skill ffm-design). List page: Page header → View tabs → Toolbar → Filter bar (khi có điều kiện lọc) → bảng tràn viền → Summary row → Pagination.
+       Chữ trên giao diện có đủ EN và VI (R16): mọi chữ lấy từ bảng T trong script theo khoá data-t / data-t-ph; vẽ EN trước, thêm VI sau khi chốt EN, trước khi giao dev. -->
+  <div class="proto ffm2" id="proto2">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/orders</span><div class="f2-lang" role="group" aria-label="Language"><button data-lang="en" class="on">EN</button><button data-lang="vi">VI</button></div></div>
+    <div class="f2-app">
+      <div class="f2-side">
+        <div class="f2-brand"><b>F</b>Pancake Fulfillment</div>
+        <a data-t="nav_dashboard"></a><a class="on" data-t="nav_orders"></a><a data-t="nav_products"></a>
+        <div class="f2-grp" data-t="nav_warehouse"></div><a data-t="nav_inventory"></a><a data-t="nav_purchases"></a>
+      </div>
+      <div class="f2-main">
+        <div class="f2-head"><h3 data-t="nav_orders"></h3><input class="f2-input" id="q2" style="width:320px" data-t-ph="search_ph"></div>
+        <div class="f2-views" id="views2"></div>
+        <div class="f2-tool"><button class="f2-btn" data-act="filter"><span data-t="filter"></span> <sup id="fc2" hidden>1</sup></button><span class="f2-sp"></span><button class="f2-btn" data-t="export"></button><button class="f2-btn f2-pri" data-act="open" data-t="create"></button></div>
+        <div class="f2-filter" id="fbar2" hidden><span class="f2-chip"><span data-t="chip_courier"></span><button data-act="unfilter" data-t-aria="remove_filter">×</button></span><span class="f2-sp"></span><button class="f2-btn f2-ghost" data-act="unfilter" data-t="clear_filters"></button></div>
+        <div class="f2-wrap"><table class="f2-tbl"><thead><tr><th data-t="col_id"></th><th data-t="col_customer"></th><th><span class="changed" data-t="col_courier"></span></th><th class="num" data-t="col_cod"></th><th data-t="col_status"></th></tr></thead><tbody id="rows2"></tbody><tfoot id="sum2"></tfoot></table><div class="f2-empty" id="empty2" hidden><p data-t="empty"></p><button class="f2-btn" data-act="reset" data-t="clear_search"></button></div></div>
+        <div class="f2-pag" id="pag2"></div>
+      </div>
+    </div>
+    <div class="f2-mask" data-act="close"></div>
+    <div class="f2-sheet">
+      <h4 data-t="create"></h4>
+      <div class="f2-body">
+        <div class="f2-fld" id="f2-name"><label data-t="f_name"></label><input class="f2-input" id="in2-name" data-t-ph="f_name_ph"><div class="f2-msg" data-t="f_name_err"></div></div>
+        <div class="f2-fld"><label data-t="col_courier"></label><select class="f2-input" id="in2-courier"><option>J&amp;T Express</option><option>Flash Express</option><option>Ninja Van</option></select></div>
+        <div class="f2-fld"><label data-t="f_cod"></label><input class="f2-input" id="in2-cod" inputmode="numeric" placeholder="0"></div>
+      </div>
+      <div class="f2-foot"><button class="f2-btn" data-act="close" data-t="cancel"></button><button class="f2-btn f2-pri" data-act="save" data-t="create"></button></div>
+    </div>
+    <div class="f2-toast" id="toast2"></div>
+  </div>
+  <p class="caption">Màn FFM vẽ theo Design System FFM v2 (skill <code>ffm-design</code>), đủ 2 ngôn ngữ EN / VI theo Glossary của skill. Viền tím nét đứt là chỗ thay đổi so với hiện tại. Dữ liệu là dữ liệu mẫu, không lấy từ prod.</p>
+  <p class="caption" style="margin-top:22px">Trang FFM cũ (vẽ trước khi có Design System v2): khung <code>.proto</code> kiểu antd. Màn Bigate dùng <code>.proto.bgt</code>: cùng kiểu antd, menu trái theo màu của bigate-web (xem file mẫu ở bigate-docs-html).</p>
+  <div class="proto" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/apps/permissions</span></div>
+    <div class="app">
+      <div class="side">
+        <div class="brand"><b>F</b>FFM · Cài đặt</div>
+        <a>User</a><a>Role Permission</a><a class="on">Phân quyền ứng dụng</a><a>Department</a>
+      </div>
+      <div class="main">
+        <div class="ph"><h3>Phân quyền ứng dụng</h3><button class="btn pri" data-act="open">+ Thêm nhân viên</button></div>
+        <div class="panel">
+          <div class="tabs"><a class="on" data-tab="all">Tất cả <sup id="c-all"></sup></a><a data-tab="crm">Có CRM <sup id="c-crm"></sup></a></div>
+          <input class="search" id="q" placeholder="Tìm theo tên, email…">
+          <table class="ant"><thead><tr><th>Nhân viên</th><th>Vai</th><th>Đơn hàng</th><th>Kho</th><th><span class="changed">CRM</span></th></tr></thead><tbody id="rows"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="mask" data-act="close"></div>
+    <div class="drawer">
+      <h4>Thêm nhân viên</h4>
+      <div class="fld" id="f-name"><label>Họ tên <em>*</em></label><input id="in-name" placeholder="Nguyễn Văn A"><div class="msg">Vui lòng nhập họ tên</div></div>
+      <div class="fld"><label>Vai</label><select id="in-role"><option>SALE</option><option>WAREHOUSE</option><option>CS</option></select></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px"><button class="btn" data-act="close">Huỷ</button><button class="btn pri" data-act="save">Lưu</button></div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+  <p class="caption">Phần viền tím nét đứt là chỗ thay đổi so với hiện tại. Dữ liệu là dữ liệu mẫu, không lấy từ prod.</p>
+</section>
+
+<section id="du-lieu">
+  <div class="sec-h"><span class="n">06</span><h2>Dữ liệu: cây và bảng</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="node"><span class="av" style="background:#0f172a">PK</span><div><b>Phòng Kinh doanh</b><small>Trưởng phòng: Trần Minh Đức</small></div></div>
+      <ul class="t-ul">
+        <li><div class="node"><span class="av" style="background:var(--blue)">MB</span><div><b>PKD Miền Bắc</b><small>Nguyễn Thu Hà</small></div></div>
+          <ul class="t-ul"><li><div class="node alt2"><span class="av" style="background:var(--crm)">T1</span><div><b>Team Hà Nội 1</b><small>6 người</small></div></div></li></ul></li>
+        <li><div class="node"><span class="av" style="background:var(--blue)">MN</span><div><b>PKD Miền Nam</b><small>Võ Thanh Tâm</small></div></div></li>
+      </ul>
+    </div>
+    <div class="schema">
+      <div class="tbl"><div class="th">departments<span>sửa</span></div>
+        <div class="f"><code>app_id · country_code</code><small>cột có sẵn</small><span></span></div>
+        <div class="f isnew"><code>parent_id</code><small>cột mới</small><span class="pill p-new">mới</span></div>
+      </div>
+      <div class="tbl"><div class="th new">teams<span>bảng mới</span></div>
+        <div class="f isnew"><code>leader_id</code><small>…</small><span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="plan">
+  <div class="sec-h"><span class="n">07</span><h2>Lộ trình và plan</h2></div>
+  <div class="card">
+    <div class="phases">
+      <div class="phase cur"><div class="dot" style="background:var(--blue)">1</div><h4>Phase 1</h4><p>mô tả ngắn</p><span class="who pill p-info">chờ duyệt</span></div>
+      <div class="phase"><div class="dot" style="background:var(--ffm)">2</div><h4>Phase 2</h4><p>mô tả ngắn</p></div>
+      <div class="phase"><div class="dot" style="background:#6366f1">3</div><h4>Phase 3</h4><p>mô tả ngắn</p></div>
+      <div class="phase"><div class="dot" style="background:var(--crm)">4</div><h4>Phase 4</h4><p>mô tả ngắn</p></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="card" style="padding:8px 10px">
+      <table class="t">
+        <tr><th>File</th><th>Sửa gì</th><th style="text-align:right">~dòng</th></tr>
+        <tr><td><code>lib/app/x_action.ex:120</code></td><td>thêm điều kiện kiểm tra</td><td class="num">8</td></tr>
+      </table>
+    </div>
+    <div class="steps">
+      <div class="step you"><div><h5>Việc người dùng tự chạy <span class="dep you">anh · song song</span></h5><div class="v">Verify: <b>kết quả mong đợi</b></div></div></div>
+      <div class="step"><div><h5>Việc chạy song song <span class="dep par">song song</span></h5><div class="v">Verify: <b>…</b></div></div></div>
+      <div class="step"><div><h5>Việc tuần tự <span class="dep">sau #2</span></h5><div class="v">Verify: <b>…</b></div></div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px;padding:16px 14px">
+    <div class="filters"><span>Lọc:</span><button class="fbtn on">Tất cả</button><button class="fbtn">P1</button><button class="fbtn">P2</button></div>
+    <div class="plan-wrap"><table class="plan">
+      <tr><th>#</th><th>Hạng mục</th><th>Loại</th><th>Ưu tiên</th><th>Nguồn</th><th>Team</th><th class="g">S1</th><th class="g pilot">S2</th><th class="g">S3</th><th class="g later">Sau</th></tr>
+      <tr class="grp"><td colspan="10">Nhóm hạng mục</td></tr>
+      <tr><td class="no">1</td><td class="name"><b>Hạng mục làm trước</b><small>mô tả 1 dòng</small></td><td><span class="pill p-info">Lõi</span></td><td><span class="pri p1">P1</span></td><td class="srcs"><span class="src d">Đ1</span> <span class="src t">T3</span> <span class="src tn">TN8</span></td><td class="team">BE · FE</td><td class="g"><i class="bar p1 st"></i></td><td class="g pilot"><i class="bar p1 en"></i></td><td class="g"></td><td class="g later"></td></tr>
+      <tr><td class="no">2</td><td class="name"><b>Hạng mục làm tiếp</b><small>mô tả 1 dòng</small></td><td><span class="pill p-mid">Cấu hình</span></td><td><span class="pri p2">P2</span></td><td class="srcs"><span class="src o">nguồn khác</span></td><td class="team">BE</td><td class="g"></td><td class="g pilot"></td><td class="g"><i class="bar p2 st en"></i></td><td class="g later"></td></tr>
+      <tr><td class="no">3</td><td class="name"><b>Hạng mục để sau</b><small>mô tả 1 dòng</small></td><td><span class="pill p-new">Custom</span></td><td><span class="pri p3">P3</span></td><td class="srcs"><span class="muted">–</span></td><td class="team">–</td><td class="g"></td><td class="g pilot"></td><td class="g"></td><td class="g later"><i class="bar p3 st en"></i></td></tr>
+    </table></div>
+    <p class="caption">Bảng kế hoạch dự án: mỗi hàng 1 hạng mục, thanh Gantt theo sprint, màu theo ưu tiên (P0 xám · P1 xanh đậm · P2 xanh nhạt · P3 tím nét đứt), cột có .pilot là mốc. Lọc bằng JS theo data-* của hàng.</p>
+  </div>
+  <div class="tnmap" style="margin-top:14px"><div><b>TN1</b>Ghi chú ngắn<span>→ #11 · P2</span></div><div><b>TN2</b>Ghi chú ngắn<span>→ #13 · P2</span></div></div>
+</section>
+
+<section id="deploy">
+  <div class="sec-h"><span class="n">08</span><h2>Deploy, hoàn tác, rủi ro</h2></div>
+  <div class="card">
+    <div class="pipe">
+      <div class="s"><b>1</b><br>Commit migration<small>đưa lên master</small></div>
+      <div class="s you"><b>2</b><br>Chạy migration<small>người dùng tự chạy</small></div>
+      <div class="s"><b>3</b><br>Commit code</div>
+      <div class="s"><b>4</b><br>make auto_hot_fix</div>
+      <div class="s"><b>5</b><br>Kiểm tra<small>cách kiểm</small></div>
+    </div>
+    <pre>-- Truy vấn đọc (chỉ đọc)
+SELECT app_id, country_code, count(*) FROM departments GROUP BY 1, 2;</pre>
+  </div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="note n-red"><span class="ic">!</span><div><p><b>Rủi ro</b></p><ul class="clean"><li>…</li></ul></div></div>
+    <div class="note n-info"><span class="ic">↺</span><div><p><b>Hoàn tác</b></p><ul class="clean"><li>…</li></ul></div></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong mảng, mọi thao tác cập nhật mảng rồi vẽ lại bảng.
+(() => {
+  const root = document.getElementById('proto');
+  const users = [
+    { name: 'Nguyễn Thu Hà', role: 'SALE_MANAGER', order: true, wms: false, crm: true },
+    { name: 'Lê Quang Huy', role: 'SALE', order: true, wms: false, crm: true },
+    { name: 'Phạm Văn Long', role: 'WAREHOUSE', order: false, wms: true, crm: false },
+    { name: 'Đặng Bảo Ngọc', role: 'CS', order: true, wms: false, crm: false },
+  ];
+  let tab = 'all';
+  const $ = (id) => document.getElementById(id);
+  const toast = (text, bad) => { const el = $('toast'); el.textContent = text; el.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(el._t); el._t = setTimeout(() => el.className = 'toast', 1800); };
+  const sw = (i, key) => `<span class="sw ${users[i][key] ? 'on' : ''}" data-i="${i}" data-k="${key}"></span>`;
+  function render() {
+    const q = $('q').value.trim().toLowerCase();
+    const list = users.map((u, i) => [u, i]).filter(([u]) => (tab === 'all' || u.crm) && u.name.toLowerCase().includes(q));
+    $('rows').innerHTML = list.map(([u, i]) => `<tr><td>${u.name}</td><td>${u.role}</td><td>${sw(i, 'order')}</td><td>${sw(i, 'wms')}</td><td>${sw(i, 'crm')}</td></tr>`).join('')
+      || '<tr><td colspan="5" style="text-align:center;color:#999;padding:24px">Không có nhân viên</td></tr>';
+    $('c-all').textContent = users.length; $('c-crm').textContent = users.filter((u) => u.crm).length;
+  }
+  root.addEventListener('click', (e) => {
+    const s = e.target.closest('.sw');
+    if (s) { const u = users[s.dataset.i]; u[s.dataset.k] = !u[s.dataset.k]; render(); toast(`${u[s.dataset.k] ? 'Đã bật' : 'Đã tắt'} app ${s.dataset.k.toUpperCase()} cho ${u.name}`); return; }
+    const tb = e.target.closest('[data-tab]');
+    if (tb) { tab = tb.dataset.tab; root.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a === tb)); render(); return; }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    // Đặt con trỏ sau khi drawer trượt xong, preventScroll: focus lúc drawer còn ngoài khung làm trình duyệt cuộn ngang cả prototype.
+    if (act === 'open') { root.classList.add('open'); setTimeout(() => $('in-name').focus({ preventScroll: true }), 260); }
+    if (act === 'close') { root.classList.remove('open'); $('f-name').classList.remove('err'); }
+    if (act === 'save') {
+      const name = $('in-name').value.trim();
+      if (!name) { $('f-name').classList.add('err'); toast('Chưa lưu: thiếu họ tên', true); return; }
+      users.push({ name, role: $('in-role').value, order: true, wms: false, crm: false });
+      $('in-name').value = ''; root.classList.remove('open'); render(); toast(`Đã thêm ${name}`);
+    }
+  });
+  $('q').addEventListener('input', render);
+  render();
+})();
+
+// Prototype FFM v2: cùng cách làm — trạng thái giữ trong mảng orders, mỗi thao tác cập nhật rồi gọi render().
+// Chữ trên giao diện: bảng T có đủ EN và VI theo Glossary (skills/ffm-design/references/ux-writing.md); thêm chữ mới thì thêm khoá ở cả 2 ngôn ngữ.
+(() => {
+  const root = document.getElementById('proto2');
+  const $ = (id) => document.getElementById(id);
+  const T = {
+    en: { nav_dashboard: 'Dashboard', nav_orders: 'Orders', nav_products: 'Products', nav_warehouse: 'Warehouse', nav_inventory: 'Inventory', nav_purchases: 'Purchases',
+      search_ph: 'Search order ID or customer', all: 'All', view_settings: 'View settings', filter: 'Filter', export: 'Export', create: 'Create order',
+      chip_courier: 'Courier: J&T Express', remove_filter: 'Remove filter', clear_filters: 'Clear filters',
+      col_id: 'Order ID', col_customer: 'Customer', col_courier: 'Courier', col_cod: 'COD', col_status: 'Status',
+      no_waybill: 'No waybill yet', empty: 'No orders match your search', clear_search: 'Clear search',
+      sum_count: (n) => `<b>${n}</b> ${n === 1 ? 'order' : 'orders'}`, sum_cod: 'Sum', pag: (n) => `Orders: <b>1–${n} of ${n}</b>`, per_page: '30 / page',
+      f_name: 'Customer name', f_name_ph: 'e.g. Maria Santos', f_name_err: 'Enter the customer name', f_cod: 'COD (₱)', cancel: 'Cancel',
+      created: (id) => `Order ${id} created`, date: (d, t) => `Nov ${d}, ${t}`,
+      st: { new: 'New', confirmed: 'Confirmed', pending: 'Pending', packing: 'Packing', canceled: 'Canceled' } },
+    vi: { nav_dashboard: 'Tổng quan', nav_orders: 'Đơn hàng', nav_products: 'Sản phẩm', nav_warehouse: 'Kho', nav_inventory: 'Tồn kho', nav_purchases: 'Nhập hàng',
+      search_ph: 'Tìm mã đơn hàng hoặc khách hàng', all: 'Tất cả', view_settings: 'Cài đặt chế độ xem', filter: 'Bộ lọc', export: 'Xuất file', create: 'Tạo đơn',
+      chip_courier: 'Đơn vị vận chuyển: J&T Express', remove_filter: 'Bỏ bộ lọc', clear_filters: 'Xoá bộ lọc',
+      col_id: 'Mã đơn hàng', col_customer: 'Khách hàng', col_courier: 'Đơn vị vận chuyển', col_cod: 'Thu hộ', col_status: 'Trạng thái',
+      no_waybill: 'Chưa có mã vận đơn', empty: 'Không có đơn hàng khớp với tìm kiếm', clear_search: 'Xoá tìm kiếm',
+      sum_count: (n) => `<b>${n}</b> đơn hàng`, sum_cod: 'Tổng', pag: (n) => `Đơn hàng: <b>1–${n} trong ${n}</b>`, per_page: '30 / trang',
+      f_name: 'Tên khách hàng', f_name_ph: 'VD: Maria Santos', f_name_err: 'Nhập tên khách hàng', f_cod: 'Thu hộ (₱)', cancel: 'Huỷ',
+      created: (id) => `Đã tạo đơn hàng ${id}`, date: (d, t) => `${d}/11, ${t}`,
+      st: { new: 'Mới', confirmed: 'Đã xác nhận', pending: 'Chờ hàng', packing: 'Đang đóng gói', canceled: 'Đã huỷ' } },
+  };
+  const BADGE = { new: 'st0', confirmed: 'ok', pending: 'caution', packing: 'st2', canceled: '' };
+  const orders = [
+    { id: 'PH-104582', day: 20, time: '09:12', name: 'Maria Santos', phone: '0917 555 0142', courier: 'J&T Express', waybill: 'JT0021458812', cod: 1250, status: 'new' },
+    { id: 'PH-104581', day: 20, time: '08:47', name: 'Jose Reyes', phone: '0918 555 0377', courier: 'Flash Express', waybill: 'PH-FL-889201', cod: 3480, status: 'confirmed' },
+    { id: 'PH-104579', day: 19, time: '17:30', name: 'Ana Dela Cruz', phone: '0927 555 0190', courier: 'J&T Express', waybill: 'JT0021457730', cod: 0, status: 'packing' },
+    { id: 'PH-104575', day: 19, time: '15:05', name: 'Paolo Cruz', phone: '0935 555 0611', courier: 'Ninja Van', waybill: 'NVPH77420015', cod: 2190, status: 'pending' },
+    { id: 'PH-104570', day: 19, time: '11:41', name: 'Kristine Bautista', phone: '0906 555 0284', courier: 'J&T Express', waybill: 'JT0021456025', cod: 760, status: 'confirmed' },
+    { id: 'PH-104566', day: 18, time: '20:18', name: 'Mark Villanueva', phone: '0995 555 0433', courier: 'Flash Express', waybill: '', cod: 1540, status: 'canceled' },
+  ];
+  let lang = 'en', view = 'all', courier = null, seq = 104583;
+  const t = () => T[lang];
+  const peso = (n) => '₱' + n.toLocaleString('en-US');
+  const toast = (text) => { const el = $('toast2'); el.innerHTML = `<b>${text}</b>`; el.className = 'f2-toast show'; clearTimeout(el._t); el._t = setTimeout(() => el.className = 'f2-toast', 2200); };
+  function applyLang() {
+    root.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t()[el.dataset.t]; });
+    root.querySelectorAll('[data-t-ph]').forEach((el) => { el.placeholder = t()[el.dataset.tPh]; });
+    root.querySelectorAll('[data-t-aria]').forEach((el) => { el.setAttribute('aria-label', t()[el.dataset.tAria]); });
+    root.querySelectorAll('[data-lang]').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
+    render();
+  }
+  function render() {
+    const L = t(), q = $('q2').value.trim().toLowerCase();
+    const base = orders.filter((o) => (!courier || o.courier === courier) && (o.id.toLowerCase().includes(q) || o.name.toLowerCase().includes(q)));
+    const list = base.filter((o) => view === 'all' || o.status === view);
+    $('views2').innerHTML = [['all', L.all], ...Object.keys(BADGE).map((k) => [k, L.st[k]])]
+      .map(([k, label]) => `<a data-view="${k}" class="${k === view ? 'on' : ''}">${label}<sup>${k === 'all' ? base.length : base.filter((o) => o.status === k).length}</sup></a>`).join('') + `<span class="f2-sp"></span><button class="f2-btn f2-ghost">${L.view_settings}</button>`;
+    $('rows2').innerHTML = list.map((o) => `<tr><td><a>${o.id}</a><small>${L.date(o.day, o.time)}</small></td><td>${o.name}<small>${o.phone || '—'}</small></td><td>${o.courier}<small>${o.waybill || L.no_waybill}</small></td><td class="num">${peso(o.cod)}</td><td><span class="f2-badge ${BADGE[o.status]}">${L.st[o.status]}</span></td></tr>`).join('');
+    const empty = list.length === 0;
+    $('empty2').hidden = !empty; $('sum2').hidden = empty; $('pag2').hidden = empty;
+    $('sum2').innerHTML = `<tr><td>${L.sum_count(list.length)}</td><td></td><td></td><td class="num">${L.sum_cod} <b>${peso(list.reduce((s, o) => s + o.cod, 0))}</b></td><td></td></tr>`;
+    $('pag2').innerHTML = `<span>${L.pag(list.length)}</span><span class="f2-sp"></span><span class="f2-pg">‹</span><span class="f2-pg on">1</span><span class="f2-pg">›</span><button class="f2-btn">${L.per_page}</button>`;
+    $('fbar2').hidden = !courier; $('fc2').hidden = !courier;
+  }
+  root.addEventListener('click', (e) => {
+    const lg = e.target.closest('[data-lang]');
+    if (lg) { lang = lg.dataset.lang; applyLang(); return; }
+    const v = e.target.closest('[data-view]');
+    if (v) { view = v.dataset.view; render(); return; }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'filter') { courier = 'J&T Express'; render(); }
+    if (act === 'unfilter') { courier = null; render(); }
+    if (act === 'reset') { $('q2').value = ''; courier = null; view = 'all'; render(); }
+    // Đặt con trỏ sau khi sheet trượt xong, preventScroll: focus lúc sheet còn ngoài khung làm trình duyệt cuộn ngang cả prototype.
+    if (act === 'open') { root.classList.add('open'); setTimeout(() => $('in2-name').focus({ preventScroll: true }), 260); }
+    if (act === 'close') { root.classList.remove('open'); $('f2-name').classList.remove('err'); }
+    if (act === 'save') {
+      const name = $('in2-name').value.trim();
+      // Lỗi nhập liệu hiện ngay dưới ô (R16), không dùng toast.
+      if (!name) { $('f2-name').classList.add('err'); $('in2-name').focus({ preventScroll: true }); return; }
+      const id = 'PH-' + seq++;
+      orders.unshift({ id, day: 20, time: '09:30', name, phone: '', courier: $('in2-courier').value, waybill: '', cod: Number($('in2-cod').value.replace(/\D/g, '')) || 0, status: 'new' });
+      $('in2-name').value = ''; $('in2-cod').value = ''; $('f2-name').classList.remove('err'); root.classList.remove('open'); view = 'all'; render(); toast(t().created(id));
+    }
+  });
+  $('q2').addEventListener('input', render);
+  applyLang();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>So sánh WMS 创智云仓 (GIP) với FFM</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+<style>
+  /* Nút sửa / xoá ghi chú: chỉ hiện khi rê chuột vào ghi chú */
+  .nt-box { position: relative; }
+  .nt-act { position: absolute; top: 6px; right: 10px; display: none; gap: 10px; font-size: 14px; }
+  .nt-box:hover .nt-act { display: flex; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>So sánh WMS GIP · FFM</div>
+  <nav class="nav"><a href="#tom-tat">Tóm tắt</a><a href="#pham-vi">Phạm vi</a><a href="#theo-nhom">Kết quả theo nhóm</a><a href="#chi-tiet">Bảng chi tiết</a></nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Phân tích so sánh tính năng kho</div>
+  <h1>So sánh WMS 创智云仓 (GIP · kho VN02) với FFM</h1>
+  <p>Trên 55 màn của WMS 创智云仓, FFM đã có 34 màn (62%). Phần lõi nhập kho, xử lý đơn và xuất kho đã đủ; khoảng trống lớn nhất là xử lý ngoại lệ và báo cáo vận hành kho.</p>
+  <div class="meta">
+    <span class="chip">Tài liệu <a href="https://drive.google.com/drive/folders/1bhKMa_1PoGwMitpweuHvLgDUl2ORf8Xh" target="_blank">Hướng dẫn WMS 创智云仓 (GIP)</a></span>
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i468" target="_blank">ffm_dev #468</a></span>
+    <span class="chip">Issue <a href="https://pancakework.vn/issues/w4/c5024/i466" target="_blank">ffm_dev #466</a></span>
+    <span class="chip">Cập nhật 28/10/2026</span>
+    <span class="chip">Đối chiếu: ffm-knowledge main · sea-fulfillment-web develop 24/10</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b style="color:var(--green)">34</b><span>màn FFM đã có (62%)</span></div>
+  <div class="kpi"><b style="color:var(--blue)">5</b><span>màn FFM có một phần</span></div>
+  <div class="kpi"><b style="color:var(--amber)">3</b><span>màn đang làm (#468, #466)</span></div>
+  <div class="kpi"><b style="color:var(--red)">13</b><span>màn FFM chưa có</span></div>
+</div>
+
+<section id="tom-tat">
+  <div class="sec-h"><span class="n">01</span><h2>Tóm tắt</h2><p>Kết luận chính</p></div>
+  <div class="card"><ul class="clean">
+    <li><b>Phần lõi đã đủ:</b> nhập kho, xử lý đơn trước khi xuất và phần lớn xuất kho (soạn hàng, đóng gói, bàn giao) FFM đều đã có, nhiều chỗ làm khác cách nhưng đáp ứng được nghiệp vụ.</li>
+    <li><b>Khoảng trống lớn nhất là xử lý ngoại lệ:</b> 5/10 màn nhóm Hoàn, chặn đơn &amp; ngoại lệ chưa có (hàng nhập bất thường, hàng vô chủ, chốt chặn đơn, chặn phía ĐVVC).</li>
+    <li><b>Đang làm đúng chỗ thiếu:</b> #468 (kiểm kê) và #466 (Re-putaway đơn huỷ, chặn đơn) lấp 3 màn.</li>
+    <li><b>Chưa có báo cáo vận hành kho:</b> không có dashboard số đơn theo bước và năng suất theo người.</li>
+  </ul></div>
+</section>
+
+<section id="pham-vi">
+  <div class="sec-h"><span class="n">02</span><h2>Phạm vi và cách đánh giá</h2><p>Nguồn, quy ước, mức độ xác nhận</p></div>
+  <div class="card"><ul class="clean">
+    <li><b>Nguồn WMS:</b> tài liệu “Hướng dẫn sử dụng WMS 创智云仓”, Bản B – theo luồng nghiệp vụ, kèm ảnh màn hình. Đây là hệ thống của bên khác, dùng làm mẫu tham khảo.</li>
+    <li><b>Nguồn FFM:</b> knowledge base ffm-knowledge (bản mới nhất trên main) và danh sách màn của FFM web trên nhánh develop (24/10/2026).</li>
+    <li><b>Quy ước:</b> FFM làm khác cách nhưng đã có thì tính là <b>Có</b>. <b>Có một phần</b> chỉ dùng khi FFM thật sự thiếu một phần chức năng.</li>
+  </ul></div>
+  <div class="note n-warn" style="margin-top:14px"><span class="ic">!</span><div><p><b>Mức độ xác nhận:</b> 16/56 màn đã được duyệt từng màn (cột “Đã duyệt”). Các màn còn lại là đánh giá theo tài liệu, chưa soát code từng mục và chưa đối chiếu app mobile — “Chưa có” nghĩa là không thấy trong tài liệu và danh sách màn web của FFM.</p></div></div>
+</section>
+
+<section id="theo-nhom">
+  <div class="sec-h"><span class="n">03</span><h2>Kết quả theo nhóm</h2><p>Số màn theo trạng thái trong từng nhóm nghiệp vụ</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t"><tr><th>Nhóm</th><th>Có</th><th>Có một phần</th><th>Đang làm</th><th>Chưa có</th><th>Bỏ qua</th><th>Tổng</th><th>% Có</th></tr>
+    <tr><td>Thiết lập kho &amp; vị trí</td><td class="num"><span class="pill p-ok">5</span></td><td class="num"><span class="pill p-info">1</span></td><td class="num">–</td><td class="num"><span class="pill p-bad">1</span></td><td class="num">–</td><td class="num"><b>7</b></td><td class="num">71%</td></tr><tr><td>Sản phẩm</td><td class="num"><span class="pill p-ok">2</span></td><td class="num">–</td><td class="num">–</td><td class="num"><span class="pill p-bad">1</span></td><td class="num">–</td><td class="num"><b>3</b></td><td class="num">67%</td></tr><tr><td>Nhập kho</td><td class="num"><span class="pill p-ok">5</span></td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num"><b>5</b></td><td class="num">100%</td></tr><tr><td>Tồn kho &amp; vị trí</td><td class="num"><span class="pill p-ok">2</span></td><td class="num"><span class="pill p-info">1</span></td><td class="num"><span class="pill p-mid">1</span></td><td class="num"><span class="pill p-bad">2</span></td><td class="num">–</td><td class="num"><b>6</b></td><td class="num">33%</td></tr><tr><td>Xử lý đơn trước khi xuất</td><td class="num"><span class="pill p-ok">6</span></td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num"><b>6</b></td><td class="num">100%</td></tr><tr><td>Xuất kho</td><td class="num"><span class="pill p-ok">11</span></td><td class="num"><span class="pill p-info">2</span></td><td class="num">–</td><td class="num"><span class="pill p-bad">3</span></td><td class="num"><span class="pill " style="color:var(--ink2);background:var(--slate-bg)">1</span></td><td class="num"><b>16</b></td><td class="num">69%</td></tr><tr><td>Hoàn, chặn đơn &amp; ngoại lệ</td><td class="num"><span class="pill p-ok">3</span></td><td class="num">–</td><td class="num"><span class="pill p-mid">2</span></td><td class="num"><span class="pill p-bad">5</span></td><td class="num">–</td><td class="num"><b>10</b></td><td class="num">30%</td></tr><tr><td>Theo dõi &amp; báo cáo</td><td class="num">–</td><td class="num"><span class="pill p-info">1</span></td><td class="num">–</td><td class="num"><span class="pill p-bad">1</span></td><td class="num">–</td><td class="num"><b>2</b></td><td class="num">0%</td></tr><tr><td><b>Tổng</b></td><td class="num"><b>34</b></td><td class="num"><b>5</b></td><td class="num"><b>3</b></td><td class="num"><b>13</b></td><td class="num"><b>1</b></td><td class="num"><b>55</b></td><td class="num"><b>62%</b></td></tr></table>
+    <p class="caption">Đã đủ: Nhập kho (5/5), Xử lý đơn trước khi xuất (6/6). Phần lớn đã có: Thiết lập kho &amp; vị trí (5/7), Xuất kho (11/16). Yếu nhất: Hoàn, chặn đơn &amp; ngoại lệ (3/10), Theo dõi &amp; báo cáo (0/2).</p>
+  </div>
+</section>
+
+<section id="chi-tiet">
+  <div class="sec-h"><span class="n">04</span><h2>Bảng đánh giá chi tiết 56 màn</h2><p>Bấm tên màn để xem ảnh WMS 创智云仓 · bấm nút lọc để bật / tắt · ghi chú từng màn</p></div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center"><div style="display:flex;flex-wrap:wrap;gap:8px" id="flt"><button class="btn" data-f="have">Có (34)</button> <button class="btn" data-f="partial">Có một phần (5)</button> <button class="btn" data-f="wip">Đang làm (3)</button> <button class="btn" data-f="missing">Chưa có (13)</button> <button class="btn" data-f="skip">Bỏ qua (1)</button> <button class="btn" data-n="1">Có ghi chú (<span id="nn">0</span>)</button></div><div style="display:flex;flex-wrap:wrap;gap:8px" id="pflt"><button class="btn" data-p="3">Phải làm (<span id="pc3">0</span>)</button> <button class="btn" data-p="2">Nên làm (<span id="pc2">0</span>)</button> <button class="btn" data-p="1">Xem xét sau (<span id="pc1">0</span>)</button></div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center"><small id="nt-status" style="color:var(--ink2)"></small><button class="btn" id="nt-copy">Sao chép ghi chú</button></div></div>
+  <div class="note n-info" style="margin-bottom:12px"><span class="ic">i</span><div><p>Bấm <b>✎ Ghi chú</b> ở từng màn, nhập nội dung rồi <b>Lưu</b>: ghi chú lưu chung, ai mở link cũng thấy (tải lại trang để xem ghi chú mới của người khác).</p><p>Rê chuột vào ghi chú để hiện nút <b>✎</b> sửa / <b>✕</b> xoá; thay đổi áp dụng cho mọi người.</p><p>Cột <b>Ưu tiên</b>: chọn Phải làm / Nên làm / Xem xét sau cho từng màn, lưu chung như ghi chú. Màn chưa chọn tính là Xem xét sau.</p></div></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t" id="tb"><tr><th>Mục</th><th>Màn hình</th><th>Bên WMS dùng để làm gì</th><th>FFM</th><th>Ưu tiên</th><th>Mô tả phía FFM</th><th>Đã duyệt</th></tr>
+    <tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Thiết lập kho &amp; vị trí</td></tr><tr class="r" data-st="have" data-code="3.1" data-name="Warehouse setup guidance" data-vi="Hướng dẫn dựng kho" data-lbl="Có"><td><b>3.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/3-1.jpg" target="_blank">Warehouse setup guidance</a><br><small style="color:var(--ink2)">Hướng dẫn dựng kho</small></td><td>Dựng kho mới theo 4 bước</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Dựng kho = tạo kho ở <b>Settings → Warehouse</b>, rồi import vị trí ở <code>/wms/location-warehouse</code>. Không có màn hướng dẫn từng bước nhưng đủ chức năng (chốt 26/10: tính là có).<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="3.2" data-name="Warehouse settings" data-vi="Thiết lập kho" data-lbl="Có"><td><b>3.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/3-2.jpg" target="_blank">Warehouse settings</a><br><small style="color:var(--ink2)">Thiết lập kho</small></td><td>Danh sách kho, tạo kho mới</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><b>Settings → Warehouse</b>: tạo/sửa/xoá kho theo địa chỉ hành chính, gán nhân sự phụ trách.<br>KB không ghi múi giờ hay giờ chốt đơn theo kho.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="3.3" data-name="Zone management" data-vi="Quản lý khu" data-lbl="Có"><td><b>3.3</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/3-3.jpg" target="_blank">Zone management</a><br><small style="color:var(--ink2)">Quản lý khu</small></td><td>Chia kho thành khu theo mục đích</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Không có bảng khu riêng: <code>zone</code> là 1 phần mã vị trí <code>ZoneAisle-Rack-Level</code>.<br>Mục đích gắn ở từng vị trí qua <code>storage_type</code>: pick / reserve / bulk / staging / damage.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="3.4" data-name="Location type" data-vi="Loại vị trí" data-lbl="Có"><td><b>3.4</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/3-4.jpg" target="_blank">Location type</a><br><small style="color:var(--ink2)">Loại vị trí</small></td><td>Khai báo loại ô kệ theo kích thước</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Không có loại vị trí dùng lại. Kích thước (cm), cân tối đa, số SKU tối đa khai <b>cho từng vị trí</b> khi import.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="3.5" data-name="Location management" data-vi="Quản lý vị trí" data-lbl="Có"><td><b>3.5</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/3-5.jpg" target="_blank">Location management</a><br><small style="color:var(--ink2)">Quản lý vị trí</small></td><td>Tạo, in mã, sửa, xoá vị trí</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/wms/location-warehouse</code>: import Excel, in tem QR / CODE128, % lấp đầy (empty / available / full).<br>Thiếu <b>thứ tự đi soạn</b>: FFM gợi ý kệ theo &quot;kệ nhiều hàng nhất trước&quot;.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="missing" data-code="3.6" data-name="Collection address settings" data-vi="Khu vực thu gom" data-lbl="Chưa có"><td><b>3.6</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/3-6.jpg" target="_blank">Collection address settings</a><br><small style="color:var(--ink2)">Khu vực thu gom</small></td><td>Khu vực kho đi lấy hàng + người phụ trách</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="partial" data-code="3.7" data-name="Printer settings" data-vi="Cài đặt máy in" data-lbl="Có một phần"><td><b>3.7</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/3-7.jpg" target="_blank">Printer settings</a><br><small style="color:var(--ink2)">Cài đặt máy in</small></td><td>Cài plugin in (Lodop…)</td><td><span class="pill p-info">Có một phần</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Không cần plugin: in qua trình duyệt; mẫu in ở <b>Settings → Print Template</b>.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Sản phẩm</td></tr><tr class="r" data-st="have" data-code="4.1" data-name="Product management" data-vi="Quản lý sản phẩm" data-lbl="Có"><td><b>4.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/4-1.jpg" target="_blank">Product management</a><br><small style="color:var(--ink2)">Quản lý sản phẩm</small></td><td>Tra cứu, lọc SKU</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Product / Variation / Category / Combo (combo = khuyến mại, đồng bộ từ POS). Tìm theo cụm từ, bỏ dấu.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="4.2" data-name="Product review" data-vi="Duyệt sản phẩm" data-lbl="Chưa có"><td><b>4.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/4-2.jpg" target="_blank">Product review</a><br><small style="color:var(--ink2)">Duyệt sản phẩm</small></td><td>Duyệt SKU khách mới khai báo</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Sản phẩm do POS đẩy sang, không có bước kho duyệt cân nặng / kích thước.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="4.3" data-name="Product warehouse attributes" data-vi="Thuộc tính kho của SP" data-lbl="Có"><td><b>4.3</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/4-3.jpg" target="_blank">Product warehouse attributes</a><br><small style="color:var(--ink2)">Thuộc tính kho của SP</small></td><td>Kích thước, cân nặng, vật liệu đóng gói theo kho</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Cân nặng, kích thước do POS đẩy, FFM không sửa qua màn variation.<br>Chưa có <b>vật liệu đóng gói gắn theo SKU</b>.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Nhập kho</td></tr><tr class="r" data-st="have" data-code="5.1" data-name="Receiving management" data-vi="Quản lý phiếu nhập" data-lbl="Có"><td><b>5.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/5-1.jpg" target="_blank">Receiving management</a><br><small style="color:var(--ink2)">Quản lý phiếu nhập</small></td><td>Phiếu nhập qua các mốc</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/inventory/purchase</code>: New → In transit → Received → Inbounding → Completed; import Excel, đồng bộ 2 chiều với POS. Tồn chỉ tăng ở Completed.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="5.2" data-name="Arrival scan" data-vi="Quét hàng đến" data-lbl="Có"><td><b>5.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/5-2.jpg" target="_blank">Arrival scan</a><br><small style="color:var(--ink2)">Quét hàng đến</small></td><td>Ghi nhận kiện đã về</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Nhận hàng bằng cách quét <b>mã phiếu nhập (IR)</b>, không quét từng kiện theo mã vận đơn.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="5.3" data-name="Receiving" data-vi="Nhận hàng" data-lbl="Có"><td><b>5.3</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/5-3.jpg" target="_blank">Receiving</a><br><small style="color:var(--ink2)">Nhận hàng</small></td><td>Nhận và kiểm đếm</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/wms/qc-inspection</code>: quét IR → tote → SP, +1 từng cái, nhập tay khi SL ≥10, ghi hạn dùng; khôi phục phiên sau khi tải lại trang.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="5.4" data-name="Shelving" data-vi="Xếp kệ" data-lbl="Có"><td><b>5.4</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/5-4.jpg" target="_blank">Shelving</a><br><small style="color:var(--ink2)">Xếp kệ</small></td><td>Đưa hàng lên kệ</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Quét tote → vị trí → SP trên <b>mobile</b>; web chưa có màn quét.<br>Không chọn loại tồn (tốt / lỗi / chờ xử lý) khi Xếp kệ như bên họ.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="5.5" data-name="Shelving management" data-vi="Quản lý xếp kệ" data-lbl="Có"><td><b>5.5</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/5-5.jpg" target="_blank">Shelving management</a><br><small style="color:var(--ink2)">Quản lý xếp kệ</small></td><td>Theo dõi việc Xếp kệ</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/wms/putaway</code>: danh sách + chi tiết; 4 loại purchase / return / relocation / repack.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Tồn kho &amp; vị trí</td></tr><tr class="r" data-st="have" data-code="6.1" data-name="Inventory query" data-vi="Tra cứu tồn" data-lbl="Có"><td><b>6.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/6-1.jpg" target="_blank">Inventory query</a><br><small style="color:var(--ink2)">Tra cứu tồn</small></td><td>Tồn SKU theo đủ trạng thái</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Có 2 lớp: <b>có thể bán</b> (salable) và <b>thực tế</b> (physical), kèm chờ lấy / đang giao / đang hoàn.<br>Thiếu lớp lỗi · tạm giữ · chờ huỷ và tồn cảnh báo.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="partial" data-code="6.2" data-name="Batch inventory" data-vi="Tồn theo lô" data-lbl="Có một phần"><td><b>6.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/6-2.jpg" target="_blank">Batch inventory</a><br><small style="color:var(--ink2)">Tồn theo lô</small></td><td>Tồn theo vị trí, pallet, lô, tuổi kho</td><td><span class="pill p-info">Có một phần</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Có tồn theo vị trí + lô nhập (<code>location_inventories</code>).<br>Thiếu pallet/thùng, tuổi kho, chuyển vị trí và điều chỉnh tồn hàng loạt trên web (loại Xếp kệ <code>relocation</code> có code, <code>ADJ±</code> mới định nghĩa).<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="6.3" data-name="Batch log" data-vi="Nhật ký tồn" data-lbl="Có"><td><b>6.3</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/6-3.jpg" target="_blank">Batch log</a><br><small style="color:var(--ink2)">Nhật ký tồn</small></td><td>Truy vết biến động tồn</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/inventory/history</code>: 11 loại biến động (GR, ALLOC, SO-PICK, RTN…). Ghi ở mức kho, không theo vị trí, không có IP.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="6.4" data-name="Product volume query" data-vi="Thể tích hàng" data-lbl="Chưa có"><td><b>6.4</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/6-4.jpg" target="_blank">Product volume query</a><br><small style="color:var(--ink2)">Thể tích hàng</small></td><td>Thể tích kho từng khách đang chiếm</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có theo khách; chỉ có % lấp đầy theo vị trí.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="wip" data-code="6.5" data-name="List of count sheets" data-vi="Phiếu kiểm kê" data-lbl="Đang làm"><td><b>6.5</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/6-5.jpg" target="_blank">List of count sheets</a><br><small style="color:var(--ink2)">Phiếu kiểm kê</small></td><td>Tạo, theo dõi phiếu kiểm kê</td><td><span class="pill p-mid">Đang làm</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><b>#468</b> đang làm: phiếu SC-xxxx, khoá kệ, duyệt chỉnh tồn, đồng bộ POS. Mobile ở #469.<br><a href="https://pancakework.vn/issues/w4/c5024/i468" target="_blank">https://pancakework.vn/issues/w4/c5024/i468</a><div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="6.6" data-name="Transfer of cargo right" data-vi="Chuyển quyền sở hữu" data-lbl="Chưa có"><td><b>6.6</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/6-6.jpg" target="_blank">Transfer of cargo right</a><br><small style="color:var(--ink2)">Chuyển quyền sở hữu</small></td><td>Chuyển hàng giữa các khách</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có. Chuyển kho cũng chưa có (<code>TR-IN/OUT</code> mới định nghĩa sẵn).<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Xử lý đơn trước khi xuất</td></tr><tr class="r" data-st="have" data-code="7.1" data-name="Order query" data-vi="Tra cứu đơn" data-lbl="Có"><td><b>7.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/7-1.jpg" target="_blank">Order query</a><br><small style="color:var(--ink2)">Tra cứu đơn</small></td><td>Tra cứu đơn đầy đủ nhất</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/order</code>: lọc qua Elasticsearch, tab trạng thái + <code>sub_status</code> 2 pha, Advance Filter. Lọc mạnh hơn họ.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="7.2" data-name="List of pending orders" data-vi="Đơn chờ xử lý" data-lbl="Có"><td><b>7.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/7-2.jpg" target="_blank">List of pending orders</a><br><small style="color:var(--ink2)">Đơn chờ xử lý</small></td><td>Đơn chưa xuất cần xử lý</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Tab <b>Need attention</b> + tab phụ theo <code>sub_status</code> / lý do pending.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="7.3" data-name="Synchronize backorder" data-vi="Đồng bộ đơn chờ hàng" data-lbl="Có"><td><b>7.3</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/7-3.jpg" target="_blank">Synchronize backorder</a><br><small style="color:var(--ink2)">Đồng bộ đơn chờ hàng</small></td><td>Bấm tay chuyển đơn thiếu hàng sang chờ soạn</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><b>Ngược cách:</b> FFM <b>tự bù</b> đơn thiếu hàng khi phiếu nhập hoàn tất (Restocking → tự chạy). priority_order đang làm thêm phần cấp hàng chủ động.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="7.4" data-name="Sync service provider problem pieces" data-vi="Đơn lỗi với hãng" data-lbl="Có"><td><b>7.4</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/7-4.jpg" target="_blank">Sync service provider problem pieces</a><br><small style="color:var(--ink2)">Đơn lỗi với hãng</small></td><td>Lấy lại mã vận đơn, đổi kênh</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Đẩy đơn sang ĐVVC lẻ và hàng loạt (bulk update) từ màn đơn; đơn lỗi lọc được ở màn đơn. Không có màn gom riêng nhưng không thành vấn đề (chốt 26/10).<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="7.5" data-name="Label upload" data-vi="Tải nhãn lên" data-lbl="Có"><td><b>7.5</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/7-5.jpg" target="_blank">Label upload</a><br><small style="color:var(--ink2)">Tải nhãn lên</small></td><td>Tải nhãn / tệp kèm cho đơn</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Không cần tải nhãn tay: FFM lưu <b>printed form</b> (<code>order.partner.printed_form</code>) = PDF nhãn do chính hãng vận chuyển / sàn trả về cho đơn đó; đơn sàn có nút lấy printed form.<br>In theo kiểu <code>by_courier_form</code> (gộp PDF rồi in) — xem KB <code>20_Integrations/carriers.md</code>.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="7.6" data-name="Export orders" data-vi="Xuất đơn" data-lbl="Có"><td><b>7.6</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/7-6.jpg" target="_blank">Export orders</a><br><small style="color:var(--ink2)">Xuất đơn</small></td><td>Xuất file theo bộ lọc, theo mẫu</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Xuất Excel chọn cột, có mẫu, gửi qua email.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Xuất kho</td></tr><tr class="r" data-st="have" data-code="8.1" data-name="Order picking" data-vi="Tạo danh sách soạn hàng" data-lbl="Có"><td><b>8.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-1.jpg" target="_blank">Order picking</a><br><small style="color:var(--ink2)">Tạo danh sách soạn hàng</small></td><td>Lọc đơn → tạo danh sách, lưu wave</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/wms/picking</code>: <b>tự chia nhóm</b> hoả tốc → sàn → thường, tối đa 20 đơn/list.<br>Không lưu bộ lọc thành wave, không chọn soạn gộp hay theo đơn.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.2" data-name="Picking list" data-vi="Danh sách soạn hàng" data-lbl="Có"><td><b>8.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-2.jpg" target="_blank">Picking list</a><br><small style="color:var(--ink2)">Danh sách soạn hàng</small></td><td>Theo dõi, gán người soạn</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Gán trên web + nhân viên kho tự nhận trên mobile; xuất Excel danh sách soạn hàng.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="partial" data-code="8.3" data-name="Secondary sorting" data-vi="Phân loại lần 2" data-lbl="Có một phần"><td><b>8.3</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-3.jpg" target="_blank">Secondary sorting</a><br><small style="color:var(--ink2)">Phân loại lần 2</small></td><td>Chia hàng soạn gộp về từng đơn</td><td><span class="pill p-info">Có một phần</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Không có bước riêng: soạn cả list vào tote, chia đơn ở khâu đóng gói.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.4" data-name="Order packing" data-vi="Đóng gói theo đơn" data-lbl="Có"><td><b>8.4</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-4.jpg" target="_blank">Order packing</a><br><small style="color:var(--ink2)">Đóng gói theo đơn</small></td><td>Quét đơn → quét SP → quét vật liệu</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/inventory/packing/scan</code>: tote → barcode → quét mã vận đơn chốt đơn; <b>có video đóng gói</b>.<br>Không quét vật liệu đóng gói.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="8.5" data-name="By SKU packing" data-vi="Đóng gói theo SKU" data-lbl="Chưa có"><td><b>8.5</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-5.jpg" target="_blank">By SKU packing</a><br><small style="color:var(--ink2)">Đóng gói theo SKU</small></td><td>Đóng hàng loạt đơn 1 SP bằng mã SP</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="partial" data-code="8.6" data-name="Quick checkout" data-vi="Xuất kho nhanh" data-lbl="Có một phần"><td><b>8.6</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-6.jpg" target="_blank">Quick checkout</a><br><small style="color:var(--ink2)">Xuất kho nhanh</small></td><td>Dành cho sản phẩm cấu thành: quét → nhãn → xuất</td><td><span class="pill p-info">Có một phần</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Không có màn xuất nhanh riêng. <b>Sản phẩm cấu thành</b> đi luồng thường: soạn hàng lấy các <b>sản phẩm thành phần</b> (không lấy dòng cha), đóng gói đòi đủ thành phần, rồi bàn giao.<br>Chưa có tuỳ chọn bỏ kiểm hàng hay cân từng đơn.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.7" data-name="Order packing (Shipping)" data-vi="Đóng gói – nhóm Shipping" data-lbl="Có"><td><b>8.7</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-7.jpg" target="_blank">Order packing (Shipping)</a><br><small style="color:var(--ink2)">Đóng gói – nhóm Shipping</small></td><td>Tra cứu, đóng gói đơn</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/inventory/packing</code>: danh sách packing list + chi tiết, xem lại video đóng gói.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.8" data-name="Order checkout" data-vi="Xuất kho đơn" data-lbl="Có"><td><b>8.8</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-8.jpg" target="_blank">Order checkout</a><br><small style="color:var(--ink2)">Xuất kho đơn</small></td><td>Quét đơn, kiểm cân nặng, xuất</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/inventory/handover</code>: quét mã vận đơn → xác nhận bàn giao. Không cân lúc xuất.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="missing" data-code="8.9" data-name="Virtual Delivery" data-vi="Giao hàng ảo" data-lbl="Chưa có"><td><b>8.9</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-9.jpg" target="_blank">Virtual Delivery</a><br><small style="color:var(--ink2)">Giao hàng ảo</small></td><td>Quét mã vận đơn ghi nhận thu gom</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="skip" data-code="8.10" data-name="Import checkout" data-vi="Xuất kho từ file" data-lbl="Bỏ qua"><td><b>8.10</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-10.jpg" target="_blank">Import checkout</a><br><small style="color:var(--ink2)">Xuất kho từ file</small></td><td>Xuất kho hàng loạt bằng file</td><td><span class="pill " style="color:var(--ink2);background:var(--slate-bg)">Bỏ qua</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chốt 26/10: bỏ qua màn này, không tính vào số liệu so sánh.<br>(Tham khảo: <code>/order/bulk-update</code> import Excel đổi trạng thái hàng loạt.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="missing" data-code="8.11" data-name="Re-checkout" data-vi="Xuất kho lại" data-lbl="Chưa có"><td><b>8.11</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-11.jpg" target="_blank">Re-checkout</a><br><small style="color:var(--ink2)">Xuất kho lại</small></td><td>Sửa cân, kích thước, vật liệu rồi xuất lại</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.12" data-name="Shift handover" data-vi="Bàn giao ca" data-lbl="Có"><td><b>8.12</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-12.jpg" target="_blank">Shift handover</a><br><small style="color:var(--ink2)">Bàn giao ca</small></td><td>Cuối ca rà đơn chưa đóng gói / chưa xuất</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có màn; lọc được qua <code>sub_status</code> ở màn đơn.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="8.13" data-name="Print Scan Form" data-vi="In Scan Form" data-lbl="Có"><td><b>8.13</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-13.jpg" target="_blank">Print Scan Form</a><br><small style="color:var(--ink2)">In Scan Form</small></td><td>Biên bản bàn giao tổng với hãng</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Biên bản bàn giao in được: người giao, người nhận, danh sách đơn.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.14" data-name="Order shipment query" data-vi="Tra đơn đã xuất" data-lbl="Có"><td><b>8.14</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-14.jpg" target="_blank">Order shipment query</a><br><small style="color:var(--ink2)">Tra đơn đã xuất</small></td><td>Lịch sử đơn đã xuất</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Lọc trong <code>/order</code> theo trạng thái Shipped / sub_status Handed over.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.15" data-name="Print Document" data-vi="In chứng từ" data-lbl="Có"><td><b>8.15</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-15.jpg" target="_blank">Print Document</a><br><small style="color:var(--ink2)">In chứng từ</small></td><td>In / in lại nhãn</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>In nhãn theo mẫu, nút in lại; đếm số lần in.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="8.16" data-name="Reprint Doc Log" data-vi="Lịch sử in lại" data-lbl="Có"><td><b>8.16</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-16.jpg" target="_blank">Reprint Doc Log</a><br><small style="color:var(--ink2)">Lịch sử in lại</small></td><td>Ai in lại, lúc nào</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chỉ <b>đếm số lần in</b> (<code>printed_count</code>), không lưu ai in, lúc nào.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="8.17" data-name="Document synchronization" data-vi="Đồng bộ chứng từ" data-lbl="Có"><td><b>8.17</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/8-17.jpg" target="_blank">Document synchronization</a><br><small style="color:var(--ink2)">Đồng bộ chứng từ</small></td><td>Đồng bộ lại khi lệch dữ liệu</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Đồng bộ tự động với POS; không có màn bấm đồng bộ lại.<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Hoàn, chặn đơn &amp; ngoại lệ</td></tr><tr class="r" data-st="missing" data-code="9.1" data-name="Abnormal handling" data-vi="Hàng nhập bất thường" data-lbl="Chưa có"><td><b>9.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-1.jpg" target="_blank">Abnormal handling</a><br><small style="color:var(--ink2)">Hàng nhập bất thường</small></td><td>Tiêu huỷ / Xếp kệ lại / trả hàng</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Kiểm hàng nhập chỉ ghi số lượng đạt; chưa có luồng tiêu huỷ / trả hàng / Xếp kệ lại cho hàng lỗi nhập.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="9.2" data-name="Complete exception notification" data-vi="Hoàn tất phiếu bất thường" data-lbl="Chưa có"><td><b>9.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-2.jpg" target="_blank">Complete exception notification</a><br><small style="color:var(--ink2)">Hoàn tất phiếu bất thường</small></td><td>Xác nhận đã xử lý xong</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="9.3" data-name="Claim management" data-vi="Hàng chờ nhận" data-lbl="Chưa có"><td><b>9.3</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-3.jpg" target="_blank">Claim management</a><br><small style="color:var(--ink2)">Hàng chờ nhận</small></td><td>Kiện vô chủ, có hạn</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="9.4" data-name="Problem items list" data-vi="Đơn có vấn đề" data-lbl="Có"><td><b>9.4</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-4.jpg" target="_blank">Problem items list</a><br><small style="color:var(--ink2)">Đơn có vấn đề</small></td><td>Gom đơn lỗi theo nguyên nhân</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Có <code>on_hold</code> + lý do pending, nhưng chưa phân loại lỗi kho (thiếu tồn thực tế, quá cân…).<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="wip" data-code="9.5" data-name="Problem handling" data-vi="Xử lý hàng đơn lỗi" data-lbl="Đang làm"><td><b>9.5</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-5.jpg" target="_blank">Problem handling</a><br><small style="color:var(--ink2)">Xử lý hàng đơn lỗi</small></td><td>Nhập SL + vị trí Xếp kệ lại</td><td><span class="pill p-mid">Đang làm</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><b>#466</b> re-putaway: model <code>re_putaway</code> đã có, chưa nối code.<br><a href="https://pancakework.vn/issues/w4/c5024/i466" target="_blank">https://pancakework.vn/issues/w4/c5024/i466</a><div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="wip" data-code="9.6" data-name="Interception management" data-vi="Quản lý chặn đơn" data-lbl="Đang làm"><td><b>9.6</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-6.jpg" target="_blank">Interception management</a><br><small style="color:var(--ink2)">Quản lý chặn đơn</small></td><td>Chặn đơn huỷ khi hàng còn trong kho</td><td><span class="pill p-mid">Đang làm</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><b>#466</b> đang làm luồng đơn huỷ; phần khoá lùi trạng thái khi đơn đang trong luồng kho (#431) đã live.<br><a href="https://pancakework.vn/issues/w4/c5024/i466" target="_blank">https://pancakework.vn/issues/w4/c5024/i466</a><div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="9.7" data-name="Completed interception" data-vi="Xác nhận chặn xong" data-lbl="Chưa có"><td><b>9.7</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-7.jpg" target="_blank">Completed interception</a><br><small style="color:var(--ink2)">Xác nhận chặn xong</small></td><td>Quét nhiều mã để chốt</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có; có thể gộp vào thiết kế #466.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="missing" data-code="9.8" data-name="Logistics interception" data-vi="Chặn phía hãng" data-lbl="Chưa có"><td><b>9.8</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-8.jpg" target="_blank">Logistics interception</a><br><small style="color:var(--ink2)">Chặn phía hãng</small></td><td>Theo dõi yêu cầu huỷ gửi hãng</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="have" data-code="9.9" data-name="Return management" data-vi="Quản lý hàng trả" data-lbl="Có"><td><b>9.9</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-9.jpg" target="_blank">Return management</a><br><small style="color:var(--ink2)">Quản lý hàng trả</small></td><td>Phiếu trả, cách xử lý, chi phí</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td><code>/wms/return-qc</code>: <b>2 cách</b> — good → cất lại kệ, not_good → hàng lỗi. Họ có 9 cách (tiêu huỷ, dán nhãn lại, trả về nước…).<br>(Cách làm khác bên họ nhưng FFM đã có — chốt 26/10.)<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num">✓</td></tr><tr class="r" data-st="have" data-code="9.10" data-name="Pending returns" data-vi="Hàng hoàn chờ xử lý" data-lbl="Có"><td><b>9.10</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/9-10.jpg" target="_blank">Pending returns</a><br><small style="color:var(--ink2)">Hàng hoàn chờ xử lý</small></td><td>Phiếu hoàn đang chờ</td><td><span class="pill p-ok">Có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Return QC có tab trạng thái, lọc ngày nhận / ngày cất kệ, xuất Excel.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="g"><td colspan="7" style="background:var(--slate-bg);font-weight:700">Theo dõi &amp; báo cáo</td></tr><tr class="r" data-st="missing" data-code="10.1" data-name="Home" data-vi="Trang chủ" data-lbl="Chưa có"><td><b>10.1</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/10-1.jpg" target="_blank">Home</a><br><small style="color:var(--ink2)">Trang chủ</small></td><td>Số đơn theo bước + năng suất theo người</td><td><span class="pill p-bad">Chưa có</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>Chưa có dashboard kho; thống kê hiện có: telesale và thống kê đơn bằng AI.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr><tr class="r" data-st="partial" data-code="10.2" data-name="Asynchronous export download" data-vi="Tải file xuất chạy nền" data-lbl="Có một phần"><td><b>10.2</b></td><td><a href="images/so-sanh-wms-gip-va-ffm/10-2.jpg" target="_blank">Asynchronous export download</a><br><small style="color:var(--ink2)">Tải file xuất chạy nền</small></td><td>Tải file xuất lớn</td><td><span class="pill p-info">Có một phần</span></td><td><select class="pr" aria-label="Ưu tiên"><option value="1">Xem xét sau</option><option value="2">Nên làm</option><option value="3">Phải làm</option></select></td><td>File lớn gửi qua email; không có trang tải về.<div class="nt"></div><a href="#" class="nt-add" style="font-size:12.5px">✎ Ghi chú</a></td><td class="num"></td></tr></table>
+  </div>
+  <p class="caption">Ảnh lấy từ tài liệu GIP; đã cắt bỏ phần có mã đơn / mã vận đơn thật ở 2 ảnh (7.1, 8.1).</p>
+</section>
+
+</div>
+
+<script>
+// Ghi chú + mức ưu tiên từng màn lưu chung trên Firestore (project common-b2821, collection notes / priority): ai mở trang cũng thấy, ai cũng sửa được.
+// Gọi REST thẳng, không cần SDK hay API key.
+const PAGE = 'ffm/wms/so-sanh-wms-gip-va-ffm';
+const API = 'https://firestore.googleapis.com/v1/';
+const DB = API + 'projects/common-b2821/databases/(default)/documents';
+let shared = {};
+let prio = {}; // code → 1 Xem xét sau · 2 Nên làm · 3 Phải làm; chưa chọn = 1
+const LEVELS = { 1: ['Xem xét sau', 'var(--ink2)', 'var(--slate-bg)'], 2: ['Nên làm', 'var(--amber)', 'var(--amber-bg)'], 3: ['Phải làm', 'var(--red)', 'var(--red-bg)'] };
+const levelOf = (code) => prio[code] || 1;
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const fmt = (iso) => new Date(iso).toLocaleString('vi-VN');
+const BOX = 'margin-top:8px;padding:8px 52px 8px 10px;border-radius:10px;white-space:pre-wrap;background:var(--blue-bg);border:1px solid #bfdbfe';
+const hasNote = (code) => (shared[code] || []).length > 0;
+const fromDoc = (d) => ({ name: d.name, text: d.fields.text.stringValue, at: d.fields.at.timestampValue, edited_at: d.fields.edited_at?.timestampValue });
+
+function drawNote(tr) {
+  tr.querySelector('.nt').innerHTML = (shared[tr.dataset.code] || []).map((x, i) =>
+    `<div class="nt-box" style="${BOX}">${esc(x.text)}<span class="nt-act"><a href="#" data-nt="edit" data-i="${i}" title="Sửa">✎</a><a href="#" data-nt="del" data-i="${i}" title="Xoá" style="color:var(--red)">✕</a></span></div>`).join('');
+  tr.querySelector('.nt-add').style.display = '';
+}
+// i = vị trí ghi chú đang sửa; không có i là thêm ghi chú mới.
+function editNote(tr, i) {
+  if (i !== undefined) drawNote(tr);
+  tr.querySelector('.nt-add').style.display = 'none';
+  const form = `<div class="nt-form" data-i="${i ?? ''}"><textarea rows="3" maxlength="2000" style="width:100%;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+    <button class="btn pri" data-nt="save">Lưu</button><button class="btn" data-nt="cancel">Huỷ</button><small class="nt-err" style="color:var(--red)"></small></div></div>`;
+  const box = tr.querySelector('.nt');
+  if (i === undefined) box.insertAdjacentHTML('beforeend', form); else box.children[i].outerHTML = form;
+  const ta = tr.querySelector('.nt-form textarea');
+  ta.value = i === undefined ? '' : shared[tr.dataset.code][i].text;
+  ta.focus({ preventScroll: true });
+}
+function drawPrio(tr) {
+  const sel = tr.querySelector('.pr'), [, color, bg] = LEVELS[levelOf(tr.dataset.code)];
+  sel.value = levelOf(tr.dataset.code);
+  sel.style.cssText = `border:1px solid var(--line);border-radius:999px;padding:2px 8px;font:600 12px/1.4 inherit;cursor:pointer;color:${color};background:${bg}`;
+}
+function count() {
+  const rows = [...document.querySelectorAll('#tb tr.r')];
+  document.getElementById('nn').textContent = rows.filter((r) => hasNote(r.dataset.code)).length;
+  [1, 2, 3].forEach((l) => { document.getElementById('pc' + l).textContent = rows.filter((r) => levelOf(r.dataset.code) === l).length; });
+}
+function setStatus(msg) { document.getElementById('nt-status').textContent = msg; }
+
+async function query(collection) {
+  const res = await fetch(DB + ':runQuery', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], where: { fieldFilter: { field: { fieldPath: 'page' }, op: 'EQUAL', value: { stringValue: PAGE } } } } }) });
+  if (!res.ok) throw new Error(res.status);
+  return (await res.json()).filter((r) => r.document).map((r) => r.document);
+}
+async function load() {
+  setStatus('Đang tải ghi chú…');
+  try {
+    const [notes, levels] = await Promise.all([query('notes'), query('priority').catch(() => [])]);
+    shared = {}; prio = {};
+    notes.forEach((d) => (shared[d.fields.code.stringValue] ||= []).push(fromDoc(d)));
+    Object.values(shared).forEach((l) => l.sort((a, b) => a.at.localeCompare(b.at)));
+    levels.forEach((d) => { prio[d.fields.code.stringValue] = +d.fields.level.integerValue; });
+    setStatus('');
+  } catch (e) { setStatus('Không tải được ghi chú (' + e.message + '), thử tải lại trang.'); }
+  document.querySelectorAll('#tb tr.r').forEach((tr) => { drawNote(tr); drawPrio(tr); }); count();
+}
+
+// Mỗi màn 1 document priority/<trang>__<mục>, PATCH = tạo mới hoặc ghi đè.
+async function savePrio(tr, level) {
+  const code = tr.dataset.code, old = levelOf(code);
+  prio[code] = level; drawPrio(tr); count();
+  const id = encodeURIComponent(PAGE.replace(/\//g, '_') + '__' + code);
+  try {
+    const res = await fetch(DB + '/priority/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { page: { stringValue: PAGE }, code: { stringValue: code }, level: { integerValue: level }, at: { timestampValue: new Date().toISOString() } } }) });
+    if (!res.ok) throw new Error(res.status);
+  } catch (e) { prio[code] = old; drawPrio(tr); count(); setStatus('Chưa lưu được mức ưu tiên (' + e.message + ')'); }
+}
+document.getElementById('tb').addEventListener('change', (e) => {
+  if (e.target.classList.contains('pr')) savePrio(e.target.closest('tr.r'), +e.target.value);
+});
+
+async function saveNote(tr) {
+  const form = tr.querySelector('.nt-form'), text = form.querySelector('textarea').value.trim(), err = form.querySelector('.nt-err');
+  if (!text) return void (err.textContent = 'Chưa nhập ghi chú');
+  const list = (shared[tr.dataset.code] ||= []), i = form.dataset.i === '' ? undefined : +form.dataset.i;
+  const now = new Date().toISOString();
+  // Thêm mới: tạo document; sửa: chỉ ghi đè text + edited_at (updateMask), giữ nguyên page / code / at.
+  const req = i === undefined
+    ? [DB + '/notes', 'POST', { page: { stringValue: PAGE }, code: { stringValue: tr.dataset.code }, text: { stringValue: text }, at: { timestampValue: now } }]
+    : [API + list[i].name + '?updateMask.fieldPaths=text&updateMask.fieldPaths=edited_at', 'PATCH', { text: { stringValue: text }, edited_at: { timestampValue: now } }];
+  err.textContent = 'Đang lưu…';
+  try {
+    const res = await fetch(req[0], { method: req[1], headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: req[2] }) });
+    if (!res.ok) throw new Error(res.status);
+    const note = fromDoc(await res.json());
+    if (i === undefined) list.push(note); else list[i] = note;
+  } catch (e) { return void (err.textContent = 'Chưa lưu được (' + e.message + ')'); }
+  drawNote(tr); count();
+}
+
+async function deleteNote(tr, i) {
+  const list = shared[tr.dataset.code];
+  if (!confirm('Xoá ghi chú này? Mọi người sẽ không thấy nữa.')) return;
+  try {
+    const res = await fetch(API + list[i].name, { method: 'DELETE' });
+    if (!res.ok) throw new Error(res.status);
+  } catch (e) { return void setStatus('Chưa xoá được (' + e.message + ')'); }
+  list.splice(i, 1);
+  drawNote(tr); count();
+}
+
+document.getElementById('tb').addEventListener('click', (e) => {
+  const tr = e.target.closest('tr.r'); if (!tr) return;
+  if (e.target.closest('.nt-add')) { e.preventDefault(); editNote(tr); return; }
+  const btn = e.target.closest('[data-nt]'); if (!btn) return;
+  e.preventDefault();
+  if (btn.dataset.nt === 'edit') editNote(tr, +btn.dataset.i);
+  if (btn.dataset.nt === 'del') deleteNote(tr, +btn.dataset.i);
+  if (btn.dataset.nt === 'save') saveNote(tr);
+  if (btn.dataset.nt === 'cancel') drawNote(tr);
+});
+
+// Sao chép ghi chú dạng chữ để dán Panchat.
+const flash = (btn, msg) => { btn.textContent = msg; setTimeout(() => { btn.textContent = 'Sao chép ghi chú'; }, 1600); };
+document.getElementById('nt-copy').addEventListener('click', (e) => {
+  const rows = [...document.querySelectorAll('#tb tr.r')].filter((r) => hasNote(r.dataset.code));
+  if (!rows.length) return flash(e.target, 'Chưa có ghi chú');
+  const txt = rows.map((r) => `${r.dataset.code} ${r.dataset.name} (${r.dataset.vi}) — FFM: ${r.dataset.lbl} · Ưu tiên: ${LEVELS[levelOf(r.dataset.code)][0]}\n` +
+    shared[r.dataset.code].map((x) => `- ${x.text} (${fmt(x.edited_at || x.at)})`).join('\n')).join('\n\n');
+  navigator.clipboard.writeText(txt).then(() => flash(e.target, 'Đã sao chép ' + rows.length + ' màn'));
+});
+
+load();
+
+// Lọc bảng chi tiết: mỗi nút bấm 1 lần bật, bấm lần nữa tắt; không bật nút nào = xem tất cả.
+// Cùng nhóm (trạng thái / mức ưu tiên) là HOẶC, khác nhóm (kể cả "Có ghi chú") là VÀ. Dòng tên nhóm ẩn khi nhóm không còn dòng nào.
+const on = (sel) => [...document.querySelectorAll(sel + ' button.pri')];
+function applyFilter() {
+  const st = on('#flt').filter((b) => b.dataset.f).map((b) => b.dataset.f), noted = on('#flt').some((b) => b.dataset.n);
+  const lv = on('#pflt').map((b) => +b.dataset.p);
+  document.querySelectorAll('#tb tr.r').forEach((r) => r.style.display =
+    ((!st.length || st.includes(r.dataset.st)) && (!noted || hasNote(r.dataset.code)) && (!lv.length || lv.includes(levelOf(r.dataset.code)))) ? '' : 'none');
+  document.querySelectorAll('#tb tr.g').forEach((g) => {
+    let n = g.nextElementSibling, v = false;
+    while (n && n.classList.contains('r')) { if (n.style.display !== 'none') v = true; n = n.nextElementSibling; }
+    g.style.display = v ? '' : 'none';
+  });
+}
+['flt', 'pflt'].forEach((id) => document.getElementById(id).addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  b.classList.toggle('pri'); applyFilter();
+}));
+</script>
+</body>
+</html>

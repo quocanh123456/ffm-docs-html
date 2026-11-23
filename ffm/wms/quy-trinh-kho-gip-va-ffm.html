@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo khảo sát kho GIP và đề xuất cho FFM</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --line: #e6e8f0;
+    --blue: #2563eb; --blue-bg: #eff4ff; --green: #059669; --green-bg: #ecfdf5; --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --violet: #7c3aed; --violet-bg: #f5f3ff; --slate-bg: #f1f5f9;
+    /* màu theo sản phẩm */
+    --ffm: #0ea5e9; --crm: #8b5cf6; --pos: #10b981; --bigate: #e11d48; --pid: #f97316;
+    --radius: 14px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.6 -apple-system, "SF Pro Text", "Inter", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  code { font: 12.5px/1.4 "SF Mono", ui-monospace, Menlo, monospace; background: var(--slate-bg); color: #334155; padding: 1px 6px; border-radius: 6px; }
+
+  /* Thanh mục lục dính trên đầu */
+  .top { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(180%) blur(12px); background: rgba(245,246,250,.82); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 1180px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--ffm), var(--crm)); display: inline-block; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; }
+  .nav a { color: var(--ink2); font-size: 13px; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { background: #e8ebf3; color: var(--ink); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 28px 90px; }
+
+  /* Phần mở đầu + thẻ số liệu */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #fff; border-radius: 20px; padding: 30px 34px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+  .hero::after { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #c7d2fe; font-weight: 600; }
+  .hero h1 { font-size: 30px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.01em; }
+  .hero p { color: #cbd5e1; max-width: 760px; margin: 0; }
+  .hero .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,.14); }
+  .chip a { color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .kpi b { display: block; font-size: 22px; letter-spacing: -.01em; }
+  .kpi span { color: var(--ink2); font-size: 13px; }
+
+  /* Mục */
+  section { margin-top: 44px; scroll-margin-top: 70px; }
+  .sec-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-h .n { font: 600 12px/1 "SF Mono", ui-monospace, monospace; color: var(--blue); background: var(--blue-bg); padding: 5px 8px; border-radius: 8px; }
+  .sec-h h2 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  .sec-h p { margin: 0; color: var(--ink2); font-size: 13.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+  .caption { color: var(--ink2); font-size: 13px; margin: 14px 2px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+  /* Nhãn trạng thái */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--green); background: var(--green-bg); }
+  .p-mid { color: var(--amber); background: var(--amber-bg); }
+  .p-bad { color: var(--red); background: var(--red-bg); }
+  .p-info { color: var(--blue); background: var(--blue-bg); }
+  .p-new { color: var(--violet); background: var(--violet-bg); }
+
+  /* Danh sách hiện trạng */
+  .status { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+  .row h4 { margin: 0 0 6px; font-size: 14px; }
+  .row p { margin: 0; color: var(--ink2); }
+
+  /* Sơ đồ kiến trúc: khối theo sản phẩm + mũi tên có nhãn */
+  .arch { display: grid; grid-template-columns: 1fr 104px 1.4fr 104px 1fr; align-items: stretch; }
+  .zone { border-radius: 16px; padding: 16px; }
+  .zone .zt { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+  .zone .zt i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 13px; }
+  .z-pid { background: #fff7ed; border: 1px solid #fed7aa; } .z-pid .zt i { background: var(--pid); }
+  .z-ffm { background: #f0f9ff; border: 1px solid #bae6fd; } .z-ffm .zt i { background: var(--ffm); }
+  .z-crm { background: #f5f3ff; border: 1px solid #ddd6fe; } .z-crm .zt i { background: var(--crm); }
+  .z-pos { background: #ecfdf5; border: 1px solid #a7f3d0; } .z-pos .zt i { background: var(--pos); }
+  .z-bigate { background: #fff1f2; border: 1px solid #fecdd3; } .z-bigate .zt i { background: var(--bigate); }
+  .tile { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; border: 1px solid rgba(15,23,42,.06); box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .tile b { display: block; font-size: 13px; }
+  .tile small { color: var(--ink2); font-size: 12px; }
+  .link { display: flex; flex-direction: column; justify-content: center; gap: 38px; padding: 0 10px; }
+  .arrow { position: relative; height: 2px; background: linear-gradient(90deg, #cbd5e1, #64748b); border-radius: 2px; }
+  .arrow::after { content: ""; position: absolute; right: -1px; top: -4px; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .arrow.back { background: linear-gradient(270deg, #cbd5e1, #64748b); }
+  .arrow.back::after { right: auto; left: -1px; border-left: none; border-right: 7px solid #64748b; }
+  .arrow em { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-style: normal; font-size: 11px; line-height: 1.3; color: var(--ink2); text-align: center; width: 92px; }
+
+  /* Thẻ quyết định */
+  .dec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .dcard .q { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; text-transform: uppercase; }
+  .dcard h4 { margin: 0; font-size: 15px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid #a7f3d0; }
+  .choice .ck { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+  .choice.open { background: var(--violet-bg); border-color: #ddd6fe; } .choice.open .ck { background: var(--violet); }
+  .alt { font-size: 12.5px; color: var(--ink3); padding-left: 2px; }
+
+  /* Khối ghi chú: cảnh báo / rủi ro / thông tin */
+  .note { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .note .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .n-warn { background: var(--amber-bg); border: 1px solid #fde68a; } .n-warn .ic { background: #f59e0b; }
+  .n-red { background: var(--red-bg); border: 1px solid #fecaca; } .n-red .ic { background: var(--red); }
+  .n-info { background: var(--blue-bg); border: 1px solid #bfdbfe; } .n-info .ic { background: var(--blue); }
+  .note p { margin: 0; } .note p + p { margin-top: 6px; }
+  ul.clean { margin: 0; padding-left: 18px; color: var(--ink2); } ul.clean li { margin: 5px 0; }
+
+  /* Cây (tổ chức, danh mục, quan hệ cha–con) */
+  .node { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .node .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+  .node b { font-size: 13.5px; display: block; line-height: 1.2; }
+  .node small { color: var(--ink2); font-size: 11.5px; }
+  .node.alt2 { background: #faf5ff; border-color: #e9d5ff; }
+  .t-ul { list-style: none; margin: 0; padding-left: 26px; }
+  .t-ul li { position: relative; padding: 7px 0 0 18px; }
+  .t-ul li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid #dbe1ec; }
+  .t-ul li:last-child::before { bottom: auto; height: 27px; }
+  .t-ul li::after { content: ""; position: absolute; left: 0; top: 27px; width: 16px; border-top: 2px solid #dbe1ec; }
+
+  /* Thẻ bảng dữ liệu (schema) */
+  .schema { display: grid; gap: 12px; }
+  .tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .tbl .th { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: #0f172a; color: #fff; font: 600 13px/1.3 "SF Mono", ui-monospace, monospace; }
+  .tbl .th span { font: 600 11px/1 -apple-system, sans-serif; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .tbl .th.new { background: linear-gradient(90deg, #6d28d9, #8b5cf6); }
+  .f { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; padding: 6px 12px; border-top: 1px solid #f1f3f8; font-size: 12.5px; align-items: center; }
+  .f code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+  .f small { color: var(--ink2); }
+  .f.isnew { background: #faf7ff; }
+
+  /* Bảng thường */
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  table.t td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num { color: var(--ink2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* Lộ trình theo phase */
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .phase { padding: 0 8px; position: relative; }
+  .phase::before { content: ""; position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: #dbe1ec; z-index: 1; }
+  .phase:first-child::before { left: 50%; } .phase:last-child::before { right: 50%; }
+  .phase .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; position: relative; z-index: 2; font-size: 13px; margin: 0 auto; }
+  .phase.cur .dot { box-shadow: 0 0 0 5px rgba(37,99,235,.18); }
+  .phase h4 { text-align: center; margin: 10px 0 4px; font-size: 13.5px; }
+  .phase p { text-align: center; margin: 0; color: var(--ink2); font-size: 12.5px; }
+  .phase .who { display: block; text-align: center; margin-top: 6px; }
+
+  /* Các bước của plan */
+  .steps { counter-reset: s; display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .step::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 9px; background: var(--slate-bg); color: var(--ink); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  .step.you::before { background: #fff7ed; color: var(--amber); }
+  .step h5 { margin: 0 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .step .v { color: var(--ink2); font-size: 13px; }
+  .step .v b { color: #047857; font-weight: 500; }
+  .dep { font-size: 11.5px; font-weight: 600; color: var(--ink2); background: var(--slate-bg); padding: 1px 8px; border-radius: 999px; }
+  .dep.par { color: var(--blue); background: var(--blue-bg); }
+  .dep.you { color: var(--amber); background: var(--amber-bg); }
+
+  /* Dải bước tuần tự (deploy, luồng ngắn) */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; align-items: stretch; }
+  .pipe .s { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .pipe .s:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; }
+  .pipe .s b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--slate-bg); font-size: 11px; margin-bottom: 4px; }
+  .pipe .s.you { border-color: #fde68a; background: var(--amber-bg); }
+  .pipe .s small { display: block; color: var(--ink2); font-size: 11.5px; }
+
+  /* Luồng nhiều bên (thay sequence diagram): mỗi bên 1 cột, mỗi bước 1 hàng */
+  .seq { display: grid; grid-template-columns: 40px repeat(3, 1fr); gap: 8px 10px; align-items: center; }
+  .seq .hd { text-align: center; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 10px; color: #fff; }
+  .seq .no { width: 26px; height: 26px; border-radius: 8px; background: var(--slate-bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .seq .msg { grid-column: var(--from) / var(--to); position: relative; text-align: center; font-size: 12.5px; color: var(--ink); padding: 6px 10px 10px; }
+  .seq .msg::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 2px; height: 2px; background: #64748b; border-radius: 2px; }
+  .seq .msg::before { content: ""; position: absolute; bottom: -2px; right: 12%; border-left: 7px solid #64748b; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .seq .msg.rev::before { right: auto; left: 12%; border-left: none; border-right: 7px solid #64748b; }
+  .seq .msg.err { color: var(--red); } .seq .msg.err::after { background: var(--red); } .seq .msg.err::before { border-left-color: var(--red); border-right-color: var(--red); }
+
+
+  /* Prototype màn hình (giống giao diện antd của FFM / Bigate), thao tác được */
+  .proto { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; overflow: clip; box-shadow: var(--shadow); background: #fff; position: relative; }
+  .proto .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f1f3f8; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+  .proto .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #e2e8f0; }
+  .proto .bar span { margin-left: 10px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; max-width: 420px; }
+  .app { display: grid; grid-template-columns: 208px 1fr; min-height: 430px; font-size: 13px; }
+  .side { background: #001529; color: #c9d1dc; padding: 12px 0; }
+  .side .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; padding: 4px 16px 14px; }
+  .side .brand b { width: 22px; height: 22px; border-radius: 6px; background: var(--ffm); display: grid; place-items: center; font-size: 11px; }
+  .side a { display: block; padding: 8px 16px 8px 20px; color: #c9d1dc; cursor: pointer; }
+  .side a:hover { color: #fff; }
+  .side a.on { background: #1677ff; color: #fff; }
+  .main { background: #f5f5f5; padding: 16px 18px; }
+  .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ph h3 { margin: 0; font-size: 16px; }
+  .btn { border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: rgba(0,0,0,.88); }
+  .btn:hover { border-color: #4096ff; color: #4096ff; }
+  .btn.pri { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .btn.pri:hover { background: #4096ff; color: #fff; }
+  .panel { background: #fff; border-radius: 8px; padding: 12px; }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .tabs a { padding: 6px 0; cursor: pointer; color: rgba(0,0,0,.65); border-bottom: 2px solid transparent; }
+  .tabs a.on { color: #1677ff; border-color: #1677ff; }
+  .tabs a sup { background: #f0f0f0; border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .search { border: 1px solid #d9d9d9; border-radius: 6px; padding: 5px 10px; width: 240px; font-size: 13px; margin-bottom: 10px; }
+  table.ant { width: 100%; border-collapse: collapse; }
+  table.ant th { background: #fafafa; text-align: left; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
+  table.ant tr:hover td { background: #fafafa; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: #bfbfbf; position: relative; cursor: pointer; display: inline-block; transition: .2s; vertical-align: middle; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; }
+  .sw.on { background: #1677ff; } .sw.on::after { left: 18px; }
+  .sw.lock { opacity: .4; cursor: not-allowed; }
+  .changed { outline: 2px dashed var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .changed-tip { position: absolute; font-size: 11px; color: var(--violet); background: var(--violet-bg); border-radius: 6px; padding: 1px 6px; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; background: #fff; z-index: 6; transform: translateX(105%); visibility: hidden; transition: transform .25s, visibility .25s; padding: 18px; box-shadow: -6px 0 16px rgba(0,0,0,.08); }
+  .proto.open .mask { display: block; } .proto.open .drawer { transform: none; visibility: visible; }
+  .drawer h4 { margin: 0 0 14px; font-size: 15px; }
+  .fld { margin-bottom: 12px; } .fld label { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .fld label em { color: #ff4d4f; font-style: normal; }
+  .fld input, .fld select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .fld.err input { border-color: #ff4d4f; } .fld .msg { color: #ff4d4f; font-size: 12px; display: none; } .fld.err .msg { display: block; }
+  .toast { position: absolute; top: 52px; left: 50%; transform: translate(-50%, -10px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 8px 14px; font-size: 13px; opacity: 0; transition: .25s; z-index: 9; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast::before { content: "✓"; color: #52c41a; font-weight: 700; margin-right: 8px; }
+  .toast.bad::before { content: "✕"; color: #ff4d4f; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; font: 12.5px/1.6 "SF Mono", ui-monospace, monospace; overflow-x: auto; margin: 10px 0 0; }
+
+  @media (max-width: 960px) {
+    .arch, .dec, .kpis, .grid2, .phases, .pipe { grid-template-columns: 1fr; }
+    .link { flex-direction: row; padding: 10px 0; } .row { grid-template-columns: 1fr; }
+    .pipe .s:not(:last-child)::after { display: none; }
+  }
+</style>
+<style>
+  /* Prototype riêng trang này: chép khung màn Warehouse Setting thật của FFM (rail 64px, header 52px, thẻ kho 280px, modal Edit).
+     Số đo lấy từ fulfillment.pancake.vn/admin/warehouse ngày 01/11/2026; màu dùng lại bảng màu antd đã có trong mẫu. */
+  .proto.ffm { font-size: 13px; }
+  .fx-app { display: grid; grid-template-columns: 56px 1fr; height: 640px; }
+  .fx-rail { background: #fff; border-right: 1px solid #f0f0f0; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 12px 0; }
+  .fx-av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #64748b); }
+  .fx-shop { width: 30px; height: 30px; border-radius: 6px; background: #8c95a3; color: #fff; display: grid; place-items: center; font-weight: 700; }
+  .fx-gear { width: 44px; height: 34px; border-radius: 8px; background: #e6f4ff; color: #1677ff; display: grid; place-items: center; font-size: 16px; }
+  .fx-sp { flex: 1; }
+  .fx-ic { color: #595959; font-size: 15px; }
+  .fx-body { display: flex; flex-direction: column; min-width: 0; }
+  .fx-head { height: 46px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; padding: 0 14px; }
+  .fx-tag { color: #eb2f96; background: #fff0f6; border: 1px solid #ffadd2; border-radius: 4px; font-size: 11.5px; font-weight: 700; padding: 0 6px; }
+  .fx-title { font-size: 16px; }
+  .fx-search { margin-left: auto; width: 230px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 3px 10px; color: #bfbfbf; font-size: 12.5px; }
+  .fx-flag { font-weight: 700; font-size: 12px; padding-left: 10px; border-left: 1px solid #f0f0f0; }
+  .fx-main { background: #f2f2f2; flex: 1; padding: 14px; }
+  .fx-ph { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .fx-ph span { color: #8c8c8c; font-size: 17px; }
+  .fx-grid { display: flex; flex-wrap: wrap; gap: 14px; }
+  .fx-card { width: 250px; min-height: 236px; background: #fff; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,.1), 0 0 1px rgba(0,0,0,.1); position: relative; }
+  .fx-card h5 { margin: 0; font-size: 14.5px; padding: 9px 14px; border-bottom: 1px solid #f0f0f0; }
+  .fx-li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 14px; font-weight: 500; }
+  .fx-li:first-of-type { padding-top: 10px; }
+  .fx-li i { font-style: normal; color: #595959; }
+  .fx-li.addr { justify-content: flex-start; }
+  .fx-mode { margin: 8px 14px 0; display: inline-flex; font-size: 12px; }
+  .fx-act { position: absolute; left: 0; right: 0; bottom: 12px; display: none; justify-content: center; gap: 6px; }
+  .fx-card:hover .fx-act { display: flex; }
+  .fx-mask { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: none; z-index: 5; }
+  .fx-modal { position: absolute; top: 44px; left: 50%; width: 640px; transform: translate(-50%, -12px); background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.08), 0 9px 28px 8px rgba(0,0,0,.05); padding: 16px 20px; z-index: 6; opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s; }
+  .proto.open .fx-mask { display: block; } .proto.open .fx-modal { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+  .fx-mh { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 15px; }
+  .fx-x { cursor: pointer; color: #8c8c8c; }
+  .fx-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .fx-in { background: #f8f8f8; border-radius: 2px; padding: 5px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fx-sel::after { content: "⌄"; float: right; color: #bfbfbf; }
+  .fx-box { border: 1px solid #d9d9d9; border-radius: 5px; padding: 8px 10px; margin-top: 12px; }
+  .fx-box.changed { outline-offset: 2px; }
+  .fx-bt { margin-bottom: 6px; }
+  .fx-q { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid #1677ff; color: #1677ff; font-size: 10px; cursor: help; margin-left: 4px; }
+  .fx-radio { display: inline-flex; align-items: center; gap: 6px; margin-right: 18px; cursor: pointer; }
+  .fx-radio input { accent-color: #1677ff; margin: 0; }
+  .fx-ck { display: flex; margin-top: 8px; }
+  .fx-alert { margin-top: 8px; border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
+  .fx-alert.info { background: #e6f4ff; border: 1px solid #91caff; }
+  .fx-alert.warn { background: #fffbe6; border: 1px solid #ffe58f; }
+  .fx-mf { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  .fx-note { position: absolute; top: 56px; right: 14px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); padding: 10px 14px; z-index: 9; opacity: 0; transform: translateX(10px); transition: .25s; pointer-events: none; max-width: 340px; }
+  .fx-note.show { opacity: 1; transform: none; }
+  .fx-note b { color: #52c41a; }
+</style>
+<style>
+  /* Prototype sơ đồ kho: khung theo màn Location Warehouse thật; lưới 28 × 14 ô, mỗi ô 24px. */
+  .lm-tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .lm-s { margin-left: 0; width: 250px; background: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lm-stats { display: flex; gap: 8px; align-items: stretch; margin-bottom: 12px; }
+  .lm-st { flex: 1; background: #fff; border: 1px solid #f0f0f0; border-radius: 6px; text-align: center; padding: 4px; font-size: 12.5px; }
+  .lm-st b { display: block; font-size: 17px; font-weight: 500; }
+  .lm-st.g { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; }
+  .lm-st.b { background: #e6f4ff; border-color: #91caff; color: #0958d9; }
+  .lm-st.r { background: #fff1f0; border-color: #ffa39e; color: #cf1322; }
+  .lm-seg { display: inline-flex; background: #f0f0f0; border-radius: 6px; padding: 2px; align-self: center; }
+  .lm-seg a { padding: 3px 12px; border-radius: 5px; cursor: pointer; color: #595959; }
+  .lm-seg a.on { background: #fff; color: #1677ff; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .lm-wrap { display: grid; grid-template-columns: 676px 1fr; gap: 12px; align-items: start; }
+  .lm-mtool { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #fff; border-radius: 8px 8px 0 0; padding: 6px 8px; font-size: 12.5px; min-height: 38px; }
+  .lm-leg { margin-left: auto; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; color: #595959; }
+  .lm-leg i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+  .t-pick { background: #d9f7be; border: 1px solid #73d13d; }
+  .t-storage { background: #d6e4ff; border: 1px solid #597ef7; }
+  .t-damage { background: #ffccc7; border: 1px solid #ff7875; }
+  .lm-map { position: relative; width: 676px; height: 340px; background-color: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px); background-size: 24px 24px; background-position: 2px 2px; user-select: none; }
+  .lm-map.draw { cursor: crosshair; }
+  .lm-loc { position: absolute; border-radius: 4px; font-size: 10.5px; line-height: 1.25; padding: 2px 4px; overflow: hidden; cursor: pointer; }
+  .lm-loc b { display: block; font-size: 11px; }
+  .lm-loc .fill { position: absolute; left: 0; bottom: 0; height: 3px; background: rgba(0,0,0,.35); }
+  .lm-loc.sel { box-shadow: 0 0 0 2px #1677ff; }
+  .lm-loc.hl { box-shadow: 0 0 0 3px #7c3aed; z-index: 2; }
+  .lm-loc .bd { position: absolute; top: -1px; right: -1px; background: #7c3aed; color: #fff; font-weight: 700; font-size: 10.5px; min-width: 17px; height: 17px; border-radius: 0 4px 0 6px; display: grid; place-items: center; }
+  .lm-zone { position: absolute; border: 1px dashed #8c8c8c; border-radius: 4px; background: repeating-linear-gradient(45deg, #fafafa, #fafafa 6px, #f0f0f0 6px, #f0f0f0 12px); display: grid; place-items: center; font-size: 11px; color: #595959; text-align: center; font-weight: 600; }
+  .lm-zone.dock { border-color: #faad14; color: #ad6800; }
+  .lm-ghost { position: absolute; border: 2px dashed #7c3aed; background: rgba(124,58,237,.08); border-radius: 4px; pointer-events: none; }
+  .lm-detail { background: #fff; border-radius: 0 0 8px 8px; border-top: 1px solid #f0f0f0; padding: 8px 10px; font-size: 12.5px; min-height: 64px; }
+  .lm-side { background: #fff; border-radius: 8px; padding: 8px 12px 12px; font-size: 12.5px; min-height: 444px; }
+  .lm-side .tabs { margin-bottom: 8px; }
+  .lm-item { border: 1px solid #f0f0f0; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; cursor: pointer; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+  .lm-item.on { border-color: #1677ff; background: #f0f7ff; }
+  .lm-item.done { opacity: .5; cursor: default; }
+  .lm-item small { color: #8c8c8c; display: block; }
+  .lm-plan { background: #fafafa; border-radius: 6px; padding: 8px; margin-top: 8px; }
+  .lm-plan ol { margin: 4px 0 0; padding-left: 18px; } .lm-plan li { margin: 3px 0; }
+  .lm-why { color: #8c8c8c; display: block; font-size: 11.5px; }
+  .lm-hot { color: #d4380d; background: #fff2e8; border-radius: 4px; padding: 0 5px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .lm-warn { color: #ad6800; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; padding: 5px 8px; margin-top: 4px; font-size: 11.5px; }
+  .lm-side select { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 4px 8px; font-size: 12.5px; margin-bottom: 6px; }
+  table.lm-t { width: 100%; border-collapse: collapse; } table.lm-t th, table.lm-t td { text-align: left; padding: 5px 4px; border-bottom: 1px solid #f0f0f0; vertical-align: top; } table.lm-t th { color: #8c8c8c; font-weight: 600; }
+</style>
+<style>
+  /* Prototype pick hàng: web Picking Management (khung thật) + điện thoại minh hoạ app kho. */
+  .pk-wrap { display: grid; grid-template-columns: 1fr 286px; gap: 0; }
+  .pk-seg { display: inline-flex; border: 1px solid #d9d9d9; border-radius: 6px; overflow: hidden; background: #fff; }
+  .pk-seg a { padding: 4px 11px; cursor: pointer; }
+  .pk-seg a.on { background: #1677ff; color: #fff; }
+  .pk-sel { border: 1px solid #d9d9d9; border-radius: 6px; padding: 4px 8px; font-size: 12.5px; width: 170px; background: #fff; }
+  .pk-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; padding: 8px; border-radius: 8px 8px 0 0; flex-wrap: wrap; }
+  .pk-tabs .btn.on { background: #1677ff; border-color: #1677ff; color: #fff; }
+  .pk-filter { font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px 4px; flex-wrap: wrap; }
+  .pk-filter .lm-seg a, .pk-filter > span { white-space: nowrap; }
+  .pk-num { width: 48px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 2px 6px; font-size: 12.5px; }
+  .pk-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 1px; }
+  .pk-t { font-size: 12.5px; }
+  .pk-t th, .pk-t td { padding: 7px 8px; }
+  .pk-t tr.cur td { background: #f0f7ff; }
+  .pk-t tr[data-g] { cursor: pointer; }
+  .pk-t td .btn, .pk-t td a { white-space: nowrap; }
+  .pk-tag { white-space: nowrap; display: inline-block; border: 1px solid #d9d9d9; background: #fafafa; border-radius: 4px; padding: 0 6px; font-size: 11.5px; }
+  .pk-tag.ex { color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
+  .pk-tag.mp { color: #d46b08; background: #fff7e6; border-color: #ffd591; }
+  .pk-tag.st-new { color: #0958d9; background: #e6f4ff; border-color: #91caff; }
+  .pk-tag.st-prog { color: #d46b08; background: #fff7e6; border-color: #ffd591; }
+  .pk-tag.st-done { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
+  .pk-side { background: #fff; border-radius: 8px; padding: 10px 12px; font-size: 12.5px; }
+  .pk-side-in { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .pk-ord { display: flex; gap: 6px; align-items: flex-start; padding: 4px 0; border-bottom: 1px solid #f5f5f5; }
+  .pk-ord small, .pk-sug small { color: #8c8c8c; display: block; }
+  .pk-sug .btn { white-space: nowrap; }
+  .pk-sug { display: flex; justify-content: space-between; gap: 6px; align-items: center; background: #f9f0ff; border: 1px solid #d3adf7; border-radius: 6px; padding: 4px 6px; margin-top: 4px; }
+  .pk-phone { margin: 14px 12px 14px 0; border: 8px solid #1f1f1f; border-radius: 30px; background: #f5f5f5; overflow: hidden; display: flex; flex-direction: column; height: 600px; font-size: 12.5px; }
+  .pk-ph-top { display: flex; justify-content: space-between; background: #fff; padding: 6px 12px; font-size: 11.5px; }
+  .pk-ph-mode { background: #fff; padding: 4px 10px 8px; font-size: 11.5px; color: #595959; border-bottom: 1px solid #f0f0f0; }
+  .pk-ph-body { flex: 1; overflow: auto; padding: 10px; }
+  .pk-card { background: #fff; border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+  .pk-stop { background: #fff; border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; border: 2px solid transparent; }
+  .pk-stop.cur { border-color: #1677ff; }
+  .pk-stop.done { opacity: .55; }
+  .pk-stop b.loc { font-size: 15px; }
+  .pk-prog { height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; margin: 6px 0; }
+  .pk-prog i { display: block; height: 100%; background: #52c41a; }
+  .pk-big { width: 100%; padding: 8px; font-size: 13px; margin-top: 6px; }
+  .pk-ck { display: flex; gap: 8px; align-items: center; }
+  .pk-ck input { width: 18px; height: 18px; accent-color: #1677ff; }
+  .pk-log { color: #8c8c8c; font-size: 11.5px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="top-in">
+  <div class="logo"><i></i>Khảo sát kho GIP</div>
+  <nav class="nav">
+    <a href="#tom-tat">Tóm tắt</a><a href="#luong">Luồng</a><a href="#tung-khau">Từng khâu</a><a href="#van-de">Vấn đề</a>
+    <a href="#uu-diem">Ưu điểm</a><a href="#de-xuat">Đề xuất</a><a href="#vi-tri">Vị trí kho</a><a href="#proto-pick">Prototype pick</a><a href="#prototype">Chế độ pick</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">FFM · Báo cáo khảo sát kho GIP</div>
+  <h1>Báo cáo khảo sát kho GIP và đề xuất cho FFM</h1>
+  <p>Ở WMS GIP, khâu pick hàng nhanh hơn FFM vì nhân viên cầm phiếu đi lấy hàng, không quét gì. Đổi lại, hệ thống không biết hàng đã đi đâu từ lúc rời kệ tới bàn đóng gói, và lúc chia kiện cho từng ĐVVC. Đề xuất cho FFM: cho từng kho chọn chế độ pick hàng (quét đủ hoặc pick theo phiếu), kèm các bước kiểm bù ở đóng gói và bàn giao để không mất khả năng truy vết.</p>
+  <div class="meta">
+    <span class="chip">Bản rút gọn <a href="wms-hien-co-va-sap-toi">Tổng hợp WMS v1 · v2</a></span>
+    <span class="chip">Trang liên quan <a href="so-sanh-wms-gip-va-ffm">So sánh 55 màn WMS GIP · FFM</a></span>
+    <span class="chip">Cập nhật 02/11/2026</span>
+    <span class="chip">Code: sea-fulfillment develop 8e50107a · sea-fulfillment-web develop 625549da</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><b>8 khâu</b><span>nhập hàng, thùng, lưu trữ, pick, đóng gói, bàn giao, kiểm hàng, hàng hoàn</span></div>
+  <div class="kpi"><b>2 điểm mù</b><span>ở GIP: pick hàng và chia kiện theo ĐVVC đều làm tay</span></div>
+  <div class="kpi"><b>Nhanh hơn</b><span>khâu pick hàng của GIP so với FFM (không quét vị trí, sản phẩm)</span></div>
+  <div class="kpi"><b>9 + 5 đề xuất</b><span>9 về quy trình, 5 về vị trí kho (sơ đồ kho, gợi ý vị trí)</span></div>
+</div>
+
+<section id="tom-tat">
+  <div class="sec-h"><span class="n">01</span><h2>Tóm tắt</h2><p>Kết luận chính</p></div>
+  <div class="status">
+    <div class="row"><div><h4>GIP: nhanh ở pick hàng, mù ở 2 khâu</h4><span class="pill p-mid">Đánh đổi</span></div>
+      <p>Pick hàng theo phiếu giấy, bỏ hàng vào tote gắn mã danh sách pick hàng. Không quét nên không có lịch sử: thiếu, thừa phát hiện ở bàn đóng gói không biết lỗi ở đâu. Bàn giao chia kiện vào tote theo ĐVVC bằng tay, nhầm tote là đơn đi sai ĐVVC.</p></div>
+    <div class="row"><div><h4>FFM: quét ở mọi khâu</h4><span class="pill p-ok">Truy vết được</span></div>
+      <p>Pick hàng phải quét vị trí và sản phẩm, mỗi lượt quét trừ tồn theo vị trí và ghi sổ công việc (ai, ở đâu, bao nhiêu). Bàn giao quét mã vận đơn từng kiện, kiện sai ĐVVC bị chặn ngay. Chậm hơn GIP ở khâu pick hàng.</p></div>
+    <div class="row"><div><h4>FFM còn thiếu so với GIP</h4><span class="pill p-bad">Chưa có</span></div>
+      <p>Lọc đơn theo số sản phẩm (1 SP, 2 SP, mix) khi tạo danh sách pick hàng, gợi ý gom đơn có sản phẩm nằm gần nhau, nhận hàng theo thùng, bổ sung hàng từ vị trí lưu trữ sang vị trí pick hàng, cập nhật tồn bằng file, đóng gói theo SKU cho đơn 1 sản phẩm.</p></div>
+  </div>
+</section>
+
+<section id="luong">
+  <div class="sec-h"><span class="n">02</span><h2>Luồng hai bên</h2><p>Ô vàng: làm tay, hệ thống không ghi nhận. Ô trắng: có quét, hệ thống ghi lại</p></div>
+  <div class="card">
+    <h4 style="margin:0 0 10px">WMS GIP (vận hành thực tế)</h4>
+    <div class="pipe" style="grid-template-columns:repeat(6,1fr)">
+      <div class="s"><b>1</b><br>Nhập hàng<small>theo sản phẩm hoặc theo thùng</small></div>
+      <div class="s"><b>2</b><br>Xếp kệ<small>vị trí Storage hoặc Picking</small></div>
+      <div class="s"><b>3</b><br>Tạo danh sách pick hàng<small>lọc theo số SP, chọn đơn, gán người pick</small></div>
+      <div class="s you"><b>4</b><br>Pick hàng<small>cầm phiếu lấy tay, bỏ vào tote</small></div>
+      <div class="s"><b>5</b><br>Đóng gói<small>mã danh sách → quét SP → in → quét mã vận đơn</small></div>
+      <div class="s you"><b>6</b><br>Bàn giao<small>chia kiện vào tote theo ĐVVC bằng tay</small></div>
+    </div>
+    <h4 style="margin:22px 0 10px">FFM (hiện tại)</h4>
+    <div class="pipe" style="grid-template-columns:repeat(6,1fr)">
+      <div class="s"><b>1</b><br>Nhận hàng + Kiểm tra QC<small>quét IR → tote → từng sản phẩm</small></div>
+      <div class="s"><b>2</b><br>Xếp kệ<small>quét tote → vị trí → sản phẩm</small></div>
+      <div class="s"><b>3</b><br>Pick hàng (tạo danh sách)<small>tự chia hoả tốc → sàn → thường, ≤20 đơn</small></div>
+      <div class="s"><b>4</b><br>Pick hàng (mobile)<small>quét tote → vị trí → sản phẩm</small></div>
+      <div class="s"><b>5</b><br>Đóng gói<small>quét tote → sản phẩm → mã vận đơn, có video</small></div>
+      <div class="s"><b>6</b><br>Bàn giao<small>phiên theo 1 ĐVVC, quét mã vận đơn từng kiện</small></div>
+    </div>
+    <p class="caption">Hai bên giống nhau ở khung luồng. Khác biệt nằm ở bước 4 và 6: GIP làm tay nên nhanh nhưng không để lại dấu vết; FFM quét nên chậm hơn nhưng biết hàng đang ở đâu, ai đã làm.</p>
+  </div>
+  <div class="grid2" style="margin-top:14px;align-items:stretch">
+    <div class="card">
+      <h4 style="margin:0 0 10px">Kiểm hàng</h4>
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px">WMS GIP: không có tính năng riêng</div>
+      <div class="pipe" style="grid-template-columns:repeat(3,1fr)">
+        <div class="s you"><b>1</b><br>Đếm tay<small>tại kệ, không phiếu kiểm kê</small></div>
+        <div class="s you"><b>2</b><br>So với tồn<small>tự đối chiếu, không khoá kệ</small></div>
+        <div class="s"><b>3</b><br>Phiếu xuất / nhập kho<small>bù số chênh, hoặc nhập tồn từ file</small></div>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin:16px 0 6px">FFM: phiếu kiểm kê <a href="https://pancakework.vn/issues/w4/c5024/i468">#468</a> <span class="pill p-mid">đang làm</span></div>
+      <div class="pipe" style="grid-template-columns:repeat(4,1fr)">
+        <div class="s"><b>1</b><br>Tạo phiếu<small>phiếu SC, khoá kệ</small></div>
+        <div class="s"><b>2</b><br>Đếm<small>trên mobile (#469)</small></div>
+        <div class="s"><b>3</b><br>Duyệt<small>xem chênh lệch từng dòng</small></div>
+        <div class="s"><b>4</b><br>Chỉnh tồn<small>mở khoá kệ, đồng bộ POS</small></div>
+      </div>
+    </div>
+    <div class="card">
+      <h4 style="margin:0 0 10px">Hàng hoàn</h4>
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px">WMS GIP: đi chung luồng nhập hàng</div>
+      <div class="pipe" style="grid-template-columns:repeat(3,1fr)">
+        <div class="s you"><b>1</b><br>Kiểm tay<small>đơn hoàn về kho, xem hàng tốt / hỏng</small></div>
+        <div class="s"><b>2</b><br>Nhập hàng<small>hàng tốt: phiếu nhập loại hoàn</small></div>
+        <div class="s"><b>3</b><br>Xếp kệ<small>hàng hỏng xử lý ngoài hệ thống</small></div>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin:16px 0 6px">FFM: màn Hoàn &amp; QC</div>
+      <div class="pipe" style="grid-template-columns:repeat(4,1fr)">
+        <div class="s"><b>1</b><br>Quét mã vận đơn<small>tạo phiếu hoàn RR gắn đơn gốc</small></div>
+        <div class="s"><b>2</b><br>Quét tote<small>rồi quét từng sản phẩm</small></div>
+        <div class="s"><b>3</b><br>QC<small>Good / Not good, có video</small></div>
+        <div class="s"><b>4</b><br>Xếp kệ<small>Good lên kệ, Not good vào vị trí hàng hỏng</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tung-khau">
+  <div class="sec-h"><span class="n">03</span><h2>So sánh từng khâu</h2><p>Đối chiếu cách làm của 2 bên ở từng khâu</p></div>
+  <div class="card" style="padding:8px 10px">
+    <table class="t">
+      <tr><th style="width:120px">Khâu</th><th>WMS GIP</th><th>FFM hiện tại</th><th style="width:230px">Nhận xét</th></tr>
+      <tr><td><b>1. Nhập hàng</b></td>
+        <td>2 cách nhận: <b>theo sản phẩm</b> (List by SKU) và <b>theo thùng</b> (BOX). Sản phẩm khai sẵn quy cách thùng (số lượng, kích thước) và mã vạch thùng, nên quét 1 mã thùng là nhận cả thùng.</td>
+        <td>Chỉ theo sản phẩm. Kiểm tra QC: quét mã phiếu nhập (IR) → tote → quét từng sản phẩm +1; dòng có SL ≥ 10 mới được nhập tay. Ghi hạn dùng lúc QC. Tồn chỉ cộng khi Xếp kệ xong.</td>
+        <td><span class="pill p-bad">FFM thiếu</span><br>Hàng về nguyên thùng phải đếm hoặc nhập tay từng dòng, không kiểm được theo thùng.</td></tr>
+      <tr><td><b>2. Thùng</b></td>
+        <td>Hàng nhập và lưu theo <b>thùng</b>: mỗi thùng chứa số sản phẩm cố định theo quy cách của sản phẩm. Tồn xem được theo vị trí, pallet, thùng, ngày xếp kệ, tuổi kho.</td>
+        <td>Không có thùng. Thứ gần nhất là <b>lô</b> = từng dòng phiếu nhập (<code>purchase_item</code>), mang hạn dùng. Tồn theo vị trí tách theo lô (<code>location_inventories.purchase_item_id</code>). Lô dùng để cấp hàng cho đơn theo FIFO / LIFO / FEFO của sản phẩm. Không có pallet, tuổi kho.</td>
+        <td><span class="pill p-bad">FFM thiếu</span><br>FFM chưa quản lý theo thùng. Gọi là "thùng" để không lẫn với lô của FFM (đợt nhập, có hạn dùng).</td></tr>
+      <tr><td><b>3. Lưu trữ, vị trí</b></td>
+        <td>Vị trí chia 2 loại: <b>Storage</b> (lưu trữ, hàng dự trữ) và <b>Picking</b> (đã xử lý, tách lẻ để lấy ngay). Có thứ tự đi pick cho từng vị trí.</td>
+        <td><code>storage_type</code> khai khi import vị trí: <code>pick</code> / <code>reserve</code> / <code>bulk</code> / <code>staging</code> / <code>damage</code>. Pick hàng chỉ gợi ý và tính tồn ở vị trí <code>pick</code>. Gợi ý theo "kệ nhiều hàng nhất trước", không theo đường đi. Có API chuyển kệ (<code>POST /putaways/relocation</code>).</td>
+        <td><span class="pill p-mid">FFM có một phần</span><br>Đã có khái niệm tương đương (<code>pick</code> ≈ Picking, <code>reserve</code>/<code>bulk</code> ≈ Storage). Thiếu luồng bổ sung hàng từ lưu trữ sang vị trí pick.</td></tr>
+      <tr><td><b>4. Pick hàng</b></td>
+        <td>Người quản lý tạo danh sách pick hàng: lọc đơn theo <b>số sản phẩm trong đơn</b> (1 SP, 2 SP, mix), theo loại đơn, kênh, khu; tự chọn đơn đưa vào phiếu, số đơn mỗi phiếu ước lượng theo người pick. Khi không đủ đơn cùng loại, người quản lý dựa vào kinh nghiệm để gom thêm đơn có sản phẩm nằm gần nhau. Nhân viên cầm phiếu lấy hàng bằng tay, bỏ vào tote gắn mã danh sách. Không quét vị trí, không quét sản phẩm.</td>
+        <td>Màn Picking Management tự gom đơn thành nhóm gợi ý theo 2 chế độ <b>Marketplace</b> (hoả tốc → sàn → thường) hoặc <b>SKU</b>, tối đa 20 đơn mỗi nhóm; người quản lý tick nhóm, chọn người pick rồi Assign. <b>Không chọn / bỏ được từng đơn, không lọc theo số sản phẩm, không gợi ý đơn theo vị trí.</b> (Code FE có sẵn modal chọn đơn tay <code>CreatePickingListModal</code> nhưng chưa gắn vào màn.) Mobile: quét tote → vị trí → sản phẩm, mỗi lượt quét trừ tồn theo vị trí và ghi <code>wms_work_logs</code>. Có xuất Excel phiếu pick hàng để in.</td>
+        <td><span class="pill p-info">Khác cách làm</span><br>GIP tạo phiếu linh hoạt và pick nhanh hơn, nhưng gom đơn dựa vào kinh nghiệm. FFM biết ai lấy, lấy ở vị trí nào, bao nhiêu, lúc nào.</td></tr>
+      <tr><td><b>5. Đóng gói</b></td>
+        <td>Quét hoặc nhập tay mã danh sách pick hàng → quét từng sản phẩm → in mẫu in của ĐVVC (printed form) → quét lại mã vận đơn để hoàn tất. Có thêm đóng gói theo SKU cho đơn 1 sản phẩm.</td>
+        <td>Pack WMS: quét tote → đơn đầu hàng đợi tự hiện → quét từng sản phẩm (≤ 20 phải quét từng cái) → quét mã vận đơn để chốt. Có quay video, nút Thiếu hàng đưa đơn sang <code>on_hold</code>. Chốt đơn là lúc trừ tồn vật lý.</td>
+        <td><span class="pill p-ok">Tương đương</span><br>Ở GIP, đóng gói là lần đầu hệ thống thấy sản phẩm, nên mọi chênh lệch dồn về đây.</td></tr>
+      <tr><td><b>6. Bàn giao</b></td>
+        <td>Sau đóng gói, nhân viên chia kiện vào từng tote theo ĐVVC bằng tay, rồi giao cả tote cho ĐVVC. Hệ thống có màn xuất kho (quét, cân) và biên bản tổng (Scan Form) nhưng khâu chia kiện không có kiểm tra.</td>
+        <td>Mỗi phiên bàn giao = 1 kho + 1 ĐVVC + loại đơn (sàn / thường). Quét mã vận đơn từng kiện: kiện khác ĐVVC bị chặn ("Different courier"), kiện đã bàn giao bị chặn, đơn huỷ đếm riêng. Xác nhận → đơn sang Đã bàn giao, in biên bản bàn giao.</td>
+        <td><span class="pill p-ok">FFM tốt hơn</span><br>Nhưng FFM chỉ chặn lúc quét giao; kiện để nhầm khu từ trước thì tới lúc giao mới biết.</td></tr>
+      <tr><td><b>7. Kiểm hàng, nắn tồn khi lệch</b></td>
+        <td><b>Kiểm hàng làm thủ công</b>: nhân viên đếm tay tại kệ, không dùng tính năng kiểm kê riêng. Thấy lệch thì <b>tạo phiếu xuất kho hoặc nhập kho</b> để bù số chênh, hoặc nhập tồn từ file Excel (Inventory Import) / điều chỉnh tồn hàng loạt (Batch Adjust Inventory).</td>
+        <td>Phiếu kiểm kê đang làm (<a href="https://pancakework.vn/issues/w4/c5024/i468">#468</a>): phiếu <code>SC-xxxx</code>, khoá kệ trong lúc đếm, duyệt chênh lệch rồi mới chỉnh tồn, đồng bộ POS; phần đếm trên mobile ở #469. Chưa có màn cập nhật tồn bằng file; công cụ nắn tồn <code>ADJ-BAL</code> do dev chạy tay; mã biến động <code>ADJ+</code> / <code>ADJ-</code> mới khai báo, chưa có màn dùng.</td>
+        <td><span class="pill p-mid">FFM đang làm</span><br>Khi #468 lên, FFM có luồng kiểm hàng riêng mà GIP đang thiếu; vận hành chưa tự nắn tồn bằng file được.</td></tr>
+      <tr><td><b>8. Hàng hoàn</b></td>
+        <td><b>Không có luồng hoàn hàng riêng.</b> Đơn hoàn về kho, hàng còn tốt thì làm như <b>nhập hàng</b> (phiếu nhập loại hoàn từ đơn / hoàn từ sàn) rồi Xếp kệ; hàng không tốt xử lý ngoài hệ thống.</td>
+        <td>Màn <b>Hoàn &amp; QC</b>: quét mã vận đơn của đơn đã hoàn → tạo phiếu hoàn <code>RR-xxxx</code> gắn với đơn gốc → quét tote → kiểm từng sản phẩm Good / Not good. Good vào phiếu Xếp kệ loại hoàn (<code>RPA-xxxx</code>), cất xong mới cộng lại tồn có thể bán; Not good vào vị trí <code>damage</code>. Số đang hoàn (<code>returning_quantity</code>) giảm theo, có video QC, lọc theo ngày nhận / ngày cất kệ.</td>
+        <td><span class="pill p-ok">FFM tốt hơn</span><br>Hàng hoàn gắn với đơn gốc, tách hàng tốt / hỏng, không lẫn với hàng nhập.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="van-de">
+  <div class="sec-h"><span class="n">04</span><h2>Vấn đề của cách GIP đang làm</h2><p>Những gì không xử lý được khi pick, bàn giao, kiểm hàng làm tay và hàng hoàn không có luồng riêng</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Hàng rơi giữa kệ và bàn đóng gói không truy được</h4><span class="pill p-bad">Mức cao</span></div>
+      <p>Đóng gói thấy thiếu 2 sản phẩm A trong danh sách 20 đơn: không biết do người pick lấy thiếu, lấy nhầm SKU, rơi dọc đường, hay kệ vốn đã hết. Thừa hàng cũng không biết trả về kệ nào. Không có ai chịu trách nhiệm cụ thể vì không có lượt quét nào gắn người với số lượng.</p></div>
+    <div class="row"><div><h4>Tồn theo vị trí lệch dần</h4><span class="pill p-bad">Mức cao</span></div>
+      <p>Pick không quét thì tồn từng vị trí không được trừ đúng lúc hàng rời kệ. Lệch tích luỹ cho tới khi kiểm kê, rồi phải nắn bằng file import, làm mất luôn dấu vết của chênh lệch.</p></div>
+    <div class="row"><div><h4>Chia kiện theo ĐVVC dễ nhầm</h4><span class="pill p-bad">Mức cao</span></div>
+      <p>Kiện bỏ nhầm tote thì ĐVVC A cầm đơn của ĐVVC B. Thường chỉ phát hiện khi ĐVVC trả lại hoặc khách khiếu nại: đơn trễ, phát sinh phí, khó đối soát vì không có bằng chứng kiện nào đã giao cho ai.</p></div>
+    <div class="row"><div><h4>Không đo được năng suất người pick</h4><span class="pill p-mid">Mức vừa</span></div>
+      <p>Không có lượt quét nên không biết mỗi người pick bao nhiêu sản phẩm, mất bao lâu, sai bao nhiêu lần. Không có số liệu để chia ca hay đánh giá.</p></div>
+    <div class="row"><div><h4>Gom đơn vào phiếu dựa vào kinh nghiệm</h4><span class="pill p-mid">Mức vừa</span></div>
+      <p>Hệ thống không gợi ý đơn nào có sản phẩm nằm gần nhau. Người quản lý phải nhớ vị trí hàng để gom, nên tạo phiếu chậm. Người mới chưa quen kho thì gom kém, người pick đi nhiều hơn.</p></div>
+    <div class="row"><div><h4>Kiểm hàng không có luồng riêng</h4><span class="pill p-bad">Mức cao</span></div>
+      <p>Đếm tay rồi bù chênh lệch bằng phiếu xuất kho / nhập kho: số liệu nhập, xuất bị lẫn với hàng nhập, xuất thật, báo cáo nhập xuất sai; không phân biệt được đâu là chênh lệch do kiểm kê. Không có phiếu kiểm kê nên không khoá kệ lúc đếm (đang pick thì số đếm lệch), không có bước duyệt, không lưu ai đếm, đếm lúc nào, lệch bao nhiêu.</p></div>
+    <div class="row"><div><h4>Hàng hoàn đi chung luồng nhập hàng</h4><span class="pill p-mid">Mức vừa</span></div>
+      <p>Hàng hoàn nhập như hàng mới nên không gắn với đơn gốc: không biết đơn nào đã về kho, khó đối chiếu với ĐVVC những đơn báo hoàn mà chưa thấy hàng. Số nhập hàng bị lẫn hàng hoàn. Hàng hỏng không có chỗ ghi nhận trong hệ thống.</p></div>
+    <div class="row"><div><h4>Nắn tồn bằng file là ghi đè</h4><span class="pill p-mid">Mức vừa</span></div>
+      <p>Import file đặt lại số tồn mà không cần duyệt, không giữ lý do chênh. Dễ che lỗi quy trình và khó phát hiện thất thoát.</p></div>
+  </div>
+</section>
+
+<section id="uu-diem">
+  <div class="sec-h"><span class="n">05</span><h2>Ưu điểm của GIP — FFM nên học</h2><p>Những điểm làm nhanh vận hành</p></div>
+  <div class="status">
+    <div class="row"><div><h4>Pick hàng nhanh</h4><span class="pill p-ok">Ưu điểm chính</span></div>
+      <p>Nhân viên không dừng ở mỗi vị trí để quét vị trí rồi quét sản phẩm. Hợp với kho nhỏ, ít SKU, hàng dễ nhận biết, hoặc giờ cao điểm cần đẩy đơn ra nhanh.</p></div>
+    <div class="row"><div><h4>Lọc đơn theo số sản phẩm khi tạo phiếu</h4><span class="pill p-ok">Đáng học</span></div>
+      <p>Phiếu pick hàng lọc được đơn 1 SP, đơn 2 SP, đơn mix. Phiếu toàn đơn 1 SP thì người pick lấy gộp theo SKU rồi chia, nhanh hơn nhiều so với đi lấy từng đơn. FFM hiện chưa có bộ lọc này.</p></div>
+    <div class="row"><div><h4>Người quản lý chọn đơn linh hoạt</h4><span class="pill p-mid">Đáng học, còn thiếu gợi ý</span></div>
+      <p>Người quản lý tự chọn đơn và số đơn mỗi phiếu cho vừa sức từng người pick. Khi không đủ đơn cùng loại, họ dựa vào kinh nghiệm để gom thêm đơn có sản phẩm nằm gần nhau. Nhược điểm: hệ thống không gợi ý sản phẩm gần nhau, nên tạo phiếu chậm và chỉ người quen kho mới gom tốt.</p></div>
+    <div class="row"><div><h4>Tách vị trí pick hàng và vị trí lưu trữ</h4><span class="pill p-ok">Đáng học</span></div>
+      <p>Hàng ở vị trí Picking đã được tách lẻ, đặt gần, nên người pick lấy nhanh. Hàng dự trữ nằm ở Storage, chỉ bổ sung sang khi cần.</p></div>
+    <div class="row"><div><h4>Nhận hàng theo thùng</h4><span class="pill p-ok">Đáng học</span></div>
+      <p>Quét 1 mã thùng = nhận đủ số trong thùng theo quy cách. Nhanh với hàng về số lượng lớn, ít sai đếm.</p></div>
+    <div class="row"><div><h4>Đóng gói theo SKU</h4><span class="pill p-ok">Đáng học</span></div>
+      <p>Đơn chỉ có 1 sản phẩm: quét mã sản phẩm là đóng xong đơn kế tiếp trong danh sách, không phải tìm đơn.</p></div>
+  </div>
+</section>
+
+<section id="de-xuat">
+  <div class="sec-h"><span class="n">06</span><h2>Đề xuất cho FFM</h2><p>Giữ khả năng truy vết của FFM, lấy tốc độ của GIP khi kho cần</p></div>
+
+  <div class="dec" style="grid-template-columns:1.3fr 1fr">
+    <div class="dcard"><div class="q">Đề xuất 1 · làm trước</div><h4>Cài đặt chế độ pick hàng theo kho</h4>
+      <div class="choice"><span class="ck">✓</span><div>Mỗi kho chọn 1 trong 2 chế độ: <b>Quét đầy đủ</b> (mặc định, như hiện tại) hoặc <b>Pick theo phiếu</b> (bỏ quét vị trí, sản phẩm khi pick). Tuỳ chọn thêm: chỉ áp dụng cho danh sách hoả tốc.</div></div>
+      <ul class="clean">
+        <li><b>Vẫn bắt buộc quét tote</b> lúc bắt đầu để tote gắn với danh sách pick hàng (giống GIP), đóng gói vẫn tìm đơn theo tote.</li>
+        <li>Màn pick trên mobile hiện vị trí gợi ý + số lượng như phiếu in, có 1 nút <b>Hoàn tất pick</b>.</li>
+        <li>Khi hoàn tất: trừ tồn theo vị trí gợi ý, ghi <code>wms_work_logs</code> cho người nhận danh sách, đánh dấu "pick theo phiếu" để báo cáo tách riêng.</li>
+        <li><b>Đóng gói không được bỏ quét</b>: đây thành điểm kiểm duy nhất của hàng đã pick.</li>
+        <li>Đổi chế độ chỉ áp dụng cho danh sách tạo sau; danh sách đang làm giữ chế độ cũ.</li>
+      </ul>
+      <div class="alt"><s>Tắt hẳn bước pick hàng</s>: mất cả tote lẫn danh sách, đóng gói không biết lấy hàng ở đâu.</div></div>
+    <div class="dcard"><div class="q">Đi kèm đề xuất 1</div><h4>Kiểm bù khi pick theo phiếu</h4>
+      <div class="choice"><span class="ck">✓</span><div><b>Đóng gói thiếu hàng phải chọn lý do</b>: pick thiếu / kệ hết / lấy nhầm SKU. Lưu kèm người pick của danh sách.</div></div>
+      <div class="choice"><span class="ck">✓</span><div><b>Báo cáo chênh lệch theo danh sách pick hàng</b>: số cần lấy, số đóng gói thực tế, người pick. Giúp tìm ra người, ca, vị trí hay sai.</div></div>
+      <div class="choice"><span class="ck">✓</span><div><b>Hàng thừa sau đóng gói</b> đưa về kệ qua phiếu Xếp kệ loại <code>repack</code> (đã có trong code), không để nằm ngoài sổ.</div></div>
+    </div>
+  </div>
+  <div class="note n-warn" style="margin-top:14px"><span class="ic">!</span><div><p><b>Đánh đổi khi bật "Pick theo phiếu":</b> tồn vị trí trừ theo gợi ý, nếu nhân viên lấy ở kệ khác thì tồn vị trí lệch. Kho bật chế độ này nên kiểm kê định kỳ (phiếu kiểm kê #468) để nắn lại.</p></div></div>
+
+  <div class="card" style="padding:8px 10px;margin-top:14px">
+    <table class="t">
+      <tr><th>#</th><th>Đề xuất</th><th>Giải quyết vấn đề gì</th><th>Công sức (ước lượng)</th><th>Ưu tiên</th></tr>
+      <tr><td class="num">1</td><td><b>Chế độ pick hàng theo kho</b> + kiểm bù ở đóng gói (mục trên)</td><td>Tăng tốc pick hàng mà không mất người chịu trách nhiệm và số liệu chênh lệch</td><td>Vừa: BE + FE web + mobile</td><td><span class="pill p-bad">Làm trước</span></td></tr>
+      <tr><td class="num">2</td><td><b>Gợi ý tote bàn giao theo ĐVVC ngay khi đóng gói xong</b>: quét mã vận đơn chốt đơn → màn hình hiện to tên ĐVVC (hoặc mã tote / khu chờ của ĐVVC đó). Bước sau: tote chờ bàn giao gắn ĐVVC, bỏ kiện vào tote nào phải quét tote đó, sai ĐVVC báo ngay.</td><td>Chặn chia nhầm từ lúc bỏ kiện, không đợi tới lúc quét giao</td><td>Nhỏ (bước đầu) · Vừa (tote gắn ĐVVC)</td><td><span class="pill p-bad">Làm trước</span></td></tr>
+      <tr><td class="num">3</td><td><b>Lọc đơn theo loại đơn khi tạo danh sách pick hàng</b>: thêm chế độ gom "Loại đơn" và "Shop" (mỗi danh sách 1 shop) cạnh Marketplace / SKU, bộ lọc shop và 5 loại đơn (1 SP · 1 SKU nhiều cái · Bộ · Đơn giống nhau · Lung tung, xem bảng dưới); cho chỉnh số đơn tối đa mỗi danh sách (hiện cố định 20) và cho bỏ / thêm từng đơn trong nhóm (tận dụng <code>CreatePickingListModal</code> đã có code)</td><td>Mỗi loại đơn có cách pick nhanh nhất riêng (gộp theo SKU, theo bộ, theo mẫu đơn); số đơn mỗi phiếu hợp với từng người</td><td>Nhỏ</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+      <tr><td class="num">4</td><td><b>Gợi ý gom đơn theo vị trí gần nhau</b>: khi tạo danh sách, ưu tiên đưa vào cùng phiếu các đơn có sản phẩm cùng khu / lối đi (đọc từ mã vị trí <code>ZoneAisle-Rack-Level</code>); hiện khu / lối đi và số điểm dừng của từng nhóm, gợi ý đơn ở nhóm khác nằm gọn trong cùng khu để thêm vào. Trên mobile, sắp vị trí theo thứ tự đi một vòng thay vì "kệ nhiều hàng nhất trước"</td><td>Tạo phiếu không phải dựa vào trí nhớ của người quản lý; người pick đi ít hơn</td><td>Vừa</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+      <tr><td class="num">5</td><td><b>Kiểm hàng qua phiếu kiểm kê, không bù bằng phiếu xuất / nhập</b>: kho GIP chuyển sang phiếu kiểm kê #468 khi lên prod. <b>Cập nhật tồn bằng file thành phiếu điều chỉnh chờ duyệt</b>: import tạo phiếu, quản lý kho duyệt mới ghi <code>ADJ+</code> / <code>ADJ-</code>, lưu lý do; dùng lại luồng duyệt của phiếu kiểm kê #468</td><td>Vận hành tự nắn tồn khi lệch, vẫn giữ dấu vết và người duyệt; số nhập / xuất không bị lẫn chênh lệch kiểm kê</td><td>Vừa (nếu dùng lại #468)</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+      <tr><td class="num">6</td><td><b>Gợi ý bổ sung hàng khi vị trí pick sắp hết</b>: mỗi SKU ở vị trí Pick có mức tối thiểu (số bán 2 ngày, hoặc số đơn đang chờ nếu lớn hơn). Tồn dưới mức thì gợi ý <b>lấy bao nhiêu, từ vị trí Storage nào, xuống vị trí Pick nào</b>, tạo việc chuyển kệ (đã có loại Xếp kệ <code>relocation</code>) để làm trước ca pick. SKU bán chạy chưa có vị trí Pick thì gợi ý vị trí Pick trống gần khu đóng gói. Khi tạo danh sách mà vị trí Pick không đủ nhưng Storage còn hàng thì cảnh báo</td><td>Hàng ở Storage khó lấy (trên cao, sâu trong kệ): đưa xuống trước, người pick không phải tự lấy giữa ca. Hiện cảnh báo thiếu hàng chỉ đếm vị trí <code>pick</code>, hàng ở vị trí lưu trữ vẫn bị báo thiếu</td><td>Vừa</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+      <tr><td class="num">7</td><td><b>Nhận hàng theo thùng</b>: thêm quy cách thùng (SL / thùng, mã vạch thùng) cho sản phẩm; Kiểm tra QC quét mã thùng = cộng cả thùng</td><td>Nhập hàng số lượng lớn nhanh, ít sai đếm</td><td>Vừa</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+      <tr><td class="num">8</td><td><b>Đóng gói theo SKU</b> cho danh sách toàn đơn 1 sản phẩm (đi cùng đề xuất 3): quét mã sản phẩm là chốt đơn kế tiếp</td><td>Bù thời gian ở đóng gói, nhất là đơn sàn 1 sản phẩm</td><td>Vừa</td><td><span class="pill p-info">Xem xét sau</span></td></tr>
+      <tr><td class="num">9</td><td><b>Đóng gói nhanh khi có sự cố</b> (mất điện, mất mạng, hỏng máy quét / app kho / máy in): ghi nhận đơn đã đóng ngoài luồng WMS theo danh sách mã đơn, tự trừ tồn vị trí (xem mục dưới)</td><td>Kho vẫn đẩy đơn ra được khi thiết bị hỏng, mà tồn vị trí không lệch</td><td>Vừa</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+    </table>
+  </div>
+  <p class="caption">Công sức là ước lượng sơ bộ để xếp thứ tự, chưa phải estimate của dev. Đề xuất 1 và 2 giải quyết thẳng 2 điểm mù đã thấy ở GIP.</p>
+  <div class="card" id="loai-don" style="padding:14px 10px 8px;margin-top:14px">
+    <h4 style="margin:0 12px 6px">Đề xuất 3 — 5 loại đơn khi lọc danh sách pick hàng</h4>
+    <table class="t">
+      <tr><th style="width:150px">Loại đơn</th><th>Điều kiện</th><th style="width:220px">Ví dụ</th><th>Cách pick gợi ý</th></tr>
+      <tr><td><b>1. 1 SP</b></td><td>1 SKU, số lượng 1</td><td>Áo thun × 1</td><td>Gộp theo SKU: lấy đủ tổng số rồi chia mỗi đơn 1 cái; đi cùng đóng gói theo SKU (đề xuất 8)</td></tr>
+      <tr><td><b>2. 1 SKU nhiều cái</b></td><td>1 SKU, số lượng từ 2</td><td>Áo thun × 3</td><td>Gộp theo SKU, chia theo số lượng từng đơn</td></tr>
+      <tr><td><b>3. Bộ</b></td><td>Từ 2 SKU, mỗi SKU 1 cái</td><td>Áo + quần (1 bộ quần áo)</td><td>Đi một vòng lấy đủ bộ cho từng đơn; các đơn cùng bộ gom chung 1 danh sách</td></tr>
+      <tr><td><b>4. Đơn giống nhau</b></td><td>Từ 2 SKU, có SKU từ 2 cái, và có từ 2 đơn trở lên giống hệt (cùng SKU, cùng số lượng)</td><td>3 đơn cùng Áo × 2 + Quần × 1</td><td>Lấy 1 lần cho cả N đơn (nhân số lượng lên), rồi chia đều vào N đơn</td></tr>
+      <tr><td><b>5. Lung tung</b></td><td>Còn lại</td><td>Áo khoác × 2 + Ví + Dép</td><td>Lấy theo từng đơn, theo thứ tự đi một vòng; dùng gợi ý gom đơn theo vị trí (đề xuất 4)</td></tr>
+    </table>
+    <p class="caption" style="margin:8px 12px 4px">Xét từ loại 1 xuống loại 5, mỗi đơn chỉ thuộc 1 loại. Ngưỡng "giống nhau" (từ 2 đơn) là đề xuất, chờ BA và vận hành chốt.</p>
+  </div>
+  <div class="card" id="dong-goi-nhanh" style="margin-top:14px">
+    <h4 style="margin:0 0 10px">Đề xuất 9 — Đóng gói nhanh khi có sự cố</h4>
+    <div class="grid2">
+      <div>
+        <div style="font-weight:600;margin-bottom:6px">Khi nào dùng, cách làm</div>
+        <ul class="clean">
+          <li><b>Khi nào:</b> mất điện, mất mạng, hỏng máy quét, app kho hoặc máy in. Kho vẫn phải đóng đơn ra, không đợi sửa xong thiết bị.</li>
+          <li><b>Trong lúc sự cố:</b> đóng tay theo mẫu in của ĐVVC đã in sẵn hoặc phiếu ghi tay, giữ lại danh sách mã vận đơn đã đóng.</li>
+          <li><b>Có lại hệ thống:</b> màn Đóng gói nhanh — quét, nhập hoặc dán cả danh sách mã đơn / mã vận đơn, chọn lý do sự cố, xác nhận. Đơn sang Đã đóng gói, hệ thống tự trừ tồn vị trí.</li>
+          <li><b>Truy vết:</b> ghi sổ công việc dòng "đóng gói nhanh" (ai, lúc nào, lý do), báo cáo tách riêng để biết kho dùng bao nhiêu lần, có bị lạm dụng thay luồng chính không.</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:6px">Trừ tồn vị trí: điểm khác giữa GIP / SSC và FFM</div>
+        <ul class="clean">
+          <li><b>GIP, SSC:</b> mỗi sản phẩm chỉ lưu ở 1 vị trí, nên đóng gói nhanh trừ thẳng vào vị trí đó, không cần chọn.</li>
+          <li><b>FFM:</b> 1 sản phẩm đặt được ở nhiều vị trí, nhiều lô, nên phải có quy tắc chọn vị trí để trừ:</li>
+        </ul>
+        <table class="t" style="margin-top:6px">
+          <tr><th style="width:170px">Trường hợp</th><th>Trừ tồn thế nào</th></tr>
+          <tr><td>Đơn đã pick xong (đã quét)</td><td>Không trừ lại, tồn vị trí đã trừ lúc quét; chỉ chốt đơn</td></tr>
+          <tr><td>Sản phẩm chỉ có 1 vị trí Pick còn hàng</td><td>Trừ thẳng vị trí đó, giống GIP</td></tr>
+          <tr><td>Nhiều vị trí Pick</td><td>Trừ theo đúng thứ tự gợi ý pick đang có (vị trí nhiều hàng trước, lô theo FIFO / LIFO / FEFO), đánh dấu "trừ theo gợi ý"</td></tr>
+          <tr><td>Vị trí Pick không đủ</td><td>Không tự trừ sang Storage; vẫn chốt đơn, ghi dòng lệch chờ xử lý và gợi ý kiểm kê vị trí đó</td></tr>
+        </table>
+        <p class="caption" style="margin-top:6px">Kho muốn chính xác như GIP thì cài thêm tuỳ chọn "mỗi sản phẩm chỉ 1 vị trí Pick" (đi cùng đề xuất V1).</p>
+      </div>
+    </div>
+    <div class="note n-warn" style="margin-top:12px"><span class="ic">!</span><div><p><b>Hiện tại FFM chưa có đường này cho kho WMS.</b> Màn Pack Order (cũ) đóng gói đơn không cần tote, nhưng chỉ chốt đơn (<code>PUT /orders/:id</code>), <b>không trừ tồn vị trí</b>: tồn vị trí chỉ trừ lúc quét khi pick (<code>PickingAction.do_pick</code>). Kho WMS dùng Pack Order (cũ) để chữa cháy thì tồn vị trí sẽ cao hơn thực tế. Đóng gói nhanh có thể xây trên Pack Order (cũ) hoặc hướng gộp 2 luồng đóng gói của <a href="https://pancakework.vn/issues/w4/c5024/i436">#436</a>, thêm bước trừ tồn vị trí theo bảng trên. (Đọc code sea-fulfillment develop 8ea82b83, 02/11/2026.)</p></div></div>
+  </div>
+</section>
+
+<section id="vi-tri">
+  <div class="sec-h"><span class="n">07</span><h2>Vị trí kho — đề xuất</h2><p>Gợi ý vị trí khi Xếp kệ và khi pick, dựa trên sơ đồ kho và độ bán chạy</p></div>
+  <div class="status">
+    <div class="row"><div><h4>FFM hiện tại</h4><span class="pill p-mid">Có một phần</span></div>
+      <p>Vị trí có 5 loại <code>pick</code> / <code>reserve</code> / <code>bulk</code> / <code>staging</code> / <code>damage</code>, nhưng code chỉ xử lý riêng <code>pick</code> (nơi được pick) và <code>damage</code> (hàng hỏng); 3 loại còn lại không có luồng nào dùng. Khi Xếp kệ, hệ thống đã gợi ý vị trí: các vị trí <b>đang chứa đúng SKU đó</b>, chưa đầy, vị trí trống nhiều xếp trước. Không xét loại vị trí, độ bán chạy, khoảng cách tới khu đóng gói; SKU mới chưa nằm ở vị trí nào thì không có gợi ý. Khi pick, gợi ý "kệ nhiều hàng nhất trước". Vị trí chỉ xem được dạng bảng, không có sơ đồ.</p></div>
+  </div>
+  <div class="card" style="padding:8px 10px;margin-top:14px">
+    <table class="t">
+      <tr><th>#</th><th>Đề xuất vị trí</th><th>Cách hoạt động</th><th>Ưu tiên</th></tr>
+      <tr><td class="num">V1</td><td><b>Gọn còn 3 loại vị trí</b>: <b>Pick</b> (pick được), <b>Storage</b> (lưu trữ), <b>Damage</b> (hàng hỏng)</td><td><code>reserve</code> / <code>bulk</code> gộp vào Storage. Pick hàng chỉ gợi ý vị trí Pick; Storage dùng để cất dự trữ và bổ sung sang Pick; Damage nhận hàng hỏng như hiện nay.</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+      <tr><td class="num">V2</td><td><b>Sơ đồ kho dạng map</b>: người dùng tự vẽ vị trí trên lưới</td><td>Kéo chuột để vẽ từng vị trí với kích thước riêng, chọn loại, đánh dấu khu đóng gói và cửa nhập hàng. Toạ độ trên sơ đồ là đầu vào để tính khoảng cách cho V3, V4, V5.</td><td><span class="pill p-bad">Làm trước</span></td></tr>
+      <tr><td class="num">V3</td><td><b>Gợi ý vị trí cất khi Xếp kệ theo độ bán chạy</b></td><td>Hàng bán chạy → vị trí Pick đang có SKU đó hoặc vị trí Pick trống gần khu đóng gói; phần dư → Storage. Hàng bán chậm → Storage, ưu tiên chỗ xa để dành chỗ gần cho hàng bán chạy. Hàng hỏng → Damage. SKU mới cũng có gợi ý. Chỉ là gợi ý, nhân viên vẫn quét vị trí thật.</td><td><span class="pill p-bad">Làm trước</span></td></tr>
+      <tr><td class="num">V4</td><td><b>Gợi ý vị trí pick theo đơn, tính lúc bắt đầu pick</b></td><td>Đọc tồn từng vị trí ngay lúc nhân viên bắt đầu (FFM đã dựng gợi ý lúc <code>/start</code>), ưu tiên vị trí Pick đủ số lượng và gần; thiếu thì lấy thêm ở vị trí gần nhất còn hàng; sắp thứ tự đi một vòng từ khu đóng gói. Chỉ gợi ý, không khoá vị trí.</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+      <tr><td class="num">V5</td><td><b>Danh sách sản phẩm bán chạy</b> + cảnh báo đặt sai chỗ</td><td>Xếp hạng SKU theo số lượng bán 7 ngày tại kho. SKU bán chạy mà chỉ nằm ở Storage hoặc ở vị trí xa → gợi ý chuyển sang vị trí Pick gần khu đóng gói (dùng phiếu chuyển kệ <code>relocation</code> đã có).</td><td><span class="pill p-mid">Nên làm</span></td></tr>
+    </table>
+  </div>
+  <div class="note n-info" style="margin-top:14px"><span class="ic">i</span><div><p><b>Dữ liệu cần thêm (ước lượng):</b> toạ độ trên sơ đồ cho từng vị trí (<code>map_x</code>, <code>map_y</code>, <code>map_w</code>, <code>map_h</code> trên <code>warehouse_locations</code>), các khu đặc biệt của kho (khu đóng gói, cửa nhập), số lượng bán theo SKU × kho trong 7 ngày (tính từ đơn đã đóng gói). Khoảng cách tạm tính theo đường thẳng góc trên lưới, chưa tính lối đi bị chắn.</p></div></div>
+</section>
+
+<section id="proto-vi-tri">
+  <div class="sec-h"><span class="n">08</span><h2>Prototype — sơ đồ kho và gợi ý vị trí</h2><p>Bấm thử: chọn SKU ở tab Cất hàng rồi Áp dụng · tab Pick theo đơn · tab Bán chạy · tab Bổ sung → Tạo việc bổ sung · Vẽ vị trí (chọn loại, kéo chuột trên ô trống) · bấm 1 vị trí để xem / đổi loại / xoá · đổi List / Map</p></div>
+  <div class="proto ffm" id="lproto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/wms/location-warehouse</span></div>
+    <div class="fx-app" style="height:auto">
+      <div class="fx-rail">
+        <span class="fx-av"></span>
+        <span class="fx-shop" style="background:#fa8c16">W</span>
+        <span class="fx-ic">🛒</span><span class="fx-ic">⛉</span><span class="fx-ic">▤</span><span class="fx-ic">↩</span>
+        <span class="fx-gear">⌖</span>
+        <span class="fx-sp"></span><span class="fx-ic">›</span>
+      </div>
+      <div class="fx-body">
+        <div class="fx-head"><span class="fx-tag">⌂ FFM</span><b class="fx-title">Location Warehouse</b><span class="fx-flag" style="margin-left:auto">VN</span><span class="fx-ic">◷</span><span class="fx-ic">⚇</span></div>
+        <div class="fx-main">
+          <div class="lm-tools">
+            <button class="btn">⟳ Reload</button><span class="fx-search lm-s">⌕ &nbsp;Search location...</span><span class="fx-search lm-s">⌕ &nbsp;Search product in warehouse location</span>
+            <span class="fx-in fx-sel" style="width:170px;background:#fff;border:1px solid #d9d9d9">Kho Hà Nội 01</span>
+          </div>
+          <div class="lm-stats">
+            <span class="lm-seg changed"><a data-view="list">List</a><a data-view="map" class="on">Map</a></span>
+            <div class="lm-st"><b id="st-total"></b>Total Locations</div>
+            <div class="lm-st g"><b id="st-empty"></b>Empty</div>
+            <div class="lm-st b"><b id="st-avail"></b>Available</div>
+            <div class="lm-st r"><b id="st-full"></b>Full</div>
+          </div>
+          <div id="lm-list" style="display:none" class="panel"><table class="ant"><thead><tr><th>Location</th><th>Warehouse Name</th><th>Storage</th><th>Dimensions</th><th>Status</th></tr></thead><tbody id="lm-rows"></tbody></table></div>
+          <div id="lm-mapview" class="lm-wrap">
+            <div>
+              <div class="lm-mtool changed">
+                <span class="lm-seg"><a data-mode="view" class="on">Xem</a><a data-mode="draw">✎ Vẽ vị trí</a></span>
+                <span id="lm-drawopt" style="display:none">Loại:
+                  <label class="fx-radio"><input type="radio" name="dt" value="pick" checked> Pick</label>
+                  <label class="fx-radio"><input type="radio" name="dt" value="storage"> Storage</label>
+                  <label class="fx-radio"><input type="radio" name="dt" value="damage"> Damage</label>
+                  <span style="color:#8c8c8c">kéo chuột trên ô trống</span></span>
+                <span class="lm-leg"><i class="t-pick"></i>Pick <i class="t-storage"></i>Storage <i class="t-damage"></i>Damage</span>
+              </div>
+              <div class="lm-map" id="lm-map"></div>
+              <div class="lm-detail" id="lm-detail">Bấm 1 vị trí trên sơ đồ để xem hàng đang chứa.</div>
+            </div>
+            <div class="lm-side changed">
+              <div class="tabs"><a class="on" data-tab="put">Cất hàng</a><a data-tab="pick">Pick theo đơn</a><a data-tab="hot">Bán chạy</a><a data-tab="rep">Bổ sung</a></div>
+              <div id="tab-put"></div>
+              <div id="tab-pick" style="display:none"></div>
+              <div id="tab-hot" style="display:none"></div>
+              <div id="tab-rep" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fx-note" id="ltoast"><b>✓</b> <span></span></div>
+  </div>
+  <p class="caption">Khung màn dựng theo màn Location Warehouse thật (thanh công cụ, 4 ô thống kê, bảng List). Phần viền tím là phần thêm mới: nút List / Map, sơ đồ kho vẽ được và bảng gợi ý bên phải. Số lượng bán, tồn, mã vị trí là dữ liệu mẫu. Gợi ý tính lại theo tồn hiện tại sau mỗi lần Áp dụng hoặc bổ sung, nên tab Pick theo đơn đổi theo: bổ sung xong thì đơn không còn phải lấy ở Storage. Tab Bổ sung: mức tối thiểu = max(số bán 2 ngày, số đơn đang chờ), lấy xuống đủ số bán 5 ngày, không vượt sức chứa vị trí Pick.</p>
+</section>
+
+<section id="proto-pick">
+  <div class="sec-h"><span class="n">09</span><h2>Prototype — pick hàng theo shop</h2><p>Bấm thử: đổi chế độ gom, lọc shop / loại đơn · bấm nhóm để bỏ / thêm đơn · Assign · Assigned → Mở trên app</p></div>
+  <div class="proto ffm" id="pproto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/wms/picking</span></div>
+    <div class="pk-wrap">
+      <div class="fx-app" style="height:auto;min-height:620px">
+        <div class="fx-rail">
+          <span class="fx-av"></span><span class="fx-shop" style="background:#fa8c16">W</span>
+          <span class="fx-ic">🛒</span><span class="fx-ic">⛉</span><span class="fx-ic">▤</span>
+          <span class="fx-gear">🛍</span><span class="fx-ic">⌖</span>
+          <span class="fx-sp"></span><span class="fx-ic">›</span>
+        </div>
+        <div class="fx-body">
+          <div class="fx-head"><span class="fx-tag">⌂ FFM</span><b class="fx-title">Picking Management</b><span class="fx-flag" style="margin-left:auto">VN</span><span class="fx-ic">◷</span><span class="fx-ic">⚇</span></div>
+          <div class="fx-main">
+            <div class="lm-tools" style="flex-wrap:wrap">
+              <button class="btn">⟳</button>
+              <span class="fx-in fx-sel" style="width:150px;background:#fff;border:1px solid #d9d9d9">Kho Hà Nội 01</span>
+              <span class="pk-seg" id="pk-mode"><a data-gm="marketplace">Marketplace</a><a data-gm="sku">SKU</a><a data-gm="units" class="changed">Loại đơn</a><a data-gm="shop" class="changed">Shop</a></span>
+              <select id="pk-staff" class="pk-sel"><option value="">Assign Picking Staff</option><option>Nguyễn Văn Nam</option><option>Trần Thị Mai</option><option>Lê Quốc Bảo</option></select>
+              <button class="btn pri" data-act="assign">Assign</button>
+            </div>
+            <div class="pk-bar">
+              <span class="pk-tabs"><button class="btn" data-mtab="list">Picking List</button><button class="btn" data-mtab="assigned">Assigned</button></span>
+              <span class="pk-filter changed"><span>Shop: <select id="pk-shop" class="pk-sel" style="width:130px"><option value="all">Tất cả</option><option>Thời Trang An</option><option>Mẹ &amp; Bé Mint</option><option>Phụ Kiện Lux</option></select></span> <span>Loại đơn:</span>
+                <span class="lm-seg" id="pk-units"><a data-u="all">Tất cả</a><a data-u="1">1 SP</a><a data-u="2">1 SKU nhiều cái</a><a data-u="3">Bộ</a><a data-u="4">Đơn giống nhau</a><a data-u="5">Lung tung</a></span>
+                <span>Tối đa <input id="pk-max" type="number" min="2" max="50" value="5" class="pk-num"> đơn <span style="color:#8c8c8c">(hiện cố định 20)</span></span></span>
+            </div>
+            <div class="pk-grid">
+              <div class="panel" style="padding:0">
+                <table class="ant pk-t" id="pk-table"></table>
+              </div>
+              <div class="pk-side" id="pk-side"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pk-phone">
+        <div class="pk-ph-top"><span>9:41</span><b>FFM Kho</b><span>▮▮▮</span></div>
+        <div class="pk-ph-mode changed">Chế độ của kho (demo): <span class="lm-seg" id="pk-pmode"><a data-pm="scan">Full scan</a><a data-pm="paper">Pick by list</a></span></div>
+        <div class="pk-ph-body" id="pk-phone"></div>
+      </div>
+    </div>
+    <div class="fx-note" id="ptoast"><b>✓</b> <span></span></div>
+  </div>
+  <p class="caption">Màn web dựng theo màn Picking Management thật (thanh công cụ Marketplace / SKU, Assign Picking Staff, tab Picking List / Assigned, các cột Total orders · SKUs · Type). Phần viền tím là phần thêm mới: chế độ gom "Shop" (mỗi danh sách chỉ chứa đơn của 1 shop; đơn hoả tốc vẫn tách riêng trong từng shop) và "Loại đơn", bộ lọc shop, bộ lọc 5 loại đơn (1 SP · 1 SKU nhiều cái · Bộ · Đơn giống nhau · Lung tung), số đơn tối đa chỉnh được, cột Loại đơn · Khu · Điểm dừng, khung sửa đơn trong nhóm và gợi ý đơn gần. Màn app kho vẽ theo luồng trong code BE và KB (quét tote → vị trí → sản phẩm, dòng ≤ 5 phải quét từng cái); chưa đối chiếu giao diện app thật. Dữ liệu là dữ liệu mẫu.</p>
+</section>
+
+<section id="prototype">
+  <div class="sec-h"><span class="n">10</span><h2>Prototype — chế độ pick hàng</h2><p>Bấm thử: rê chuột vào thẻ kho → Edit, đổi Picking mode, OK. Kho HCM 02 đang pick dở nên có cảnh báo</p></div>
+  <div class="proto ffm" id="proto">
+    <div class="bar"><i></i><i></i><i></i><span>fulfillment.pancake.vn/admin/warehouse</span></div>
+    <div class="fx-app">
+      <div class="fx-rail">
+        <span class="fx-av"></span>
+        <span class="fx-shop">S</span>
+        <span class="fx-gear">⚙</span>
+        <span class="fx-sp"></span>
+        <span class="fx-ic">›</span>
+        <span class="fx-ic">⎋</span>
+      </div>
+      <div class="fx-body">
+        <div class="fx-head">
+          <span class="fx-tag">⌂ FFM</span><b class="fx-title">Warehouse Setting</b>
+          <span class="fx-search">⌕ &nbsp;Search settings...</span>
+          <span class="fx-flag">VN</span><span class="fx-ic">◷</span><span class="fx-ic">⚇</span>
+        </div>
+        <div class="fx-main">
+          <div class="fx-ph"><span>Warehouse</span><button class="btn pri" id="hdr-btn">+ Create</button></div>
+          <div class="fx-grid" id="cards"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fx-mask" data-act="close"></div>
+    <div class="fx-modal" role="dialog">
+      <div class="fx-mh"><b id="m-title"></b><span class="fx-x" data-act="close">✕</span></div>
+      <div class="fx-row"><span class="fx-in" style="flex:1">👤 <span id="m-name"></span></span><span class="fx-in" style="flex:1">✆ <span id="m-phone"></span></span></div>
+      <div class="fx-row"><span class="fx-in" style="flex:2">⌖ <span id="m-addr"></span></span><span class="fx-in fx-sel" style="flex:1">Vietnam</span></div>
+      <div class="fx-row"><span class="fx-in fx-sel" style="flex:1" id="m-p"></span><span class="fx-in fx-sel" style="flex:1" id="m-d"></span><span class="fx-in fx-sel" style="flex:1" id="m-c"></span></div>
+      <div class="fx-box">
+        <div class="fx-bt">Aggregate inventory <span class="fx-q">?</span></div>
+        <label class="fx-radio"><input type="radio" name="agg" checked> Order Returned</label>
+        <label class="fx-radio"><input type="radio" name="agg"> Putaway</label>
+      </div>
+      <div class="fx-box changed">
+        <div class="fx-bt">Picking mode <span class="fx-q" title="Pick by list: staff pick with a printed list, no location / product scan. Packing still scans every product.">?</span></div>
+        <label class="fx-radio"><input type="radio" name="pm" value="scan" id="pm-scan"> Full scan (scan location + product)</label>
+        <label class="fx-radio"><input type="radio" name="pm" value="paper" id="pm-paper"> Pick by list (no scan when picking)</label>
+        <div id="pm-extra" style="display:none">
+          <label class="fx-radio fx-ck"><input type="checkbox" id="pm-express"> Only apply to express picking lists</label>
+          <div class="fx-alert info">Tote scan is still required to start. Completing a list deducts stock from the suggested locations. Packing still scans every product.</div>
+        </div>
+        <div class="fx-alert warn" id="pm-warn" style="display:none"></div>
+      </div>
+      <div class="fx-mf"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="save">OK</button></div>
+    </div>
+    <div class="fx-note" id="toast"><b>✓</b> <span></span></div>
+  </div>
+  <p class="caption">Dựng theo màn Warehouse Setting thật của FFM (thẻ kho, rê chuột hiện Edit / Delete, modal Edit có sẵn ô "Aggregate inventory"). Ô viền tím nét đứt là phần thêm mới: "Picking mode" đặt ngay dưới "Aggregate inventory" vì cả 2 đều là cài đặt theo kho. Nhãn tiếng Anh theo giao diện FFM; tên kho, địa chỉ là dữ liệu mẫu.</p>
+</section>
+
+
+</div>
+
+<script>
+// Prototype: trạng thái giữ trong mảng kho, mỗi thao tác cập nhật mảng rồi vẽ lại thẻ kho.
+(() => {
+  const root = document.getElementById('proto');
+  const MODE = { scan: 'Full scan', paper: 'Pick by list' };
+  const whs = [
+    { name: 'Kho Hà Nội 01', code: 'W10293847561HNA01', phone: '0901234567', addr: '12 Phạm Hùng', p: 'Hà Nội', d: 'Nam Từ Liêm', c: 'Mỹ Đình 2', active: 0, mode: 'scan', express: false },
+    { name: 'Kho HCM 02', code: 'W20394857612HCM02', phone: '0912345678', addr: '88 Quốc lộ 1A', p: 'Hồ Chí Minh', d: 'Bình Tân', c: 'Bình Hưng Hoà', active: 2, mode: 'scan', express: false },
+    { name: 'Kho Đà Nẵng', code: 'W30495867123DNG03', phone: '0923456789', addr: '5 Nguyễn Hữu Thọ', p: 'Đà Nẵng', d: 'Hải Châu', c: 'Hoà Thuận Tây', active: 0, mode: 'paper', express: true },
+  ];
+  let cur = null;
+  const $ = (id) => document.getElementById(id);
+  const note = (text) => { const el = $('toast'); el.querySelector('span').textContent = text; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2400); };
+  const modeTag = (w) => w.mode === 'scan' ? '<span class="pill p-ok fx-mode changed">Full scan</span>'
+    : `<span class="pill p-mid fx-mode changed">Pick by list${w.express ? ' · express only' : ''}</span>`;
+  function render() {
+    $('cards').innerHTML = whs.map((w, i) => `<div class="fx-card"><h5>${w.name}</h5>
+      <div class="fx-li"><i>⌗</i><span>${w.code}</span></div>
+      <div class="fx-li"><i>✆</i><span>${w.phone}</span></div>
+      <div class="fx-li addr"><i>⌖</i><span>${w.addr}, ${w.c}, ${w.d}, ${w.p}</span></div>
+      ${modeTag(w)}
+      <div class="fx-act"><button class="btn pri" data-act="open" data-i="${i}">Edit</button><button class="btn" data-act="del">Delete</button></div></div>`).join('');
+  }
+  const draft = () => ({ mode: $('pm-paper').checked ? 'paper' : 'scan', express: $('pm-paper').checked && $('pm-express').checked });
+  function sync() {
+    const w = whs[cur]; if (!w) return;
+    const d = draft();
+    $('pm-extra').style.display = d.mode === 'paper' ? '' : 'none';
+    const changed = d.mode !== w.mode || d.express !== w.express;
+    $('pm-warn').style.display = w.active && changed ? '' : 'none';
+    $('pm-warn').textContent = `This warehouse has ${w.active} picking lists in progress. The new mode only applies to lists created after saving.`;
+  }
+  function close() { root.classList.remove('open'); $('hdr-btn').textContent = '+ Create'; cur = null; }
+  root.addEventListener('change', sync);
+  root.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-act]'); const act = el?.dataset.act;
+    if (act === 'open') {
+      cur = +el.dataset.i; const w = whs[cur];
+      $('m-title').textContent = w.name; $('m-name').textContent = w.name; $('m-phone').textContent = w.phone;
+      $('m-addr').textContent = w.addr; $('m-p').textContent = w.p; $('m-d').textContent = w.d; $('m-c').textContent = w.c;
+      $('pm-scan').checked = w.mode === 'scan'; $('pm-paper').checked = w.mode === 'paper'; $('pm-express').checked = w.express;
+      sync(); root.classList.add('open'); $('hdr-btn').textContent = '💾 Save';
+      setTimeout(() => $(w.mode === 'scan' ? 'pm-scan' : 'pm-paper').focus({ preventScroll: true }), 220);
+    }
+    if (act === 'close') close();
+    if (act === 'del') note('Prototype: Delete không làm gì');
+    if (act === 'save') {
+      const w = whs[cur]; const d = draft();
+      const changed = d.mode !== w.mode || d.express !== w.express;
+      Object.assign(w, d); const active = w.active; close(); render();
+      note(changed ? `Updated Successfully! ${w.name}: ${MODE[w.mode]}${w.express ? ' (express only)' : ''}${active ? ' · applies to new lists' : ''}` : 'Updated Successfully!');
+    }
+  });
+  render();
+})();
+</script>
+<script>
+// Prototype sơ đồ kho: mọi thứ tính lại từ mảng locs (vị trí + tồn) ở mỗi lần vẽ, nên gợi ý luôn theo tồn hiện tại.
+(() => {
+  const root = document.getElementById('lproto');
+  const $ = (id) => document.getElementById(id);
+  const CELL = 24, COLS = 28, ROWS = 14;
+  const CAP = { pick: 60, storage: 300, damage: 100 };
+  const TYPE = { pick: 'Pick', storage: 'Storage', damage: 'Damage' };
+  const COLOR = { pick: ['#f6ffed', '#73d13d'], storage: ['#f0f5ff', '#597ef7'], damage: ['#fff1f0', '#ff7875'] };
+  const zones = [
+    { x: 0, y: 10, w: 5, h: 4, label: 'Khu đóng gói', kind: 'pack' },
+    { x: 23, y: 0, w: 5, h: 3, label: 'Cửa nhập hàng', kind: 'dock' },
+  ];
+  const SKU = {
+    'AT-TRANG-M': { name: 'Áo thun trắng M', sold7: 168 },
+    'KHAU-TRANG': { name: 'Khẩu trang vải', sold7: 140 },
+    'AK-GIO': { name: 'Áo khoác gió', sold7: 105 },
+    'QJ-XANH-30': { name: 'Quần jean xanh 30', sold7: 91 },
+    'NON-DEN': { name: 'Nón lưỡi trai đen', sold7: 12 },
+    'TUI-VAI': { name: 'Túi vải canvas', sold7: 4 },
+  };
+  const HOT = 70; // bán ≥ 70 / 7 ngày = bán chạy (mẫu)
+  const isHot = (s) => SKU[s].sold7 >= HOT;
+  const locs = [
+    { code: 'A01-01', type: 'pick', x: 6, y: 11, w: 3, h: 2, items: { 'AT-TRANG-M': 40 } },
+    { code: 'A01-02', type: 'pick', x: 9, y: 11, w: 3, h: 2, items: { 'QJ-XANH-30': 25 } },
+    { code: 'A01-03', type: 'pick', x: 12, y: 11, w: 3, h: 2, items: {} },
+    { code: 'A02-01', type: 'pick', x: 6, y: 7, w: 3, h: 2, items: {} },
+    { code: 'A02-02', type: 'pick', x: 9, y: 7, w: 3, h: 2, items: {} },
+    { code: 'A02-03', type: 'pick', x: 12, y: 7, w: 3, h: 2, items: { 'NON-DEN': 30 } },
+    { code: 'S01-01', type: 'storage', x: 17, y: 4, w: 4, h: 3, items: {} },
+    { code: 'S01-02', type: 'storage', x: 22, y: 4, w: 4, h: 3, items: { 'AT-TRANG-M': 120, 'TUI-VAI': 80 } },
+    { code: 'S02-01', type: 'storage', x: 17, y: 9, w: 4, h: 3, items: { 'QJ-XANH-30': 150 } },
+    { code: 'S02-02', type: 'storage', x: 22, y: 9, w: 4, h: 3, items: { 'AK-GIO': 60 } },
+    { code: 'D01', type: 'damage', x: 0, y: 0, w: 3, h: 2, items: {} },
+  ];
+  const putList = [
+    { sku: 'KHAU-TRANG', qty: 80 }, { sku: 'AT-TRANG-M', qty: 100 },
+    { sku: 'TUI-VAI', qty: 50 }, { sku: 'NON-DEN', qty: 5, damaged: true },
+  ];
+  const orders = {
+    'PFFM-10021': [['AT-TRANG-M', 2], ['NON-DEN', 1]],
+    'PFFM-10022': [['QJ-XANH-30', 30]],
+    'PFFM-10023': [['AK-GIO', 1], ['KHAU-TRANG', 2]],
+  };
+  let view = 'map', mode = 'view', tab = 'put', selLoc = null, curPut = 0, curOrder = 'PFFM-10021', highlight = [], drag = null;
+
+  const used = (l) => Object.values(l.items).reduce((a, b) => a + b, 0);
+  const free = (l) => CAP[l.type] - used(l);
+  const pack = zones[0];
+  const center = (o) => [o.x + o.w / 2, o.y + o.h / 2];
+  const dist = (a, b) => { const [ax, ay] = center(a), [bx, by] = center(b); return Math.abs(ax - bx) + Math.abs(ay - by); };
+  const toast = (t) => { const el = $('ltoast'); el.querySelector('span').textContent = t; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2600); };
+
+  // V3: gợi ý cất hàng. Trả về [{loc, qty, why}].
+  function suggestPut(p) {
+    let left = p.qty; const plan = [];
+    const take = (cands, why) => {
+      for (const l of cands) { if (left <= 0) break; const n = Math.min(free(l), left); if (n > 0) { plan.push({ loc: l, qty: n, why }); left -= n; } }
+    };
+    const byDist = (arr, desc) => arr.slice().sort((a, b) => desc ? dist(b, pack) - dist(a, pack) : dist(a, pack) - dist(b, pack));
+    const of = (t) => locs.filter((l) => l.type === t);
+    if (p.damaged) take(byDist(of('damage')), 'Hàng hỏng → vị trí Damage');
+    else if (isHot(p.sku)) {
+      take(byDist(of('pick').filter((l) => l.items[p.sku])), 'Bán chạy, vị trí Pick đang có SKU này → gom 1 chỗ');
+      if (!plan.length) take(byDist(of('pick').filter((l) => used(l) === 0)).slice(0, 1), 'Bán chạy → vị trí Pick trống gần khu đóng gói nhất');
+      take(byDist(of('storage').filter((l) => l.items[p.sku])), 'Phần dư → Storage đang có SKU này');
+      take(byDist(of('storage')), 'Phần dư → Storage gần nhất còn chỗ');
+    } else {
+      take(byDist(of('storage').filter((l) => l.items[p.sku])), 'Bán chậm → Storage đang có SKU này');
+      take(byDist(of('storage'), true), 'Bán chậm → Storage xa, để dành chỗ gần cho hàng bán chạy');
+    }
+    return { plan, left };
+  }
+
+  // V4: gợi ý vị trí pick cho 1 đơn theo tồn hiện tại, rồi sắp thứ tự đi từ khu đóng gói.
+  function suggestPick(lines) {
+    const steps = [], miss = [];
+    for (const [sku, need] of lines) {
+      let left = need;
+      const cands = locs.filter((l) => (l.items[sku] || 0) > 0).sort((a, b) =>
+        (a.type === 'pick' ? 0 : 1) - (b.type === 'pick' ? 0 : 1) || ((b.items[sku] >= need) - (a.items[sku] >= need)) || dist(a, pack) - dist(b, pack));
+      for (const l of cands) { if (left <= 0) break; const n = Math.min(l.items[sku], left); steps.push({ loc: l, sku, qty: n, fromStorage: l.type !== 'pick' }); left -= n; }
+      if (left > 0) miss.push([sku, left]);
+    }
+    const route = []; let at = pack; const rest = steps.slice();
+    while (rest.length) { rest.sort((a, b) => dist(a.loc, at) - dist(b.loc, at)); const s = rest.shift(); route.push(s); at = s.loc; }
+    return { route, miss };
+  }
+
+  function renderMap() {
+    const m = $('lm-map'); m.className = 'lm-map' + (mode === 'draw' ? ' draw' : '');
+    const badge = {}; highlight.forEach((h, i) => { (badge[h.code] = badge[h.code] || []).push(h.n || i + 1); });
+    m.innerHTML = zones.map((z) => `<div class="lm-zone ${z.kind === 'dock' ? 'dock' : ''}" style="left:${z.x * CELL + 2}px;top:${z.y * CELL + 2}px;width:${z.w * CELL - 4}px;height:${z.h * CELL - 4}px">${z.label}</div>`).join('')
+      + locs.map((l, i) => {
+        const pct = Math.round(used(l) / CAP[l.type] * 100); const [bg, bd] = COLOR[l.type];
+        const b = badge[l.code] ? `<span class="bd">${badge[l.code].join(',')}</span>` : '';
+        return `<div class="lm-loc ${selLoc === i ? 'sel' : ''} ${b ? 'hl' : ''}" data-loc="${i}" style="left:${l.x * CELL + 2}px;top:${l.y * CELL + 2}px;width:${l.w * CELL - 4}px;height:${l.h * CELL - 4}px;background:${bg};border:1px solid ${bd}"><b>${l.code}</b>${pct}%${b}<span class="fill" style="width:${pct}%"></span></div>`;
+      }).join('');
+  }
+  function renderDetail() {
+    const d = $('lm-detail'); const l = locs[selLoc];
+    if (!l) { d.innerHTML = 'Bấm 1 vị trí trên sơ đồ để xem hàng đang chứa.'; return; }
+    const items = Object.entries(l.items).filter(([, q]) => q > 0).map(([s, q]) => `${SKU[s].name} × ${q}${isHot(s) ? ' <span class="lm-hot">bán chạy</span>' : ''}`).join(' · ') || 'Trống';
+    d.innerHTML = `<b>${l.code}</b> · <select data-settype style="width:auto;border:1px solid #d9d9d9;border-radius:4px">${Object.keys(TYPE).map((t) => `<option value="${t}" ${t === l.type ? 'selected' : ''}>${TYPE[t]}</option>`).join('')}</select>
+      · ${used(l)}/${CAP[l.type]} · cách khu đóng gói ${Math.round(dist(l, pack))} ô <button class="btn" data-dellocation style="float:right;padding:1px 10px">Delete</button><br>${items}`;
+  }
+  function renderPut() {
+    const p = putList[curPut];
+    let html = '<div style="margin-bottom:6px;color:#8c8c8c">Phiếu Xếp kệ PUT-IR0012 · chọn SKU để xem gợi ý</div>' + putList.map((x, i) => `<div class="lm-item ${i === curPut ? 'on' : ''} ${x.done ? 'done' : ''}" data-put="${i}"><span>${SKU[x.sku].name} × ${x.qty}<small>${x.sku} · bán ${SKU[x.sku].sold7}/7 ngày</small></span>${x.damaged ? '<span class="pill p-bad">hỏng</span>' : isHot(x.sku) ? '<span class="lm-hot">bán chạy</span>' : ''}${x.done ? '<span class="pill p-ok">đã cất</span>' : ''}</div>`).join('');
+    highlight = [];
+    if (p && !p.done) {
+      const { plan, left } = suggestPut(p);
+      highlight = plan.map((s) => ({ code: s.loc.code }));
+      html += `<div class="lm-plan"><b>Gợi ý cất ${SKU[p.sku].name} × ${p.qty}</b><ol>${plan.map((s) => `<li>${s.loc.code} (${TYPE[s.loc.type]}): cất ${s.qty}<span class="lm-why">${s.why}</span></li>`).join('')}</ol>${left > 0 ? `<div class="lm-warn">Còn ${left} chưa có chỗ: kho hết chỗ loại phù hợp.</div>` : ''}<div style="text-align:right;margin-top:6px"><button class="btn pri" data-apply>Áp dụng gợi ý</button></div></div>`;
+    }
+    $('tab-put').innerHTML = html;
+  }
+  function renderPick() {
+    const { route, miss } = suggestPick(orders[curOrder]);
+    highlight = route.map((s) => ({ code: s.loc.code }));
+    $('tab-pick').innerHTML = `<select data-order>${Object.keys(orders).map((o) => `<option ${o === curOrder ? 'selected' : ''}>${o}</option>`).join('')}</select>
+      <div style="color:#8c8c8c">${orders[curOrder].map(([s, q]) => `${SKU[s].name} × ${q}`).join(' · ')}</div>
+      <div class="lm-plan"><b>Thứ tự đi pick (tính theo tồn lúc này)</b><ol>${route.map((s) => `<li>${s.loc.code}: lấy ${s.qty} × ${SKU[s.sku].name}${s.fromStorage ? '<span class="lm-why">Vị trí Pick không đủ → lấy thêm ở Storage gần nhất; nên bổ sung hàng xuống trước (tab Bổ sung)</span>' : ''}</li>`).join('')}</ol>
+      ${miss.map(([s, q]) => `<div class="lm-warn">${SKU[s].name}: thiếu ${q}, chưa có tồn ở vị trí nào.</div>`).join('')}</div>`;
+  }
+  // Bổ sung hàng: vị trí Pick dưới mức tối thiểu → gợi ý lấy từ Storage gần nhất xuống, làm trước ca pick.
+  function suggestRep() {
+    const need = {}; Object.values(orders).forEach((ls) => ls.forEach(([s, q]) => { need[s] = (need[s] || 0) + q; }));
+    const out = [];
+    for (const s of Object.keys(SKU)) {
+      const picks = locs.filter((l) => l.type === 'pick' && l.items[s] > 0);
+      const from = locs.filter((l) => l.type === 'storage' && l.items[s] > 0).sort((a, b) => dist(a, pack) - dist(b, pack))[0];
+      if (!from || (!picks.length && !isHot(s))) continue;
+      const min = Math.max(Math.ceil(SKU[s].sold7 / 7 * 2), need[s] || 0);
+      const have = picks.reduce((a, l) => a + l.items[s], 0);
+      if (have >= min) continue;
+      const to = picks[0] || locs.filter((l) => l.type === 'pick' && used(l) === 0).sort((a, b) => dist(a, pack) - dist(b, pack))[0];
+      if (!to) continue;
+      const qty = Math.min(Math.max(min, Math.ceil(SKU[s].sold7 / 7 * 5)) - have, free(to), from.items[s]);
+      if (qty > 0) out.push({ s, from, to, qty, have, min, need: need[s] || 0 });
+    }
+    return out;
+  }
+  function renderRep() {
+    const list = suggestRep();
+    highlight = list.flatMap((r, i) => [{ code: r.from.code, n: i + 1 }, { code: r.to.code, n: i + 1 }]);
+    $('tab-rep').innerHTML = '<div style="color:#8c8c8c;margin-bottom:6px">Vị trí Pick sắp hết. Hàng ở Storage khó lấy (trên cao, sâu trong kệ) nên đưa xuống trước ca pick, không để người pick tự lấy.</div>'
+      + (list.map((r, i) => `<div class="lm-item" style="cursor:default"><span><b>${i + 1}.</b> ${SKU[r.s].name}: lấy <b>${r.qty}</b> từ ${r.from.code} → ${r.to.code}<small>${r.have ? `Còn ${r.have} ở vị trí Pick` : 'Bán chạy, chưa có ở vị trí Pick'}, mức tối thiểu ${r.min}${r.need ? ` (đơn đang chờ cần ${r.need})` : ''}</small></span><button class="btn" data-rep="${i}" style="padding:0 8px;white-space:nowrap">Tạo việc bổ sung</button></div>`).join('')
+        || '<div class="lm-plan">Không có vị trí Pick nào dưới mức tối thiểu.</div>');
+  }
+  function renderHot() {
+    highlight = [];
+    const rows = Object.entries(SKU).sort((a, b) => b[1].sold7 - a[1].sold7).map(([s, v], i) => {
+      const at = locs.filter((l) => l.items[s] > 0);
+      const inPick = at.some((l) => l.type === 'pick');
+      const target = locs.filter((l) => l.type === 'pick' && used(l) === 0).sort((a, b) => dist(a, pack) - dist(b, pack))[0];
+      const warn = isHot(s) && !inPick && at.length ? `<div class="lm-warn">Bán chạy nhưng chỉ nằm ở Storage → gợi ý chuyển sang ${target ? target.code : 'vị trí Pick trống'} <button class="btn" data-move="${s}" style="padding:0 8px;margin-left:4px">Tạo phiếu chuyển kệ</button></div>` : '';
+      if (warn && target) highlight.push({ code: target.code });
+      return `<tr><td>${i + 1}</td><td>${v.name}${isHot(s) ? ' <span class="lm-hot">bán chạy</span>' : ''}${warn}</td><td>${v.sold7}</td><td>${at.map((l) => l.code).join(', ') || '—'}</td></tr>`;
+    }).join('');
+    $('tab-hot').innerHTML = `<table class="lm-t"><tr><th>#</th><th>Sản phẩm</th><th>Bán 7 ngày</th><th>Vị trí</th></tr>${rows}</table>`;
+  }
+  function renderStats() {
+    $('st-total').textContent = locs.length;
+    $('st-empty').textContent = locs.filter((l) => used(l) === 0).length;
+    $('st-full').textContent = locs.filter((l) => used(l) / CAP[l.type] >= 0.7).length;
+    $('st-avail').textContent = locs.length - +$('st-empty').textContent - +$('st-full').textContent;
+    $('lm-rows').innerHTML = locs.map((l) => { const p = used(l) / CAP[l.type]; return `<tr><td>${l.code}</td><td>Kho Hà Nội 01</td><td>${TYPE[l.type]}</td><td>${l.w * 40}×${l.h * 40}×200</td><td>${p === 0 ? 'empty' : p >= 0.7 ? 'full' : 'available'}</td></tr>`; }).join('');
+  }
+  function render() {
+    ['put', 'pick', 'hot', 'rep'].forEach((t) => { $('tab-' + t).style.display = t === tab ? '' : 'none'; });
+    root.querySelector('[data-tab=rep]').textContent = `Bổ sung (${suggestRep().length})`;
+    root.querySelectorAll('[data-tab]').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
+    if (tab === 'put') renderPut(); else if (tab === 'pick') renderPick(); else if (tab === 'hot') renderHot(); else renderRep();
+    renderMap(); renderDetail(); renderStats();
+    $('lm-list').style.display = view === 'list' ? '' : 'none'; $('lm-mapview').style.display = view === 'map' ? '' : 'none';
+    root.querySelectorAll('[data-view]').forEach((a) => a.classList.toggle('on', a.dataset.view === view));
+    root.querySelectorAll('[data-mode]').forEach((a) => a.classList.toggle('on', a.dataset.mode === mode));
+    $('lm-drawopt').style.display = mode === 'draw' ? '' : 'none';
+  }
+
+  root.addEventListener('click', (e) => {
+    const t = e.target;
+    const v = t.closest('[data-view]'); if (v) { view = v.dataset.view; render(); return; }
+    const md = t.closest('[data-mode]'); if (md) { mode = md.dataset.mode; render(); return; }
+    const tb = t.closest('[data-tab]'); if (tb && root.querySelector('.lm-side').contains(tb)) { tab = tb.dataset.tab; render(); return; }
+    const pu = t.closest('[data-put]'); if (pu) { const i = +pu.dataset.put; if (!putList[i].done) { curPut = i; render(); } return; }
+    if (t.closest('[data-apply]')) {
+      const p = putList[curPut]; const { plan } = suggestPut(p);
+      plan.forEach((s) => { s.loc.items[p.sku] = (s.loc.items[p.sku] || 0) + s.qty; });
+      p.done = true; toast(`Đã cất ${SKU[p.sku].name}: ${plan.map((s) => `${s.qty} → ${s.loc.code}`).join(', ')}`);
+      const next = putList.findIndex((x) => !x.done); curPut = next < 0 ? curPut : next; render(); return;
+    }
+    const rp = t.closest('[data-rep]'); if (rp) {
+      const r = suggestRep()[+rp.dataset.rep]; r.from.items[r.s] -= r.qty; r.to.items[r.s] = (r.to.items[r.s] || 0) + r.qty;
+      toast(`Đã tạo việc chuyển kệ: ${r.qty} × ${SKU[r.s].name}, ${r.from.code} → ${r.to.code}`); render(); return;
+    }
+    const mv = t.closest('[data-move]'); if (mv) { toast(`Prototype: tạo phiếu chuyển kệ (relocation) cho ${SKU[mv.dataset.move].name}`); return; }
+    if (t.closest('[data-dellocation]')) {
+      const l = locs[selLoc]; if (used(l) > 0) { toast(`Không xoá được ${l.code}: vị trí còn hàng`); return; }
+      locs.splice(selLoc, 1); toast(`Đã xoá ${l.code}`); selLoc = null; render(); return;
+    }
+    const lc = t.closest('[data-loc]'); if (lc && mode === 'view') { selLoc = +lc.dataset.loc; render(); }
+  });
+  root.addEventListener('change', (e) => {
+    if (e.target.matches('[data-order]')) { curOrder = e.target.value; render(); }
+    if (e.target.matches('[data-settype]')) {
+      const l = locs[selLoc]; const nt = e.target.value;
+      if (used(l) > CAP[nt]) { toast(`Không đổi được: ${l.code} đang chứa ${used(l)}, quá sức chứa ${TYPE[nt]}`); render(); return; }
+      l.type = nt; toast(`${l.code} → ${TYPE[nt]}`); render();
+    }
+  });
+  // Vẽ vị trí: kéo chuột trên lưới, thả ra thì tạo vị trí nếu không đè lên vị trí / khu khác.
+  const map = $('lm-map');
+  const cellAt = (e) => { const r = map.getBoundingClientRect(); return [Math.max(0, Math.min(COLS - 1, Math.floor((e.clientX - r.left) / CELL))), Math.max(0, Math.min(ROWS - 1, Math.floor((e.clientY - r.top) / CELL)))]; };
+  const rectOf = (a, b) => ({ x: Math.min(a[0], b[0]), y: Math.min(a[1], b[1]), w: Math.abs(a[0] - b[0]) + 1, h: Math.abs(a[1] - b[1]) + 1 });
+  const overlap = (r) => [...locs, ...zones].some((o) => r.x < o.x + o.w && o.x < r.x + r.w && r.y < o.y + o.h && o.y < r.y + r.h);
+  map.addEventListener('mousedown', (e) => {
+    if (mode !== 'draw') return; drag = { a: cellAt(e) };
+    drag.g = document.createElement('div'); drag.g.className = 'lm-ghost'; map.appendChild(drag.g); move(e);
+  });
+  const move = (e) => { if (!drag) return; const r = rectOf(drag.a, cellAt(e)); Object.assign(drag.g.style, { left: r.x * CELL + 'px', top: r.y * CELL + 'px', width: r.w * CELL + 'px', height: r.h * CELL + 'px' }); drag.r = r; };
+  map.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', () => {
+    if (!drag) return; const r = drag.r; drag.g.remove(); drag = null;
+    if (!r || r.w * r.h < 2) { toast('Vị trí phải rộng ít nhất 2 ô'); return; }
+    if (overlap(r)) { toast('Không tạo được: đè lên vị trí hoặc khu khác'); return; }
+    const type = root.querySelector('input[name=dt]:checked').value;
+    const prefix = { pick: 'A03-', storage: 'S03-', damage: 'D0' }[type];
+    const n = locs.filter((l) => l.code.startsWith(prefix)).length + 1;
+    const code = prefix + (type === 'damage' ? n : String(n).padStart(2, '0'));
+    locs.push({ code, type, ...r, items: {} }); selLoc = locs.length - 1; toast(`Đã tạo vị trí ${code} (${TYPE[type]})`); render();
+  });
+  render();
+})();
+</script>
+<script>
+// Prototype pick hàng: đơn, nhóm gợi ý, danh sách đã assign và tiến độ trên app đều nằm trong biến S; mỗi thao tác sửa S rồi vẽ lại.
+(() => {
+  const root = document.getElementById('pproto');
+  const $ = (id) => document.getElementById(id);
+  const SKU = {
+    AT: { name: 'Áo thun trắng M', loc: 'A01-01' }, QJ: { name: 'Quần jean xanh 30', loc: 'A01-02' },
+    KT: { name: 'Khẩu trang vải', loc: 'A02-01' }, NON: { name: 'Nón lưỡi trai đen', loc: 'A02-03' },
+    AK: { name: 'Áo khoác gió', loc: 'A03-02' }, VI: { name: 'Ví da nam', loc: 'B01-02' },
+    TUI: { name: 'Túi vải canvas', loc: 'B01-04' }, DEP: { name: 'Dép lê', loc: 'B02-01' },
+  };
+  const aisle = (loc) => loc.slice(0, 3);
+  const orders = [
+    ['2001', [['AT', 1]], 1, 0], ['2002', [['AT', 1]], 1, 0], ['2003', [['KT', 1]], 0, 0], ['2004', [['AT', 1]], 0, 0],
+    ['2005', [['QJ', 2]], 0, 0], ['2006', [['NON', 1], ['KT', 1]], 0, 0], ['2007', [['AK', 1], ['TUI', 1], ['VI', 1]], 0, 0],
+    ['2008', [['DEP', 2]], 0, 0], ['2009', [['KT', 1]], 0, 1], ['2010', [['AT', 1], ['QJ', 1]], 1, 0], ['2011', [['VI', 1]], 0, 0],
+    ['2012', [['TUI', 1], ['DEP', 1]], 0, 0], ['2013', [['QJ', 1]], 0, 0], ['2014', [['AT', 6]], 0, 0],
+    ['2015', [['AT', 2], ['QJ', 1]], 0, 0], ['2016', [['AT', 2], ['QJ', 1]], 1, 0], ['2017', [['AT', 2], ['QJ', 1]], 0, 0],
+    ['2018', [['AK', 2], ['VI', 1], ['DEP', 1]], 0, 0], ['2019', [['NON', 3], ['TUI', 1]], 1, 0],
+  ].map(([id, items, mp, ex]) => ({ id: 'PFFM-' + id, items, mp: !!mp, ex: !!ex, assigned: false }));
+  const SHOPS = ['Thời Trang An', 'Mẹ & Bé Mint', 'Phụ Kiện Lux'];
+  [0, 0, 1, 0, 0, 1, 2, 2, 1, 0, 2, 2, 0, 1, 0, 0, 0, 2, 1].forEach((k, i) => { orders[i].shop = SHOPS[k]; });
+  const shopsOf = (ids) => [...new Set(ids.map((id) => O(id).shop))];
+  const O = (id) => orders.find((o) => o.id === id);
+  const units = (o) => o.items.reduce((a, [, q]) => a + q, 0);
+  // Loại đơn: xét từ 1 xuống 5, mỗi đơn chỉ thuộc 1 loại.
+  const sig = (o) => o.items.map(([s, q]) => s + '×' + q).sort().join(',');
+  const bucket = (o) => {
+    if (o.items.length === 1) return units(o) === 1 ? '1' : '2';
+    if (o.items.every(([, q]) => q === 1)) return '3';
+    return orders.filter((x) => sig(x) === sig(o)).length >= 2 ? '4' : '5';
+  };
+  const BL = { 1: '1 SP', 2: '1 SKU nhiều cái', 3: 'Bộ', 4: 'Đơn giống nhau', 5: 'Lung tung' };
+  const HOW = { 1: 'gộp theo SKU, lấy đủ tổng rồi chia mỗi đơn 1 cái', 2: 'gộp theo SKU, chia theo số lượng từng đơn', 3: 'đi một vòng lấy đủ bộ cho từng đơn', 4: 'lấy 1 lần cho cả nhóm đơn giống nhau rồi chia đều', 5: 'lấy theo từng đơn, theo thứ tự vị trí' };
+  const locsOf = (ids) => [...new Set(ids.flatMap((id) => O(id).items.map(([s]) => SKU[s].loc)))].sort();
+  const S = { gm: 'shop', sf: 'all', uf: 'all', max: 5, tab: 'list', groups: [], cur: null, sel: new Set(), lists: [], seq: 0, phone: null, pmode: 'scan' };
+  const toast = (t) => { const el = $('ptoast'); el.querySelector('span').textContent = t; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2600); };
+
+  function build() {
+    const pool = orders.filter((o) => !o.assigned && (S.uf === 'all' || bucket(o) === S.uf) && (S.sf === 'all' || o.shop === S.sf));
+    const chunk = (arr, kind) => { const out = []; for (let i = 0; i < arr.length; i += S.max) out.push({ orders: arr.slice(i, i + S.max).map((o) => o.id), kind, ex: new Set() }); return out; };
+    const ex = pool.filter((o) => o.ex), rest = pool.filter((o) => !o.ex);
+    const firstLoc = (o) => SKU[o.items[0][0]].loc;
+    let groups = S.gm === 'shop' ? [] : chunk(ex, 'Express');
+    const byLoc = (arr) => arr.slice().sort((a, c) => firstLoc(a).localeCompare(firstLoc(c)));
+    if (S.gm === 'shop') for (const sh of SHOPS) groups = groups.concat(chunk(ex.filter((o) => o.shop === sh), 'Express'), chunk(byLoc(rest.filter((o) => o.shop === sh)), null));
+    if (S.gm === 'marketplace') groups = groups.concat(chunk(rest.filter((o) => o.mp), 'Marketplace'), chunk(rest.filter((o) => !o.mp), 'Normal'));
+    else if (S.gm === 'sku') groups = groups.concat(chunk(rest.slice().sort((a, b) => a.items[0][0].localeCompare(b.items[0][0])), null));
+    else if (S.gm === 'units') for (const b of ['1', '2', '3', '4', '5']) groups = groups.concat(chunk(rest.filter((o) => bucket(o) === b).sort((a, c) => sig(a).localeCompare(sig(c)) || firstLoc(a).localeCompare(firstLoc(c))), null));
+    groups.forEach((g, i) => { g.gid = i; if (!g.kind) g.kind = g.orders.some((id) => O(id).mp) ? 'Marketplace' : 'Normal'; });
+    S.groups = groups; S.cur = null; S.sel = new Set();
+  }
+  const tag = (k) => `<span class="pk-tag ${k === 'Express' ? 'ex' : k === 'Marketplace' ? 'mp' : ''}">${k}</span>`;
+  const inc = (g) => g.orders.filter((id) => !g.ex.has(id));
+  function unitsLabel(ids) { const b = [...new Set(ids.map((id) => bucket(O(id))))]; return b.length === 1 ? BL[b[0]] : 'Nhiều loại'; }
+
+  function renderTable() {
+    const t = $('pk-table');
+    if (S.tab === 'list') {
+      t.innerHTML = `<thead><tr><th style="width:30px"></th><th class="changed">Shop</th><th>Total orders</th><th>SKUs</th><th>Type</th><th class="changed">Loại đơn</th><th class="changed">Khu</th><th class="changed">Điểm dừng</th></tr></thead><tbody>`
+        + (S.groups.map((g) => {
+          const ids = inc(g); const locs = locsOf(ids); const skus = new Set(ids.flatMap((id) => O(id).items.map(([s]) => s)));
+          return `<tr data-g="${g.gid}" class="${S.cur === g.gid ? 'cur' : ''}"><td><input type="checkbox" data-sel="${g.gid}" ${S.sel.has(g.gid) ? 'checked' : ''}></td><td>${shopsOf(ids).length === 1 ? shopsOf(ids)[0] : shopsOf(ids).length ? shopsOf(ids).length + ' shop' : '—'}</td><td>${ids.length}${g.ex.size ? ` <small style="color:#8c8c8c">(bỏ ${g.ex.size})</small>` : ''}</td><td>${skus.size}</td><td>${tag(g.kind)}</td><td>${ids.length ? unitsLabel(ids) : '—'}</td><td>${[...new Set(locs.map(aisle))].join(' · ')}</td><td>${locs.length}</td></tr>`;
+        }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999;padding:24px">Không còn đơn chờ pick</td></tr>') + '</tbody>';
+    } else {
+      t.innerHTML = `<thead><tr><th>Picking ID</th><th class="changed">Shop</th><th>Total orders</th><th>SKUs</th><th>Type</th><th>Total products</th><th>Status</th><th>Picking staff</th><th></th></tr></thead><tbody>`
+        + (S.lists.map((l) => {
+          const st = { new: ['New', 'st-new'], in_progress: ['In progress', 'st-prog'], picked: ['Picked', 'st-done'] }[l.status];
+          return `<tr><td><a>${l.id}</a></td><td>${shopsOf(l.orders).length === 1 ? shopsOf(l.orders)[0] : shopsOf(l.orders).length + ' shop'}</td><td>${l.orders.length}</td><td>${new Set(l.orders.flatMap((id) => O(id).items.map(([s]) => s))).size}</td><td>${tag(l.kind)}</td><td>${l.orders.reduce((a, id) => a + units(O(id)), 0)}</td><td><span class="pk-tag ${st[1]}">${st[0]}</span></td><td>${l.staff}</td><td><button class="btn" data-open="${l.id}" style="padding:1px 8px">Mở trên app</button></td></tr>`;
+        }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:24px">Chưa có danh sách nào. Assign ở tab Picking List.</td></tr>') + '</tbody>';
+    }
+  }
+  function renderSide() {
+    const side = $('pk-side'); const g = S.groups.find((x) => x.gid === S.cur);
+    if (S.tab !== 'list' || !g) { side.style.display = S.tab === 'list' ? '' : 'none'; side.innerHTML = '<span style="color:#8c8c8c">Bấm 1 nhóm để xem đơn, bỏ bớt đơn hoặc thêm đơn có sản phẩm nằm gần.</span>'; return; }
+    side.style.display = '';
+    const aisles = new Set(locsOf(inc(g)).map(aisle));
+    const cands = S.groups.filter((x) => x.gid !== g.gid).flatMap((x) => inc(x).map((id) => ({ id, from: x })))
+      .filter(({ id }) => (g.kind === 'Express') === O(id).ex && (S.gm !== 'shop' || O(id).shop === O(g.orders[0]).shop) && O(id).items.every(([s]) => aisles.has(aisle(SKU[s].loc)))).slice(0, 3);
+    const bs = [...new Set(inc(g).map((id) => bucket(O(id))))];
+    side.innerHTML = `<div class="changed" style="padding:2px 4px;margin-bottom:8px"><b>Loại đơn:</b> ${bs.length === 1 ? BL[bs[0]] : 'Nhiều loại'} · <span style="color:#8c8c8c">cách pick gợi ý: ${bs.length === 1 ? HOW[bs[0]] : 'lấy theo từng đơn'}</span></div><div class="pk-side-in"><div class="changed" style="padding:4px"><b>Đơn trong nhóm (${inc(g).length}/${S.max})</b>${g.orders.map((id) => `<label class="pk-ord"><input type="checkbox" data-keep="${id}" ${g.ex.has(id) ? '' : 'checked'}><span>${id}<small>${O(id).items.map(([s, q]) => `${SKU[s].name} × ${q} · ${SKU[s].loc}`).join(' · ')}</small></span></label>`).join('')}</div>
+      <div class="changed" style="padding:4px"><b>Gợi ý thêm đơn gần</b><div style="color:#8c8c8c">Đơn ở nhóm khác có toàn bộ sản phẩm nằm trong khu ${[...aisles].join(', ') || '—'}</div>
+      ${cands.map(({ id, from }) => `<div class="pk-sug"><span>${id}<small>${O(id).items.map(([s, q]) => `${SKU[s].name} × ${q} · ${SKU[s].loc}`).join(' · ')}</small></span><button class="btn" data-add="${id}" data-from="${from.gid}" style="padding:1px 8px">+ Thêm</button></div>`).join('') || '<div style="margin-top:6px;color:#8c8c8c">Không có đơn nào nằm gọn trong các khu này.</div>'}</div></div>`;
+  }
+  function stopsOf(l) {
+    const need = {}; l.orders.forEach((id) => O(id).items.forEach(([s, q]) => { need[s] = (need[s] || 0) + q; }));
+    return Object.entries(need).map(([s, q]) => ({ s, loc: SKU[s].loc, need: q, picked: 0, ok: false })).sort((a, b) => a.loc.localeCompare(b.loc));
+  }
+  function renderPhone() {
+    const P = S.phone; const box = $('pk-phone');
+    if (!P) { box.innerHTML = '<div class="pk-card" style="color:#8c8c8c">Chưa mở danh sách nào. Ở tab <b>Assigned</b> bấm <b>Mở trên app</b>.</div>'; return; }
+    const l = S.lists.find((x) => x.id === P.id);
+    let h = `<div class="pk-card"><b>${l.id}</b> · ${l.orders.length} đơn · ${l.staff}<br>Shop: ${shopsOf(l.orders).join(', ')}<br><span class="pk-tag ${l.status === 'picked' ? 'st-done' : l.status === 'new' ? 'st-new' : 'st-prog'}">${{ new: 'New', in_progress: 'In progress', picked: 'Picked' }[l.status]}</span> ${P.tote ? '· tote ' + P.tote : ''}</div>`;
+    if (l.status === 'picked') { box.innerHTML = h + `<div class="pk-card">Đã hoàn tất. Packing list đã tạo, tote chuyển sang khâu Đóng gói.<div class="pk-log">${P.log}</div></div>`; return; }
+    if (!P.tote) { box.innerHTML = h + '<div class="pk-card">Quét tote để bắt đầu. Tote sẽ gắn với danh sách này.<button class="btn pri pk-big" data-ph="tote">Quét tote TOTE0007</button></div>'; return; }
+    const done = P.stops.filter((x) => x.ok).length;
+    h += `<div class="pk-prog"><i style="width:${done / P.stops.length * 100}%"></i></div><div style="color:#8c8c8c;margin-bottom:6px">${done}/${P.stops.length} điểm dừng · thứ tự đi một vòng theo mã vị trí</div>`;
+    if (S.pmode === 'scan') {
+      const cur = P.stops.findIndex((x) => !x.ok);
+      h += P.stops.map((x, i) => {
+        let act = '';
+        if (i === cur) act = !P.locOk ? `<button class="btn pri pk-big" data-ph="loc">Quét vị trí ${x.loc}</button>`
+          : x.need <= 5 ? `<button class="btn pri pk-big" data-ph="one">Quét sản phẩm (+1)</button>`
+            : `<div style="display:flex;gap:6px;margin-top:6px"><input id="pk-q" type="number" value="${x.need - x.picked}" class="pk-num" style="width:70px"><button class="btn pri" data-ph="qty" style="flex:1">Nhập SL (dòng > 5)</button></div>`;
+        return `<div class="pk-stop ${i === cur ? 'cur' : ''} ${x.ok ? 'done' : ''}"><b class="loc">${x.loc}</b> ${x.ok ? '✓' : ''}<br>${SKU[x.s].name} · ${x.picked}/${x.need}${act}</div>`;
+      }).join('');
+      h += cur < 0 ? '<button class="btn pri pk-big" data-ph="done">Hoàn tất</button>' : '';
+      h += `<div class="pk-log">Sổ công việc: ${P.scans} lượt quét (người, vị trí, số lượng, thời điểm)</div>`;
+    } else {
+      h += P.stops.map((x, i) => `<label class="pk-stop pk-ck ${x.ok ? 'done' : ''}"><input type="checkbox" data-tick="${i}" ${x.ok ? 'checked' : ''}><span><b class="loc">${x.loc}</b><br>${SKU[x.s].name} × ${x.need}</span></label>`).join('');
+      h += '<button class="btn pri pk-big" data-ph="done">Hoàn tất pick</button><div class="pk-log">Không quét vị trí, sản phẩm. Hoàn tất sẽ trừ tồn theo vị trí gợi ý; đóng gói vẫn quét từng sản phẩm.</div>';
+    }
+    box.innerHTML = h;
+  }
+  function render() {
+    root.querySelectorAll('[data-gm]').forEach((a) => a.classList.toggle('on', a.dataset.gm === S.gm));
+    root.querySelectorAll('[data-u]').forEach((a) => a.classList.toggle('on', a.dataset.u === S.uf));
+    root.querySelectorAll('[data-mtab]').forEach((b) => b.classList.toggle('on', b.dataset.mtab === S.tab));
+    root.querySelector('.pk-filter').style.visibility = S.tab === 'list' ? 'visible' : 'hidden';
+    root.querySelectorAll('[data-pm]').forEach((a) => a.classList.toggle('on', a.dataset.pm === S.pmode));
+    renderTable(); renderSide(); renderPhone();
+  }
+  const finish = (l) => {
+    const P = S.phone; l.status = 'picked';
+    const miss = P.stops.filter((x) => !x.ok).length;
+    P.log = S.pmode === 'scan' ? `Sổ công việc: ${P.scans} lượt quét.` : `Sổ công việc: 1 dòng "pick theo phiếu" cho ${l.staff}.${miss ? ` ${miss} dòng chưa tick, đóng gói sẽ đối chiếu.` : ''}`;
+    toast(`${l.id}: hoàn tất pick, đã tạo packing list`);
+  };
+  root.addEventListener('click', (e) => {
+    const t = e.target; const d = (k) => t.closest(`[data-${k}]`)?.dataset[k];
+    if (d('gm')) { S.gm = d('gm'); build(); return render(); }
+    if (d('u')) { S.uf = d('u'); build(); return render(); }
+    if (d('mtab')) { S.tab = d('mtab'); return render(); }
+    if (d('pm')) { S.pmode = d('pm'); if (S.phone) { const l = S.lists.find((x) => x.id === S.phone.id); if (l.status !== 'picked') { S.phone.stops.forEach((x) => { x.picked = 0; x.ok = false; }); S.phone.locOk = false; S.phone.scans = 0; } } return render(); }
+    if (t.matches('[data-sel]')) { const g = +t.dataset.sel; S.sel.has(g) ? S.sel.delete(g) : S.sel.add(g); return; }
+    if (t.matches('[data-keep]')) { const g = S.groups.find((x) => x.gid === S.cur); const id = t.dataset.keep; t.checked ? g.ex.delete(id) : g.ex.add(id); return render(); }
+    if (d('add')) {
+      const g = S.groups.find((x) => x.gid === S.cur); const from = S.groups.find((x) => x.gid === +d('from'));
+      if (inc(g).length >= S.max) return toast(`Nhóm đã đủ ${S.max} đơn, bỏ bớt đơn hoặc tăng số tối đa`);
+      from.orders = from.orders.filter((id) => id !== d('add')); g.orders.push(d('add'));
+      S.groups = S.groups.filter((x) => x.orders.length); toast(`Đã thêm ${d('add')} vào nhóm`); return render();
+    }
+    if (d('act') === 'assign') {
+      const staff = $('pk-staff').value; const gs = S.groups.filter((g) => S.sel.has(g.gid) && inc(g).length);
+      if (!gs.length) return toast('Chưa tick nhóm nào');
+      if (!staff) return toast('Chưa chọn Picking Staff');
+      gs.forEach((g) => { S.seq += 1; inc(g).forEach((id) => { O(id).assigned = true; }); S.lists.push({ id: 'PL20261102-' + String(S.seq).padStart(3, '0'), orders: inc(g), kind: g.kind, staff, status: 'new' }); });
+      build(); toast(`Đã tạo ${gs.length} danh sách pick cho ${staff}`); return render();
+    }
+    if (d('open')) { const l = S.lists.find((x) => x.id === d('open')); S.phone = { id: l.id, tote: l.tote || null, stops: l.stops || stopsOf(l), locOk: false, scans: 0 }; l.stops = S.phone.stops; return render(); }
+    const ph = d('ph');
+    if (ph) {
+      const P = S.phone; const l = S.lists.find((x) => x.id === P.id); const cur = P.stops.find((x) => !x.ok);
+      if (ph === 'tote') { P.tote = l.tote = 'TOTE0007'; l.status = 'in_progress'; }
+      if (ph === 'loc') P.locOk = true;
+      if (ph === 'one' || ph === 'qty') {
+        const n = ph === 'one' ? 1 : Math.max(0, Math.min(+$('pk-q').value || 0, cur.need - cur.picked));
+        if (!n) return toast('Số lượng không hợp lệ');
+        cur.picked += n; P.scans += 1;
+        if (cur.picked >= cur.need) { cur.ok = true; P.locOk = false; }
+      }
+      if (ph === 'done') finish(l);
+      return render();
+    }
+    if (t.matches('[data-tick]')) { const x = S.phone.stops[+t.dataset.tick]; x.ok = t.checked; x.picked = t.checked ? x.need : 0; return render(); }
+    const row = t.closest('tr[data-g]'); if (row) { S.cur = +row.dataset.g; return render(); }
+  });
+  $('pk-shop').addEventListener('change', (e) => { S.sf = e.target.value; build(); render(); });
+  $('pk-max').addEventListener('change', (e) => { S.max = Math.max(2, Math.min(50, +e.target.value || 5)); e.target.value = S.max; build(); render(); });
+  build(); render();
+})();
+</script>
+</body>
+</html>

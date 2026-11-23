@@ -1,0 +1,44 @@
+# Cấu hình Cloudflare Pages cho chức năng góp ý (functions/, _comments/).
+# Có file này thì Pages lấy binding và compatibility_date từ đây, không lấy từ trang quản trị.
+name = "ffm-docs-html"
+pages_build_output_dir = "."
+compatibility_date = "2026-10-13"
+
+# Bản thật (nhánh main)
+[vars]
+ACCESS_TEAM_DOMAIN = "sea-ffm.cloudflareaccess.com"
+# Danh sách AUD cách nhau dấu phẩy: mọi app Access phủ site (tên miền chính + *.ffm-docs-html.pages.dev); tách app thì thêm AUD mới (CLAUDE.md §13)
+ACCESS_AUD = "7ab974c7f322b4c7ddd9a6b07220ed910cab0416ec74ffbf8880f39d060ad2f3,15746609fa75d300be8c22d86c52f779d654e606e05cac3c3fae5b01bfea8527"
+# Service token của Claude (client id, không phải khoá bí mật) và người Claude viết thay
+CLAUDE_CLIENT_ID = "da5cd834b8ba7d814f5c0d3d336178ac.access"
+CLAUDE_ON_BEHALF = "sh@pancake.vn"
+# Lịch sử phiên bản (functions/api/history.js): repo lấy commit; token chỉ đọc là secret GITHUB_TOKEN của project Pages
+GITHUB_REPO = "pancake-vn/ffm-docs-html"
+# Chia sẻ trang cho khách ngoài (CLAUDE.md §13): FFM gửi email; khoá ở secret DOCS_SHARE_SECRET
+FFM_API_BASE = "https://fulfillment.pancake.vn"
+# Tên miền chính dùng cho link trong email (FFM chỉ nhận link của tên miền này)
+SITE_URL = "https://ffm-docs-html.pages.dev"
+
+[[d1_databases]]
+binding = "COMMENTS_DB"
+database_name = "ffm-docs-comments"
+database_id = "8c6f9f60-a9d4-462d-afb5-95ca9847e807"
+
+# Bản preview (mọi nhánh khác main): database riêng để góp ý thử không lẫn vào trang thật
+[env.preview.vars]
+ACCESS_TEAM_DOMAIN = "sea-ffm.cloudflareaccess.com"
+# Danh sách AUD cách nhau dấu phẩy: mọi app Access phủ site (tên miền chính + *.ffm-docs-html.pages.dev); tách app thì thêm AUD mới (CLAUDE.md §13)
+ACCESS_AUD = "7ab974c7f322b4c7ddd9a6b07220ed910cab0416ec74ffbf8880f39d060ad2f3,15746609fa75d300be8c22d86c52f779d654e606e05cac3c3fae5b01bfea8527"
+# Service token của Claude (client id, không phải khoá bí mật) và người Claude viết thay
+CLAUDE_CLIENT_ID = "da5cd834b8ba7d814f5c0d3d336178ac.access"
+CLAUDE_ON_BEHALF = "sh@pancake.vn"
+GITHUB_REPO = "pancake-vn/ffm-docs-html"
+# Chia sẻ trang cho khách ngoài (CLAUDE.md §13): FFM gửi email; khoá ở secret DOCS_SHARE_SECRET
+FFM_API_BASE = "https://fulfillment.pancake.vn"
+# Tên miền chính dùng cho link trong email (FFM chỉ nhận link của tên miền này)
+SITE_URL = "https://ffm-docs-html.pages.dev"
+
+[[env.preview.d1_databases]]
+binding = "COMMENTS_DB"
+database_name = "ffm-docs-comments-preview"
+database_id = "730b682e-a830-4735-ba37-967b41d3e562"
